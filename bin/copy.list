@@ -1,0 +1,14 @@
+initrd.img
+install.img
+kernel
+ramdisk.img
+system.sfs
+live
+casper
+image.squashfs
+modules
+isolinux\peentoo
+isolinux\peentoo.igz
+isolinux\System-pentoo.map
+SSTR
+sysresccd

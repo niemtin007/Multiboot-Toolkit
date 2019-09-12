@@ -1,0 +1,275 @@
+﻿                      =====================================                     
+                      == https://niemtin007.blogspot.com ==                     
+                      =====================================                     
+
+  Changelog Multiboot Toolkit 2.3.2: (work-in-process)
+  ==============================================================================
+* Fixed installer script for Virtual Disk & USB in the Turkish system language
+* Added more modules (AOMEI Backupper, TrueImage 2020, Bob.Ombs.Win10PEx64...)
+* Updated Grub2 Boot Loader v2.05, Grub2 file Manager (thank to A1ive)
+* Support to update Grub4dos automatic with the batch script
+* Support Turkish & Vietnamese language in Grub2 file Manager (thank to A1ive)
+* Fixed bug in the grub2 installer script for GPT disk
+* Support script to create new WIM menu in the WinPE Boot Manager
+* Added an option to reset default or private configuration
+  ------------------------------------------------------------------------------
+
+
+
+  Changelog Multiboot Toolkit 2.3.1: (01-07-2019)
+  ==============================================================================
+* Fixed "Load driver failed..." on Windows 64bit
+* Fixed bug for bcdedit, method change to keep configuration for WinSetupFromUSB
+* Updated WinSetup.ISO.Module_(ISO.method) -- developed by Tayfun Akkoyun
+* Added Hiren’s BootCD PE as a module (in Windows Boot Manager menu & Grub2)
+* Supported Wimboot in UEFI mode (thanks to A1ive, serhat100, Tayfun Akkoyun)
+* Fixed grub2 configuration for Linux Distro, Rescue Disk (live ISO & extracted)
+* Added more themes (thanks to gnome-look.org & clover team):
+  32 themes for the Grub2 Bootloader & 42 themes for the rEFInd Boot Manager
+  ------------------------------------------------------------------------------
+
+
+
+  Changelog Multiboot Toolkit 2.3.0: (28-05-2019)
+  ==============================================================================
+* Supported Install Hackintosh - add all versions with only one bootable device
+* Changed the Multiboot devices' partition order, Support GPT Disk for HDD Box
+  (ESP1-ESP2-BIOS Boot Partition-MULTIBOOT-MacInstaller1-MacInstaller2-...)
+* Changed the configuration for the bootloader to suitable with the new partition 
+  table
+* Using wimboot to boot the .wim image from GPT disk in Legacy BIOS Mode
+* Fixed Grub2 & Syslinux cannot bootable on some machines (thanks to Hoàng Đức)
+* Added option for creating/uncreate the EFI partition for Secure Boot in UEFI mode
+* Fixed config for about 50 Distros Linux, support multi-version in a menu 
+  (thanks to SmartFinn)
+* Added colortool to improve user experience in the installer interface
+* Added grub2-filemanager as an extra module (thanks to A1ive)
+* Fixed boot menu for DLC 2019, easy to use together with Strelec, HKboot, Anhdv...
+* Optimized source code for the batch script
+* And, a newly released version with many bugs @@
+  ------------------------------------------------------------------------------
+
+
+  *********************************** 2019 *************************************
+
+
+  Changelog Multiboot Toolkit 2.2.0: (28-05-2017)
+  ==============================================================================
+* Updated the AOMEI Partition Assistant (thanks to Hoàng Khiển, Krishna)
+* Changed partition method, increase read and write speeds for Multiboot device
+* Updated partition tools configuration for Grub2 (updated by Tayfun Akkoyun)
+* Allowed install on the Virtual Disk, support to test quickly a Multiboot device
+* Fixed Grub2 cannot be bootable in UEFI mode on the External Portable Hard Drives
+* Fixed DLC Boot cannot be bootable from Grub2 menu in Legacy mode on the
+  External Portable Hard Drives (thanks to steve6375 from reboot.pro forum)
+* Supported Grub2 Menu with multi-language (Vietnam, English, Turkish languages)
+  (Changed the script structure for easy translation into other languages)
+* Updated Windows Setup from Source module with both WIM and ISO method
+  (updated by Tayfun Akkoyun)
+* Added timeout between the partition commands. It makes the installation slower
+  but it makes the Multiboot Installer works well in the system has low performance
+* Fixed missing disk and partition number variables in Windows 7, it is the cause of 
+  can not run script install file in the hidden partitions
+  ------------------------------------------------------------------------------
+
+  Changelog Multiboot Toolkit 2.1.3: (03-05-2017)
+  ==============================================================================
+* Fixed bug scripts in the previous version, fixed bug for Windows 7
+* Added EasyUEFI Portable to edit UEFI boot entries for MultiOS
+* Supported script change default bootloader/boot manager for UEFI mode
+* Updated new WinPE modules (thanks to Hoàng Khiển, anhdv, dinhphucIT)
+* Fixed boot Grub2, WinPE Boot Manager for UEFI 32bit (thanks to Ahmet Bulut)
+* Added WinPE Boot Manager & WinSetupFromUSB to Grub2 Menu in UEFI mode
+* Swapped files between ESP1 and ESP2 for compatibility with secure boot 
+  in some machine does not allow to choose boot option
+  ------------------------------------------------------------------------------
+
+  Changelog Multiboot Toolkit 2.1.2: (28-04-2017)
+  ==============================================================================
+* Added Grub2 File Manager (thanks to karadurak, Tayfun Akkoyun)
+* Updated Grub2 Bootloader 2.02 (thanks to Tayfun Akkoyun, Hà Sơn)
+* Converted more themes from Clover bootloader for rEFInd boot manager
+* Added script Supported to create config.plist for Clover (Hackintosh)
+* Fixed script was not able to run in directory contain Unicode symbols or Whitespace
+* Supported secure boot with original Microsoft UEFI boot files, only Supported 
+  for WIM format (Thanks to köylü, Tayfun Akkoyun from TNCTR forum)
+  ------------------------------------------------------------------------------
+
+  Changelog Multiboot Toolkit 2.1.1: (29-03-2017)
+  ==============================================================================
+* Supported Turkish Language (translate by Tayfun Akkoyun)
+* Improved Grub2 Config, more powerful with auto scan menu (thanks to aguslr)
+  (Fixed boot for Wifislax64 or some particular ISO unbootable on a real machine)
+* Added NT6 method as the other option to install Windows (thanks to Tayfun Akkoyun)
+* Updated WinSetup.ISO.Module, better than WIM method (Updated by Tayfun Akkoyun)
+* Added more options for XorBoot Boot Manager (UEFI mode)
+* Fixed AOMEI Partition Assistant Warning in Windows XP, 7
+  ------------------------------------------------------------------------------
+
+  Changelog Multiboot Toolkit 2.1.0: (19-03-2017)
+  ==============================================================================
+* Improved modules script to prevent lost name file while running again
+* Improved multiboot_Updated script to auto Updated config for grub2
+* Added boot live ISO Wifislax64 (Grub2 UEFI/Legacy)
+* Fixed multiboot_Updated script to keep the current grub2's theme setting
+* Loopback original config for some Linux distributions (need testing)
+* Fixed missing Grub4dos config while installing WinSetupFromUSB (thanks to Tayfun Akkoyun)
+* Added many useful ISO tool on Grub4dos menu (thanks to Tayfun Akkoyun)
+* Made Grub4dos more powerful with auto menu (thanks to Tayfun Akkoyun and karadurak)
+* Added Wim method as an alternative to WinSetupFromUSB, saving more space 
+  (thanks to Tayfun Akkoyun, his friend Aşkın ÖZTAV and oguzhan43 from TNCTR)
+* Added ISO method as the other option to install Windows from original ISO 
+  (not Supported for modified ISO versions like Windows AIO - thanks to Tayfun Akkoyun)
+* Fixed boot live ISO for Manjaro Linux 17 (Thanks to kainonergon)
+* Fixed and Updated the modules link
+  ------------------------------------------------------------------------------
+
+  Changelog Multiboot Toolkit 2.0.1: (28-02-2017)
+  ==============================================================================
+* Fixed Windows format warning for USB (use bootice v1.3.3 instead bootice v1.3.4)
+* Added DLC boot menu from Grub2, Fixed WinPE Strelec menu in UEFI mode
+* Used Windows built-in chkdsk utility to check the partition before preparing 
+  the partition for HDD box. This method will help the data safety more
+* Updated Grub2 bootloader 2.02 rc1 (thanks to Hà Sơn)
+* Fixed config for Clover bootloader to auto scan entries like rEFInd
+* Added new module boot live ISO: AiO-SRT (thanks to kiet2507)
+  ------------------------------------------------------------------------------
+
+  Changelog Multiboot Toolkit 2.0.0: (27-01-2017)
+  ==============================================================================
+* Fixed to miss Grub4dos configuration files when installing Grub2 with new method
+* Set Grub2 is the default legacy bootloader
+* Supported some special ISO run only with FAT32 format on the hide partition
+  (Bitdefender; Fedora; Network Security Toolkit...)
+* Supported script auto Added some special ISO in the hide partition
+* Fixed and Added much more the Grub2 themes
+* Improved the script to keep the original name when adding modules to boot live ISO
+* Supported script to manually Updated the rEFInd boot manager and the Clover bootloader
+* Built new script to install rEFInd/Clover to Internal Hard Drives, Supported for MultiOS
+* Supported edit mini Windows boot manager and WinSetup boot manager with bootice
+* Supported script auto Added ISO extracted to multiboot drive
+* Supported script auto install portable software to multiboot drive
+  ------------------------------------------------------------------------------
+  
+  
+  
+  *********************************** 2017 *************************************
+
+
+
+  Changelog MultibootUSB 1.0.6: (31-12-2016)
+  ==============================================================================
+* Fixed Grub2 booting error in some devices without using CleanMBR
+* Added the another method to install/reinstall GRUB2 from Legacy mode
+* Supported script change easily the Grub2 theme
+* Fixed warning driver letter B:\ when installing to USB Flash Driver
+* Fixed Shutdown error in some devices
+  ------------------------------------------------------------------------------
+
+  Changelog MultibootUSB 1.0.5: (31-10-2016)
+  ==============================================================================
+* Build new installer to install MultibootUSB for External Portable Hard Drives 
+  (HDD box) with 1 click (create boot without data loss - very safe for your data)
+* Added WinPE Sergei Strelec like a module (UEFI/Legacy)
+* Updated Grub2, Clover bootloader
+* Fixed boot error when booting to Syslinux bootloader
+* Fixed boot AndroidOS, PhoenixOS, CubLinux
+* Added password recovery tool for web browsers and wifi
+* Build new script for Updated MultibootUSB manually
+* Added boot live ISO Caine OS (Grub2 UEFI/Legacy mode)
+  ------------------------------------------------------------------------------
+
+  Changelog MultibootUSB 1.0.4: (02-09-2016)
+  ==============================================================================
+* Set NTFS is a main boot partition
+* Used NTFS Drive Protection to protect USB 
+* Added WinSetupFromUSB for UEFI 32bit
+* Updated Clover, rEFInd Boot Manager
+* Set rEFInd is the default boot manager for UEFI mode
+* Auto partition with simple script (thanks to AOMEI)
+* Build new instaler to install MultibootUSB for USB Flash Drive with 1 click
+* Fixed boot live ISO for Parrot OS, Fixed some bugs for script
+* Optimize the boot menu
+* Added new Mini Windows module (thanks to Hoàng Khiển)
+* Added boot live ISO Apricity OS (Grub2 UEFI/Legacy Mode)
+* Remove Clover legacy (not Supported for NTFS)
+  ------------------------------------------------------------------------------
+
+  Changelog MultibootUSB 1.0.3: (15-08-2016)
+  ==============================================================================
+* Added boot live ISO Cyborg Essentials (Grub2 UEFI/Legacy)
+* Added boot live Cyborg Hawk (Grub2 UEFI/Legacy - extracted)
+* Added boot live LionSec Linux (Grub2 UEFI/Legacy - extracted)
+* Added boot live Cyborg Hawk (Grub2 UEFI/Legacy - extracted)
+* Added boot live Weakerthan 7 (Grub2 UEFI/Legacy - extracted)
+* Added boot live ISO Wifislax (Grub2 UEFI/Legacy) + Persistent just Supported with 
+  extracted method
+* Added boot live ISO Network Security Toolkit (NST 24) (Grub2 UEFI/Legacy)
+* Added boot live ISO BlackArch Linux on the second partition (NTFS) (Grub2 UEFI/Legacy)
+* Added boot live ISO Solus Linux (Grub2 UEFI/Legacy)
+* Added boot live ISO Antergos Linux (Grub2 UEFI/Legacy)
+* Added boot live ISO BBQLinux (Grub2 UEFI/Legacy)
+* Added boot live ISO Arch Strike Linux (x86_64) (Grub2 UEFI/Legacy)
+* Fixed boot live ISO Fedora, Manjaro -- (thank Steve' E2B & hanhtrung92)
+* Fixed boot Remix OS (new beta)
+* Fixed bug & Updated MultibootUSB_HDD_Installer_(160812)
+* Added Simple Script auto Added module (*.iso / *.wim / *.exe)
+* Added YUMI boot like a module Legacy & simple script to Fixed boot with Syslinux/Grub2
+* Added DLC boot like a module both UEFI & Legacy mode
+* Added WinSetupFromUSB to install multi windows-setup like a module for UEFI/Legacy mode
+* Updated Clover bootloader, Added more icon (Kali, Parrot, Remix), Added more config.plist
+* Added Minitool Partition Wizard portable for MultibootUSB_HDD_Installer to 
+  partition and format manually
+* Try to boot Syslinux from UEFI mode
+  ------------------------------------------------------------------------------
+
+  Changelog MultibootUSB 1.0.2: (18-06-2016)
+  ==============================================================================
+* Added boot Boot-Repair-Disk (Grub2 UEFI)
+* Fixed boot Kaspersky Rescue Disk 10 (Grub2 UEFI/Legacy + Syslinux/grub4dos legacy)
+* Fixed boot AVG Rescue CD (Syslinux)
+* Fixed boot WEAKERTHAN Linux 7 (Syslinux)
+* Added boot Wifislax + Persistent (syslinux)
+* Added menu Matriux Leandros (chỉ syslinux + no Added with WEAKERTHAN Linux)
+* Added boot Deft linux (Grub2 UEFI/Legacy)
+* Added boot CAINE Linux (Syslinux + Grub2 UEFI/Legacy)
+* Added boot NodeZero Linux (Syslinux + grub2 Legacy)
+* Added boot Bugtraq-II blackwidow (Syslinux) -- (thank YUMI boot)
+* Added boot Network Security Toolkit (NST 22) (Syslinux)
+* Added Xiaopan OS (Syslinux)
+* Added boot Dr.Web LiveDisk  (Syslinux) -- (thank YUMI boot)
+* Added boot Eset rescue (Syslinux + Grub2 Legacy) -- (thank YUMI boot)
+* Added boot Comodo rescue (Syslinux)
+* Added boot live ISO PCLinuxOS (Grub2 UEFI/Legacy)
+* Added boot live ISO LXLE linux (Grub2 UEFI/Legacy)
+* Added boot live ISO Linux Lite (Grub2 UEFI/Legacy)
+* Added script auto defrag for ISO -- (thank Steve' E2B)
+* Added boot syslinux from grub2 menu and grub4dos menu -- (thank Steve' E2B)
+* Updated bootloader (Grub2, Grub4dos, Clover)
+* Added menu Win8/8.1/10 PE/SE for Xorboot Menu UEFI 32bit
+* Updated MultibootUSB_HDD_installer_(160618).exe
+* Added guide in readme
+  ------------------------------------------------------------------------------
+
+  Changelog MultibootUSB 1.0.1: (18-05-2016)
+  ==============================================================================
+* Added create boot for external portable Hard Drive
+* Added boot bootmgr method on legacy mode
+* Updated bootloader data: Clover, rEFInd, ...
+* Remove HBCD folder and source folder
+  ------------------------------------------------------------------------------
+
+  Changelog MultibootUSB 1.0.0: (28-03-2016)
+  ==============================================================================
+* Fixed bug beta 3
+* Supported Clover in Legacy mode (USB FAT32 - Menu Grub4dos)
+* Bring Clover to main Grub2 menu in UEFI mode, Added Xorboot
+* Added data.img for Remix OS, Phoenix, Androidx86
+* Supported quick install with 1-click
+* Added Wincontig to defrag for ISO
+* And many change...
+  ------------------------------------------------------------------------------
+
+
+  *********************************** 2016 *************************************
+
