@@ -100,7 +100,7 @@ set "_lang0609_=>  Confirm to install the rEFInd to EFI System Partition [ y/n ]
 set "_lang0610_=^   Successful..."
 set "_lang0611_=^>^> Enter to edit UEFI boot entries with EasyUEFI..."
 rem >> [ 07 ] Install Clover (UEFI mode)
-set "_lang0700_=> Download the last release of the Clover [y/n]"
+set "_lang0700_=> Download the last release of the Clover [ y/n ]"
 set "_lang0701_=^>^> The browser is going to open in a few seconds. Please wait..."
 set "_lang0702_=> Make config.plist with Cloud Clover Editor  [y/n]"
 set "_lang0703_=                  ^>^> HOW CONFIG GUI FOR CLOVER BOOT MANAGER ^<^<"

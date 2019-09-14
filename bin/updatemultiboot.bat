@@ -5,8 +5,9 @@ rem >> The batch file is written by niemtin007.
 rem >> Thank you for using Multiboot Toolkit.
 
 title %~nx0
-mode con lines=18 cols=70
 rem >> Preparing files...
+cd /d "%bindir%"
+    call "colortool.bat"
 cd /d "%ducky%\BOOT"
     for /f "tokens=*" %%b in (lang) do set "lang=%%b"
     echo. & echo ^> Found current language is %lang%
@@ -30,24 +31,17 @@ cd /d "%bindir%"
     7za x "grub2.7z" -o"%tmp%" -aos -y >nul
     7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y > nul
     7za x "refind.7z" -o"%tmp%" -aoa -y > nul
-    call colortool.bat
 
-rem if not exist "%ducky%\EFI\BOOT\version" (
-rem     cls & color 4f & echo.
-rem     echo %_lang0500_%
-rem     timeout /t 15 >nul & exit
-rem )
+echo.
+echo ---------------------------------------------------------------------
+echo.          [ 1 ] Update config only   [ 2 ] Update full data
+echo ---------------------------------------------------------------------
+echo.
+choice /c 123 /cs /n /m "> Choose your option [ ? ] > "
+    if errorlevel 2 goto :updatefull
+    if errorlevel 1 goto :updateconfig
 
-rem cd /d "%bindir%"
-rem     for /f "tokens=*" %%b in (version) do set /a "cur_version=%%b"
-rem cd /d "%ducky%\EFI\BOOT\"
-rem     for /f "tokens=*" %%b in (version) do set /a "version=%%b"
-rem if %cur_version% LEQ %version% (
-rem     cls & color 4f & echo.
-rem     echo %_lang0501_%
-rem     echo %_lang0502_% & timeout /t 15 >nul & exit
-rem )
-
+:updatefull
 cd /d "%bindir%"
     echo. & echo ^> Updating data...
     "%bindir%\7za.exe" x "data.7z" -o"%ducky%\" -aoa -y >nul
@@ -68,8 +62,7 @@ rem >> install grub2 Bootloader
 cd /d "%bindir%"
     echo.
     echo ^> Installing Grub2 Bootloader...
-    set "destination=MULTIBOOT"
-    silentcmd grub2installer.bat
+    silentcmd grub2installer.bat MULTIBOOT
 cd /d "%bindir%"
     7za x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y > nul
 cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
@@ -82,9 +75,11 @@ cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
     xcopy "others" "%ducky%\EFI\BOOT\" /e /g /h /r /y /q > nul
 cd /d "%bindir%"
     7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y > nul
-cd /d "%bindir%\config"
-    call "main.bat" & call "smartfinn.bat"
 cd /d "%ducky%\EFI\Microsoft\Boot"
     call "%bindir%\bcdautoset.bat" bcd
+
+:updateconfig
+cd /d "%bindir%\config"
+    call "main.bat"
     timeout /t 2 >nul
-    call "%bindir%\exit.bat"
+call "%bindir%\exit.bat"

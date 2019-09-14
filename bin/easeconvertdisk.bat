@@ -26,24 +26,24 @@ color 4f & echo. & echo %_lang0104_% & timeout /t 15 > nul & goto :Select
 
 :option
 cd /d "%bindir%"
-call colortool.bat
-echo.
-> "%tmp%\warning.vbs" (
-    echo Dim Speak
-    echo Set Speak=CreateObject^("sapi.spvoice"^)
-    echo Speak.Speak "WARNING!"
-    echo WScript.Sleep 4
-    echo Speak.Speak "These features will delete all partition on your External Drive"
-    echo WScript.Sleep 2
-    echo Speak.Speak "Please backup your data on the External Drive before continue"
-    echo WScript.Sleep 4
-    echo Speak.Speak "Press 1 to Initialize a disk as GPT"
-    echo WScript.Sleep 2
-    echo Speak.Speak "Press 2 to Initialize a disk as MBR"
-    echo WScript.Sleep 2
-)
+    call colortool.bat
 cd /d "%tmp%"
+    > warning.vbs (
+        echo Dim Speak
+        echo Set Speak=CreateObject^("sapi.spvoice"^)
+        echo Speak.Speak "WARNING!"
+        echo WScript.Sleep 4
+        echo Speak.Speak "These features will delete all partition on your External Drive"
+        echo WScript.Sleep 2
+        echo Speak.Speak "Please backup your data on the External Drive before continue"
+        echo WScript.Sleep 4
+        echo Speak.Speak "Press 1 to Initialize a disk as GPT"
+        echo WScript.Sleep 2
+        echo Speak.Speak "Press 2 to Initialize a disk as MBR"
+        echo WScript.Sleep 2
+    )
     start warning.vbs
+echo.
 echo                                WARNING^!
 echo ---------------------------------------------------------------------
 echo    These features will delete all partition on your External Drive
@@ -53,7 +53,6 @@ echo               [ 1 ] Press 1 to Initialize a disk as GPT
 echo               [ 2 ] Press 2 to Initialize a disk as MBR
 echo ---------------------------------------------------------------------
 echo.
-set /a sec = 5
 choice /c 12 /cs /n /m "*  %_lang0905_% [ ? ] = "
     if errorlevel 1 set "option=1"
     if errorlevel 2 set "option=2"
@@ -65,14 +64,13 @@ choice /c yn /cs /n /m "*  Do you understand the warning? [ y/n ] > "
     if errorlevel 2 goto :option
     if errorlevel 1 goto :continue
 :continue
-cls & echo.
-echo ^> Goodbye your data in %sec% seconds...
-timeout /t 1 >nul
-set /a sec = %sec% - 1
-if not %sec% == 0 goto :continue
+for /l %%i in (5,-1,0) do (
+    cls & echo.
+    echo ^> Goodbye your data in %%i seconds...
+    timeout /t 1 >nul
+)
 if "%option%"=="1" cls & goto :GPT
 if "%option%"=="2" cls & goto :MBR
-color 4f & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :option
 
 :GPT
 %partassist% /hd:%disk% /del:all

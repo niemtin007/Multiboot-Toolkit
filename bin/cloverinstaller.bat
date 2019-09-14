@@ -24,11 +24,8 @@ for /f "tokens=2" %%b in ('wmic path Win32_diskpartition get type ^, diskindex ^
     )
 
 :clover
-cls & echo.
-echo ----------------------------------------------------------------------
-echo                          ^> Clover Installer ^<                       
-echo ----------------------------------------------------------------------
-echo.
+cls 
+call :cloverinterface
 choice /c yn /cs /n /m "%_lang0700_% > "
     if errorlevel 2 goto :cloverconfig
     if errorlevel 1 goto :download
@@ -46,11 +43,7 @@ cd /d "%tmp%"
     for /f delims^=^"^ tokens^=2  %%a in ('type "clover.log" ^| findstr /i "<tr.*.lzma" ^| find /n /v "" ^| find "[1]"') do (set "name=%%a") >nul
     rem download clover
     cls
-    echo.
-    echo ----------------------------------------------------------------------
-    echo                          ^> Clover Installer ^<                       
-    echo ----------------------------------------------------------------------
-    echo.
+    call :cloverinterface
     echo ^>^> downloading %name%...
     set "sourcelink=https://sourceforge.net/projects/cloverefiboot/files/Bootable_ISO/%name%/download"
     wget -q --show-progress -O "%name%" %sourcelink%
@@ -111,11 +104,8 @@ cd /d "%bindir%"
 :cloverconfig
 call "%bindir%\colortool.bat"
 if "%structure%"=="MBR" goto :option
-cls & echo.
-echo ----------------------------------------------------------------------
-echo                          ^> Clover Installer ^<                       
-echo ----------------------------------------------------------------------
-echo.
+cls 
+call :cloverinterface
 choice /c yn /cs /n /m "%_lang0702_% > "
     if errorlevel 2 goto :option
     if errorlevel 1 goto :gdisk
@@ -194,3 +184,14 @@ echo. & echo %_lang0716_% & timeout /t 300 >nul
 cd /d "%tmp%\EasyUEFI"
     start EasyUEFIPortable.exe
 call "%bindir%\exit.bat"
+
+
+rem -----------------------------------------------------------------------
+:cloverinterface
+echo.
+echo ----------------------------------------------------------------------
+echo                          ^> Clover Installer ^<                       
+echo ----------------------------------------------------------------------
+echo.
+exit /b 0
+rem -----------------------------------------------------------------------

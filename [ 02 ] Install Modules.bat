@@ -393,10 +393,13 @@ for /f "delims=" %%b in ('dir /b "%curpath%"') do set _tmp="%%b"
 if {%_tmp%}=={} (
     cd /d "%bindir%"
         call colortool.bat
-        cls & echo.
+        cls
+        echo.
         echo ^>^> Modules not found^!
-        pause > nul
-        goto :main
+        echo.
+        choice /c yn /cs /n /m ">> Do you want to access to the modules list [ y/n ] > "
+        if errorlevel 2 goto :main
+        if errorlevel 1 start https://docs.google.com/spreadsheets/d/1HzW6t3Rh_8_BnT8Ddawe1epwrMdVzvmRAjtN3qX-G9k/edit?usp=sharing & exit
 )
 cd /d "%bindir%"
     set "module=false"

@@ -34,7 +34,7 @@ cd /d "%bindir%"
 cd /d "%ducky%\BOOT\GRUB\themes\"
     for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
 cd /d "%bindir%\config"
-    call "main.bat" & call "smartfinn.bat"
+    call "main.bat"
 rem > setting language for grub2 file manager
     >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
 call "%bindir%\exit.bat"

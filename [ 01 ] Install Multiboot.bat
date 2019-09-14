@@ -240,7 +240,7 @@ cd /d "%bindir%"
     echo %_lang0113_% %gtheme%
     7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y > nul
 cd /d "%bindir%\config"
-    call "main.bat" & call "smartfinn.bat"
+    call "main.bat"
 cd /d "%bindir%\secureboot\EFI\Microsoft\Boot"
     call "%bindir%\bcdautoset.bat" bcd
 rem >> install secure boot file

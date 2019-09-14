@@ -52,7 +52,7 @@ cd /d "%ducky%\BOOT\"
 cd /d "%ducky%\BOOT\grub\themes"
     for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
 cd /d "%bindir%\config\"
-    call "main.bat" & call "smartfinn.bat"
+    call "main.bat"
 cd /d "%ducky%\EFI\Microsoft\Boot"
     call "%bindir%\bcdautoset.bat" bcd
 rem >> install Syslinux Bootloader
