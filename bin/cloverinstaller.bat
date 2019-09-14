@@ -176,6 +176,9 @@ cd /d "%tmp%"
     mkdir CLOVER
     7za x "%bindir%\clover.7z" -o"%tmp%\CLOVER\" -aoa -y >nul
     xcopy "%tmp%\CLOVER" "s:\EFI\CLOVER\" /e /y /q >nul
+    if exist "%curdir%\config.plist" (
+        xcopy "%curdir%\config.plist" "s:\EFI\CLOVER\" /e /y /q >nul
+    )
 timeout /t 2 >nul
 mountvol s: /d
 echo. & echo %_lang0715_%

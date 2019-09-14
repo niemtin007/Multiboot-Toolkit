@@ -7,6 +7,7 @@ rem >> Thank you for using Multiboot Toolkit.
 title %~nx0
 cd /d "%~dp0"
 set "skipscan=true"
+set "curdir=%~dp0"
 set "bindir=%~dp0bin"
 if not exist "bin" (
     color 4f & echo.

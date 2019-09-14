@@ -98,6 +98,8 @@ wmic diskdrive get name, model | find /i "Msft Virtual Disk SCSI Disk Device" | 
     if not errorlevel 1 set "virtualdisk=true"
 wmic diskdrive get name, model | find /i "Microsoft Virtual Disk" | find /i "\\.\physicaldrive%disk%" > nul
     if not errorlevel 1 set "virtualdisk=true"
+wmic diskdrive get name, model | find /i "Microsoft Sanal Diski" | find /i "\\.\physicaldrive%disk%" > nul
+    if not errorlevel 1 set "virtualdisk=true"
 exit /b 0
 
 :check.harddisk
