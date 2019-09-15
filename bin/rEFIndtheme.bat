@@ -102,6 +102,8 @@ wmic diskdrive get name, model | find /i "Msft Virtual Disk SCSI Disk Device" | 
     if not errorlevel 1 set "virtualdisk=true" & goto :External
 wmic diskdrive get name, model | find /i "Microsoft Virtual Disk" | find /i "\\.\physicaldrive%disk%" >nul
     if not errorlevel 1 set "virtualdisk=true" & goto :External
+wmic diskdrive get name, model | find /i "Microsoft Sanal Diski" | find /i "\\.\physicaldrive%disk%" > nul
+    if not errorlevel 1 set "virtualdisk=true" & goto :External
 rem >> check Internal Hard Drives
 wmic diskdrive get name, mediatype | find /i "Fixed hard disk media" | find /i "\\.\physicaldrive%disk%" >nul
     if not errorlevel 1 (
