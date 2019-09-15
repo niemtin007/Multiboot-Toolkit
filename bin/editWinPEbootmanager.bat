@@ -34,13 +34,11 @@ echo ^*               Source^: %source%
 call "%bindir%\exit.bat"
 
 :uefi3264bit
-call :check.virtualdisk
+cd /d "%bindir%"
+    call checkdisktype.bat
     if "%virtualdisk%"=="true" goto :External
-call :check.harddisk
     if "%harddisk%"=="true" goto :External
-call :check.usbdisk
     if "%usb%"=="true" goto :Removable
-call :check.externaldisk
     if "%externaldisk%"=="true" goto :External
 
 :Removable
@@ -85,39 +83,3 @@ rem     %partassist% /hd:%disk% /whide:%securepart% /src:%source% /dest:EFI\Micr
 rem )
 
 call "%bindir%\exit.bat"
-
-
-
-rem >> begin functions
-:check.partitiontable
-for /f "tokens=2" %%b in ('wmic path win32_diskpartition get type ^, diskindex ^| find /i "%disk%"') do set "GPT=%%b"
-exit /b 0
-
-:check.virtualdisk
-wmic diskdrive get name, model | find /i "Msft Virtual Disk SCSI Disk Device" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "virtualdisk=true"
-wmic diskdrive get name, model | find /i "Microsoft Virtual Disk" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "virtualdisk=true"
-wmic diskdrive get name, model | find /i "Microsoft Sanal Diski" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "virtualdisk=true"
-exit /b 0
-
-:check.harddisk
-wmic diskdrive get name, mediatype | find /i "Fixed hard disk media" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 (
-        set "harddisk=true"
-        echo. & echo. & echo %_lang0102_%
-        color 4f & echo %_lang0103_% & timeout /t 15 > nul & cls
-    )
-exit /b 0
-
-:check.usbdisk
-wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "usb=true"
-exit /b 0
-
-:check.externaldisk
-wmic diskdrive get name, mediatype | find /i "External hard disk media" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "externaldisk=true"
-exit /b 0
-rem >> end functions

@@ -5,7 +5,6 @@ rem >> The batch file is written by niemtin007.
 rem >> Thank you for using Multiboot Toolkit.
 
 title %~nx0
-pushd "%cd%"
 
 :install
 cd /d "%bindir%"
@@ -97,25 +96,13 @@ cd /d "%tmp%\rEFInd_themes\%rtheme%\icons"
 cd /d "%tmp%\rEfind_themes\%rtheme%\icons\"
     xcopy "others" "%ducky%\EFI\BOOT\" /e /g /h /r /y /q >nul
 
-rem >> check Virtual Disk
-wmic diskdrive get name, model | find /i "Msft Virtual Disk SCSI Disk Device" | find /i "\\.\physicaldrive%disk%" >nul
-    if not errorlevel 1 set "virtualdisk=true" & goto :External
-wmic diskdrive get name, model | find /i "Microsoft Virtual Disk" | find /i "\\.\physicaldrive%disk%" >nul
-    if not errorlevel 1 set "virtualdisk=true" & goto :External
-wmic diskdrive get name, model | find /i "Microsoft Sanal Diski" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "virtualdisk=true" & goto :External
-rem >> check Internal Hard Drives
-wmic diskdrive get name, mediatype | find /i "Fixed hard disk media" | find /i "\\.\physicaldrive%disk%" >nul
-    if not errorlevel 1 (
-        echo. & echo. & echo %_lang0102_%
-        color 4f & echo %_lang0103_% & timeout /t 15 >nul & cls & goto :EOF
-    )
-rem >> check USB disk
-wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" >nul
-    if not errorlevel 1 set "usb=true" & goto :Removable
-rem >> check External Portable Hard Drives
-wmic diskdrive get name, mediatype | find /i "External hard disk media" | find /i "\\.\physicaldrive%disk%" >nul
-    if not errorlevel 1 goto :External
+
+cd /d "%bindir%"
+    call checkdisktype.bat
+    if "%virtualdisk%"=="true"  goto :External
+    if "%harddisk%"=="true"     goto :EOF
+    if "%usb%"=="true"          goto :Removable
+    if "%externaldisk%"=="true" goto :External
 
 :Removable
 if "%secureboot%"=="n" (

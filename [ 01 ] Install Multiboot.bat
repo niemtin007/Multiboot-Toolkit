@@ -24,20 +24,18 @@ cd /d "%bindir%"
     call colortool.bat
     7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y > nul
     7za x "refind.7z" -o"%tmp%" -aoa -y > nul
-rem end preparing file
+rem list all disk drive
 %partassist% /list
 echo.
 set /p disk= %_lang0101_%
 set /a disk=%disk%+0
-call :check.virtualdisk
-    if "%virtualdisk%"=="true" call :rEFInd.part & goto :External
-call :check.harddisk
-    if "%harddisk%"=="true" goto :Select
-call :check.usbdisk
-    if "%usb%"=="true" call :rEFInd.part & goto :Removable
-call :check.externaldisk
+cd /d "%bindir%"
+    call checkdisktype.bat
+    if "%virtualdisk%"=="true"  call :rEFInd.part & goto :External
+    if "%harddisk%"=="true"     call :harddisk.warning & goto :Select
+    if "%usb%"=="true"          call :rEFInd.part & goto :Removable
     if "%externaldisk%"=="true" call :rEFInd.part & goto :External
-color 4f & echo. & echo %_lang0104_% & timeout /t 15 > nul & goto :Select
+    color 4f & echo. & echo %_lang0104_% & timeout /t 15 > nul & goto :Select
 
 :Removable
 rem >> prepare partitions space for Removable Media
@@ -317,32 +315,9 @@ exit /b 0
 for /f "tokens=2" %%b in ('wmic path win32_diskpartition get type ^, diskindex ^| find /i "%disk%"') do set "GPT=%%b"
 exit /b 0
 
-:check.virtualdisk
-wmic diskdrive get name, model | find /i "Msft Virtual Disk SCSI Disk Device" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "virtualdisk=true"
-wmic diskdrive get name, model | find /i "Microsoft Virtual Disk" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "virtualdisk=true"
-wmic diskdrive get name, model | find /i "Microsoft Sanal Diski" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "virtualdisk=true"
-exit /b 0
-
-:check.harddisk
-wmic diskdrive get name, mediatype | find /i "Fixed hard disk media" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 (
-        set "harddisk=true"
-        echo. & echo. & echo %_lang0102_%
-        color 4f & echo %_lang0103_% & timeout /t 15 > nul & cls
-    )
-exit /b 0
-
-:check.usbdisk
-wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "usb=true"
-exit /b 0
-
-:check.externaldisk
-wmic diskdrive get name, mediatype | find /i "External hard disk media" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "externaldisk=true"
+:harddisk.warning
+    echo. & echo. & echo %_lang0102_%
+    color 4f & echo %_lang0103_% & timeout /t 15 > nul & cls
 exit /b 0
 
 :check.letter

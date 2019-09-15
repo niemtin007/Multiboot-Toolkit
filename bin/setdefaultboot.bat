@@ -4,16 +4,13 @@ rem >> https://niemtin007.blogspot.com
 rem >> The batch file is written by niemtin007.
 rem >> Thank you for using Multiboot Toolkit.
 
-color 0e
 title %~nx0
-pushd "%cd%"
-cd /d "%bindir%"
-call colortool.bat
 mode con lines=15 cols=80
-
-set "Grub2=%bindir%\secureboot\EFI\Boot\backup\Grub2"
-set "rEFInd=%bindir%\secureboot\EFI\Boot\backup\rEFInd"
-set "WinPE=%bindir%\secureboot\EFI\Boot\backup\WinPE"
+cd /d "%bindir%"
+    call colortool.bat
+    set "Grub2=%bindir%\secureboot\EFI\Boot\backup\Grub2"
+    set "rEFInd=%bindir%\secureboot\EFI\Boot\backup\rEFInd"
+    set "WinPE=%bindir%\secureboot\EFI\Boot\backup\WinPE"
 cd /d "%ducky%\BOOT"
     if not exist "secureboot" goto :option
     for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
@@ -36,14 +33,11 @@ set /P mode= %_lang0905_% ^>
     color 4f & echo. & echo %_lang0104_% & timeout /t 15 >nul & goto :option
 
 :checkdisk
-call :check.partitiontable
-call :check.virtualdisk
+cd /d "%bindir%"
+    call checkdisktype.bat
     if "%virtualdisk%"=="true" goto :External
-call :check.harddisk
     if "%harddisk%"=="true" goto :option
-call :check.usbdisk
     if "%usb%"=="true" goto :Removable
-call :check.externaldisk
     if "%externaldisk%"=="true" goto :External
 
 :Removable
@@ -108,40 +102,3 @@ if "%option%"=="Grub2" (
         >"%ducky%\EFI\BOOT\WindowsGrub2" (echo true)
 )
 call "%bindir%\exit.bat"
-
-
-
-
-rem >> begin functions
-:check.partitiontable
-for /f "tokens=2" %%b in ('wmic path win32_diskpartition get type ^, diskindex ^| find /i "%disk%"') do set "GPT=%%b"
-exit /b 0
-
-:check.virtualdisk
-wmic diskdrive get name, model | find /i "Msft Virtual Disk SCSI Disk Device" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "virtualdisk=true"
-wmic diskdrive get name, model | find /i "Microsoft Virtual Disk" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "virtualdisk=true"
-wmic diskdrive get name, model | find /i "Microsoft Sanal Diski" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "virtualdisk=true"
-exit /b 0
-
-:check.harddisk
-wmic diskdrive get name, mediatype | find /i "Fixed hard disk media" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 (
-        set "harddisk=true"
-        echo. & echo. & echo %_lang0102_%
-        color 4f & echo %_lang0103_% & timeout /t 15 > nul & cls
-    )
-exit /b 0
-
-:check.usbdisk
-wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "usb=true"
-exit /b 0
-
-:check.externaldisk
-wmic diskdrive get name, mediatype | find /i "External hard disk media" | find /i "\\.\physicaldrive%disk%" > nul
-    if not errorlevel 1 set "externaldisk=true"
-exit /b 0
-rem >> end functions
