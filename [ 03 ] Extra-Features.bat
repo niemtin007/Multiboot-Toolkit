@@ -15,7 +15,6 @@ if not exist "bin" (
     timeout /t 15 >nul & exit
 ) else (
     call "%bindir%\colortool.bat"
-    mode con lines=18 cols=72
     call "%bindir%\permissions.bat"
     call "%bindir%\multibootscan.bat"
     call "%bindir%\language.bat"
@@ -35,18 +34,18 @@ if not exist "bin" (
     echo CreateObject^("WScript.Shell"^).Run Join^(Args^), 0, False
 )
 cls & echo.
-echo =======================================================================
-echo                        ^> EXTRA FEATURES MENU ^<                       
-echo =======================================================================
-echo   [ 01 ] = Grub2  Theme                 [ 09 ] = Fix Bootloader        
-echo   [ 02 ] = rEFInd Theme                 [ 10 ] = Unhide Data Partition 
-echo   [ 03 ] = Clover Installer             [ 11 ] = Ease and Convert disk 
-echo   [ 04 ] = rEFInd Installer             [ 12 ] = NTFS Drive Protect    
-echo   [ 05 ] = Set Default Boot (UEFI)      [ 13 ] = Change Language       
-echo   [ 06 ] = Edit WinPE Boot Manager      [ 14 ] = Qemu Boot Tester      
-echo   [ 07 ] = Edit WinSetupFromUSB Menu    [ 15 ] = Update Multiboot      
-echo   [ 08 ] = Update Grub2-filemanager     [ 16 ] = Update grub4dos       
-echo =======================================================================
+echo ======================================================================
+echo                        ^> EXTRA FEATURES MENU ^<                      
+echo ======================================================================
+echo   [ 01 ] = Grub2  Theme                [ 09 ] = Fix Bootloader        
+echo   [ 02 ] = rEFInd Theme                [ 10 ] = Unhide Data Partition 
+echo   [ 03 ] = Clover Installer            [ 11 ] = Ease and Convert disk 
+echo   [ 04 ] = rEFInd Installer            [ 12 ] = NTFS Drive Protect    
+echo   [ 05 ] = Set Default Boot (UEFI)     [ 13 ] = Change Language       
+echo   [ 06 ] = Edit WinPE Boot Manager     [ 14 ] = Qemu Boot Tester      
+echo   [ 07 ] = Edit WinSetupFromUSB Menu   [ 15 ] = Update Multiboot      
+echo   [ 08 ] = Update Grub2-filemanager    [ 16 ] = Update grub4dos       
+echo ======================================================================
 echo.
 set "option=14" rem set default
 set /p option= ^> %_lang0905_% [ ? ] = 

@@ -6,12 +6,12 @@
   ==============================================================================
 * Fixed installer script for Virtual Disk & USB in the Turkish system language
 * Added more modules (AOMEI Backupper, TrueImage 2020, Bob.Ombs.Win10PEx64...)
-* Updated Grub2 Boot Loader v2.05, Grub2 file Manager (thank to A1ive)
+* Updated Grub2 Boot Loader v2.05, Grub2 file Manager (thanks to A1ive)
 * Support to update Grub4dos automatic with the batch script
-* Support Turkish & Vietnamese language in Grub2 file Manager (thank to A1ive)
+* Support Turkish & Vietnamese language in Grub2 file Manager (thanks to A1ive)
 * Fixed bug in the grub2 installer script for GPT disk
-* Support script to create new WIM menu in the WinPE Boot Manager
-* Added an option to reset default or private configuration
+* Support script to create a new WIM menu in the WinPE Boot Manager
+* Support Simplified Chinese language (thanks to A1ive)
   ------------------------------------------------------------------------------
 
 

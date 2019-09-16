@@ -34,6 +34,9 @@ echo set timeout=30
 echo # Default boot entry
 echo set default=0
 echo.
+echo # Menu language
+echo set lang=%langfm%
+echo.
 echo # Menu Themes
 echo set theme=$prefix/themes/%gtheme%/theme.txt
 echo set locale_dir=$prefix/locale

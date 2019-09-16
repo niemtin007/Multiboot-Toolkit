@@ -22,13 +22,15 @@ cd /d "%tmp%\partassist"
 
 >"%tmp%\partassist\cfg.ini" (
     echo [Language]
-    echo LANGUAGE=lang\en.txt;9
+    echo LANGUAGE=lang\%langpa%.txt;%langcode%
+    echo LANGCHANGED=1
     echo [Version]
     echo Version=4
     echo [Product Version]
     echo v=2
+    echo Lang=%langpa%
     echo [CONFIG]
-    echo COUNT=0
+    echo COUNT=2
     echo KEY=AOPR-21ROI-6Y7PL-Q4118
     echo [PA]
     echo POPUPMESSAGE=1

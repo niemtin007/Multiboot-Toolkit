@@ -33,5 +33,6 @@ cd /d "%tmp%\colortool"
 :exit
 rem echo colortool %itermcolors%
 rem timeout /t 2 >nul
-cd /d "%bindir%"
 cls
+cd /d "%bindir%"
+mode con lines=18 cols=70

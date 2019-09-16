@@ -218,6 +218,7 @@ cd /d "%bindir%"
     silentcmd grub2installer.bat MULTIBOOT
 cd /d "%bindir%\extra-modules"
     "%bindir%\7za.exe" x "grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y > nul
+    >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
 cd /d "%bindir%"
     echo.
     echo %_lang0112_% %lang%
@@ -288,8 +289,8 @@ if not exist "bin" (
     timeout /t 15 > nul & exit
 ) else (
     call "%bindir%\permissions.bat"
-    call "%bindir%\language.bat"
     call "%bindir%\license.bat"
+    call "%bindir%\language.bat"
     call "%bindir%\partassist.bat"
 )
 exit /b 0
@@ -451,11 +452,11 @@ echo 	^* %_lang0008_%                                 6100
 echo 	+++++++++++++++++++++++++++++++++++++++++++++++++++
 echo 	%_lang0009_%=50MB)
 echo.
-choice /c yn /cs /n /m "> Auto start modules installer after finish [ y/n ] > "
+choice /c yn /cs /n /m "%_lang0114_%"
     if errorlevel 1 set "installmodules=y"
     if errorlevel 2 set "installmodules=n"
 echo.
-choice /c yn /cs /n /m "> Create EFI Partition for Secure Boot      [ y/n ] > "
+choice /c yn /cs /n /m "%_lang0115_%"
     if errorlevel 1 set "secureboot=y"
     if errorlevel 2 set "secureboot=n"
 :rEFIndsize

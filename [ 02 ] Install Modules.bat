@@ -14,18 +14,17 @@ if not exist "bin" (
     timeout /t 15 > nul & exit
 ) else (
     call "%bindir%\colortool.bat"
-    mode con lines=18 cols=70
     call "%bindir%\permissions.bat"
-    call "%bindir%\language.bat"
     call "%bindir%\multibootscan.bat"
+    call "%bindir%\language.bat"
     call "%bindir%\partassist.bat"
 )
 
 :main
 > "%tmp%\modules.vbs" (
-echo Dim Message, Speak
-echo Set Speak=CreateObject^("sapi.spvoice"^)
-echo Speak.Speak "Please put all modules you need into the Modules folder. Then press any key to continue..."
+    echo Dim Message, Speak
+    echo Set Speak=CreateObject^("sapi.spvoice"^)
+    echo Speak.Speak "Please put all modules you need into the Modules folder. Then press any key to continue..."
 )
 rem begin move module to the source folder
 if exist "%bindir%\Special_ISO" (

@@ -1,5 +1,10 @@
 @echo off
 
+ver | findstr /i "6\.1\." > nul
+    if %errorlevel% equ 0 set "windows=7"
+
+if not "%windows%"=="7" chcp 65001 > nul
+
 rem >> code check permissions take from E2B. Thanks to Steve Si.
 
 :check_Permissions
