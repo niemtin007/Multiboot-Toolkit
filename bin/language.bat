@@ -16,18 +16,21 @@ if "%lang%"=="English" (
 )
 if "%lang%"=="Vietnam" (
     set "langfm=vi_VN"
-    set "langpa=en"  rem set "langpa=vn"
-    set "langcode=9" rem set "langcode=42"
+    set "langpa=en"
+    set "langcode=9"
+    rem set "langpa=vn"
+    rem set "langcode=42"
     goto :Vietnam
 )
 if "%lang%"=="Turkish" (
     set "langfm=tr_TR"
-    set "langpa=en"  rem set "langpa=tr"
-    set "langcode=9" rem set "langcode=31"
+    set "langpa=en"
+    set "langcode=9"
+    rem set "langpa=tr"
+    rem set "langcode=31"
     goto :Turkish
 )
 if "%lang%"=="SimplifiedChinese" (
-    chcp 936 > nul
     set "langfm=zh_CN"
     set "langpa=tw"
     set "langcode=999"
