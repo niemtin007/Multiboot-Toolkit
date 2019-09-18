@@ -5,26 +5,24 @@ rem >> The batch file is written by niemtin007.
 rem >> Thank you for using Multiboot Toolkit.
 
 title %~nx0
-pushd "%cd%"
 
 :install
 cd /d "%bindir%"
     call colortool.bat
-    mode con lines=18 cols=72
 echo.
 cd /d "%ducky%\BOOT\grub\themes"
     for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
 echo %_lang0300_% %gtheme%
-echo ========================================================================
-echo 01 = Aero        09 = Breeze-1     17 = Gentoo        25 = RainbowDash  
-echo 02 = Air_Vision  10 = Breeze_dark  18 = Grau          26 = Raindrops    
-echo 03 = Alienware   11 = Breeze-5     19 = Huayra-limbo  27 = SolarizedDark
-echo 04 = Archlinux   12 = Dark_Colors  20 = Journey       28 = Solstice     
-echo 05 = Ask-larry   13 = Dark_squares 21 = Monochrome    29 = Steam        
-echo 06 = Aurora      14 = Devuan       22 = Oxygen        30 = StylishDark  
-echo 07 = Axiom       15 = Eternity     23 = Plasma-dark   31 = Tela         
-echo 08 = Bluec4d     16 = FagiadaBue   24 = Powerman      32 = Ubuntu-lucid 
-echo ========================================================================
+echo =====================================================================
+echo 01 = Aero       09 = Breeze-1     17 = Gentoo      25 = RainbowDash  
+echo 02 = Air_Vision 10 = Breeze_dark  18 = Grau        26 = Raindrops    
+echo 03 = Alienware  11 = Breeze-5     19 = Huayralimbo 27 = SolarizedDark
+echo 04 = Archlinux  12 = Dark_Colors  20 = Journey     28 = Solstice     
+echo 05 = Ask-larry  13 = Dark_squares 21 = Monochrome  29 = Steam        
+echo 06 = Aurora     14 = Devuan       22 = Oxygen      30 = StylishDark  
+echo 07 = Axiom      15 = Eternity     23 = Plasma-dark 31 = Tela         
+echo 08 = Bluec4d    16 = FagiadaBue   24 = Powerman    32 = Ubuntu-lucid 
+echo =====================================================================
 echo.
 set /P ask= %_lang0301_% [ ? ]  = 
 if "%ask%"=="1"  (set "gtheme=Aero" & goto :continue)

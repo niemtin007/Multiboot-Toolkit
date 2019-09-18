@@ -394,9 +394,9 @@ if {%_tmp%}=={} (
         call colortool.bat
         cls
         echo.
-        echo ^>^> Modules not found^!
+        echo %_lang0220_%
         echo.
-        choice /c yn /cs /n /m ">> Do you want to access to the modules list [ y/n ] > "
+        choice /c yn /cs /n /m "%_lang0221_%"
         if errorlevel 2 goto :main
         if errorlevel 1 start https://docs.google.com/spreadsheets/d/1HzW6t3Rh_8_BnT8Ddawe1epwrMdVzvmRAjtN3qX-G9k/edit?usp=sharing & exit
 )
@@ -409,7 +409,7 @@ cd /d "%bindir%"
     )
     if "%module%"=="false" (
         cls & echo.
-        echo ^>^> Modules you choose are not supported
+        echo %_lang0222_%
         pause > nul
         goto :main
     )

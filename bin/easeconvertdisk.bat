@@ -16,7 +16,11 @@ set /a disk=%disk%+0
 cd /d "%bindir%"
     call checkdisktype.bat
     if "%virtualdisk%"=="true" goto :option
-    if "%harddisk%"=="true" goto :Select
+    if "%harddisk%"=="true" (
+        echo. & echo. & echo %_lang0102_%
+        color 4f & echo %_lang0103_% & timeout /t 15 > nul & cls
+        goto :Select
+    )
     if "%usb%"=="true" goto :option
     if "%externaldisk%"=="true" goto :option
     color 4f & echo. & echo %_lang0104_% & timeout /t 15 > nul & goto :Select
@@ -41,13 +45,13 @@ cd /d "%tmp%"
     )
     start warning.vbs
 echo.
-echo                                WARNING^!
+echo %_lang0813_%
 echo ---------------------------------------------------------------------
-echo    These features will delete all partition on your External Drive
-echo     Please backup your data on the External Drive before continue
+echo %_lang0814_%
+echo %_lang0815_%
 echo.
-echo               [ 1 ] Press 1 to Initialize a disk as GPT
-echo               [ 2 ] Press 2 to Initialize a disk as MBR
+echo %_lang0816_%
+echo %_lang0817_%
 echo ---------------------------------------------------------------------
 echo.
 choice /c 12 /cs /n /m "*  %_lang0905_% [ ? ] = "
@@ -57,7 +61,7 @@ choice /c 12 /cs /n /m "*  %_lang0905_% [ ? ] = "
     taskkill /f /im wscript.exe /t /fi "status eq running">nul
     del /s /q "%tmp%\warning.vbs" >nul
 echo.
-choice /c yn /cs /n /m "*  Do you understand the warning? [ y/n ] > "
+choice /c yn /cs /n /m "%_lang0818_%"
     if errorlevel 2 goto :option
     if errorlevel 1 goto :continue
 :continue

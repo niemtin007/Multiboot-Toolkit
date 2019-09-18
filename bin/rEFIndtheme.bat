@@ -9,7 +9,6 @@ title %~nx0
 :install
 cd /d "%bindir%"
     call colortool.bat
-    mode con lines=18 cols=70
 echo.
 cd /d "%ducky%\BOOT\"
     for /f "tokens=*" %%b in (rEFInd) do set "rtheme=%%b"
@@ -17,19 +16,19 @@ cd /d "%ducky%\BOOT\"
         for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
     )
 echo %_lang0400_% %rtheme%
-echo ======================================================================
-echo 01 = Apocalypse   12 = CloverBootcamp 23 = GoldClover  34 = Pandora   
-echo 02 = BGM          13 = Clovernity     24 = Gothic      35 = Red       
-echo 03 = BGM256       14 = Clover-X       25 = HighSierra  36 = Shield    
-echo 04 = black        15 = CrispyOSX      26 = HMF         37 = SimpleGrey
-echo 05 = Bluemac      16 = Crystal        27 = iclover     38 = Simplicity
-echo 06 = Buttons      17 = Dark           28 = Leather     39 = Smooth    
-echo 07 = Carbon       18 = DarkBoot       29 = MacOSX      40 = Sphere    
-echo 08 = Catalina     19 = DarkBootX      30 = MavsStyle   41 = Universe  
-echo 09 = Chrome       20 = ElCapitan      31 = Mojave      42 = Woody     
-echo 10 = Circla       21 = Emerald        32 = Neon                       
-echo 11 = ClassicMacOS 22 = Glassy         33 = Oceanix                    
-echo ======================================================================
+echo =====================================================================
+echo 01 = Apocalypse   12 = CloverBootcamp 23 = GoldClover 34 = Pandora   
+echo 02 = BGM          13 = Clovernity     24 = Gothic     35 = Red       
+echo 03 = BGM256       14 = Clover-X       25 = HighSierra 36 = Shield    
+echo 04 = black        15 = CrispyOSX      26 = HMF        37 = SimpleGrey
+echo 05 = Bluemac      16 = Crystal        27 = iclover    38 = Simplicity
+echo 06 = Buttons      17 = Dark           28 = Leather    39 = Smooth    
+echo 07 = Carbon       18 = DarkBoot       29 = MacOSX     40 = Sphere    
+echo 08 = Catalina     19 = DarkBootX      30 = MavsStyle  41 = Universe  
+echo 09 = Chrome       20 = ElCapitan      31 = Mojave     42 = Woody     
+echo 10 = Circla       21 = Emerald        32 = Neon                      
+echo 11 = ClassicMacOS 22 = Glassy         33 = Oceanix                   
+echo =====================================================================
 echo.
 set /P ask= %_lang0401_% [ ? ]  = 
 if "%ask%"=="1" (set "rtheme=Apocalypse" & goto :continue)

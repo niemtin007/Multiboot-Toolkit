@@ -17,7 +17,7 @@ echo.
 echo            ^	^>^> MINI WINDOWS BOOT MANAGER EDITOR ^<^<
 echo                 --------------------------------------
 echo.
-choice /c yn /cs /n /m "*               Do you want to add new menu? (y/n) > "
+choice /c yn /cs /n /m "%_lang0800_%"
     if errorlevel 2 goto :option-2
     if errorlevel 1 call bcdautomenu.bat
 :option-2

@@ -6,7 +6,6 @@ rem >> Thank you for using Multiboot Toolkit.
 
 title %~nx0
 cd /d "%~dp0"
-set "lang=English"
 set "rtheme=Universe"
 set "gtheme=Breeze-5"
 set "bindir=%~dp0bin"
@@ -214,7 +213,7 @@ rem >> install grub2 Bootloader
 cd /d "%bindir%"
     if "%GPT%"=="GPT:" call :gdisk
     echo.
-    echo ^>^> Installing Grub2 Bootloader...
+    echo %_lang0116_%
     silentcmd grub2installer.bat MULTIBOOT
 cd /d "%bindir%\extra-modules"
     "%bindir%\7za.exe" x "grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y > nul

@@ -7,54 +7,54 @@ rem >> Thank you for using Multiboot Toolkit.
 mode con lines=100 cols=70
 
 > "%tmp%\winpemenu.txt" (
-echo.
-echo ^>^>     Example WinPE Legacy BIOS entries
-echo        ---------------------------------
-echo [ 01 ] Boot Win10PE SE          64bit
-echo [ 02 ] Boot Win8PE              64bit
-echo [ 03 ] Hiren’s BootCD PE        64bit
-echo [ 04 ] Bob.Omb’s Modified Win10PE x64
-echo [ 05 ] Boot Win10PE SE          32bit
-echo [ 06 ] Boot Win8PE              32bit
-echo [ 07 ] Boot Win7PE              32bit
-echo [ 08 ] Boot MiniXP
-echo [ 09 ] Install Win 7-8-10 with ISO method                  WIM ^& ISO
-echo [ .. ] Switch to Grub4Dos Menu
-echo [ .. ] Switch to GRUB2 Menu
-echo.
-echo ^>^>     Example WinPE UEFI entries
-echo        ---------------------------------
-echo [ 01 ] Win10PE SE                x64 UEFI
-echo [ 02 ] Win8PE                    x64 UEFI
-echo [ 03 ] Win10PE SE                x64 UEFI               DLC Boot
-echo [ 04 ] Win10PE SE                x64 UEFI               Strelec
-echo [ 05 ] Hirens BootCD PE          x64 UEFI
-echo [ 06 ] Bob.Omb Modified Win10PE  x64 UEFI
-echo [ 07 ] Setup Windows from sources                       WIM ^& ISO
-echo -------------------------------------------------------------------
-echo [ 01 ] Win10PE SE                x86 UEFI
-echo [ 02 ] Win8PE                    x86 UEFI
-echo [ 03 ] Win10PE SE                x86 UEFI               DLC Boot
-echo [ 04 ] Win10PE SE                x86 UEFI               Strelec
-echo [ 05 ] Setup Windows from sources                       WIM ^& ISO
-echo -------------------------------------------------------------------
-echo.
-echo ^>^>     New menu entry edit below:
-echo.
-echo [ .. ] Modify your new entry here
-echo.
+    echo.
+    echo %_lang0801_%
+    echo.
+    echo [ 01 ] Boot Win10PE SE          64bit
+    echo [ 02 ] Boot Win8PE              64bit
+    echo [ 03 ] Hiren’s BootCD PE        64bit
+    echo [ 04 ] Bob.Omb’s Modified Win10PE x64
+    echo [ 05 ] Boot Win10PE SE          32bit
+    echo [ 06 ] Boot Win8PE              32bit
+    echo [ 07 ] Boot Win7PE              32bit
+    echo [ 08 ] Boot MiniXP
+    echo [ 09 ] Install Win 7-8-10 with ISO method                  WIM ^& ISO
+    echo [ .. ] Switch to Grub4Dos Menu
+    echo [ .. ] Switch to GRUB2 Menu
+    echo.
+    echo %_lang0802_%
+    echo.
+    echo [ 01 ] Win10PE SE                x64 UEFI
+    echo [ 02 ] Win8PE                    x64 UEFI
+    echo [ 03 ] Win10PE SE                x64 UEFI               DLC Boot
+    echo [ 04 ] Win10PE SE                x64 UEFI               Strelec
+    echo [ 05 ] Hirens BootCD PE          x64 UEFI
+    echo [ 06 ] Bob.Omb Modified Win10PE  x64 UEFI
+    echo [ 07 ] Setup Windows from sources                       WIM ^& ISO
+    echo -------------------------------------------------------------------
+    echo [ 01 ] Win10PE SE                x86 UEFI
+    echo [ 02 ] Win8PE                    x86 UEFI
+    echo [ 03 ] Win10PE SE                x86 UEFI               DLC Boot
+    echo [ 04 ] Win10PE SE                x86 UEFI               Strelec
+    echo [ 05 ] Setup Windows from sources                       WIM ^& ISO
+    echo -------------------------------------------------------------------
+    echo.
+    echo %_lang0803_%
+    echo.
+    echo %_lang0804_%
+    echo.
 )
 
 echo.
 echo            ^	^>^> MINI WINDOWS BOOT MANAGER EDITOR ^<^<
 echo                 --------------------------------------
 echo.
-echo ^> Please edit a new menu name in the last line of the text file.
+echo %_lang0805_%
 "%tmp%\winpemenu.txt"
 
 cd /d "%ducky%\WIM"
     echo.
-    echo ^> List all WIM modules:
+    echo %_lang0806_%
     for /f "tokens=*" %%i in ('dir /a:-d /b') do (
         if exist %%~ni.wim (
             echo.
@@ -64,15 +64,15 @@ cd /d "%ducky%\WIM"
     )
     if not "%wim%"=="true" (
         echo.
-        echo.  WIM file not found^!
+        echo. %_lang0807_%
     )
 
 echo.
 echo.  ------------------------------------------------------------------
-echo.  Hint^! Press the first letter then press "Tab" to get name quickly
+echo. %_lang0808_%
 echo.  ------------------------------------------------------------------
 echo.
-set /p bootfilename= ^> Input the WIM name here: 
+set /p bootfilename= %_lang0809_%
 set "bootfile=\WIM\%bootfilename%"
 
 for /f "delims=" %%b in (%tmp%\winpemenu.txt) do set menutitle=%%b
@@ -82,19 +82,19 @@ del /f /q "%tmp%\winpemenu.txt"
 echo.
 echo %menutitle%
 echo.
-echo ^> Creating a menu for Legacy BIOS Mode...
+echo %_lang0810_%
 set "source=%ducky%\BOOT\bootmgr\B84"
 call :create.entry
 
 :: UEFI Mode
 echo.
-echo ^> Creating a menu for UEFI Mode...
+echo %_lang0811_%
 set "source=%ducky%\EFI\MICROSOFT\Boot\bcd"
 call :create.entry
 
 echo.
 echo.  ------------------------------------------------------------------
-echo.                 Continue to edit your WinPE menu                   
+echo.  %_lang0812_%
 echo.  ------------------------------------------------------------------
 echo.
 goto :eof

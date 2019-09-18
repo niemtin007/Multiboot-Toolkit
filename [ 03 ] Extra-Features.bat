@@ -48,7 +48,7 @@ echo  [ 08 ] = Update Grub2-filemanager    [ 16 ] = Update grub4dos
 echo =====================================================================
 echo.
 set "option=14" rem set default
-set /p option= ^> %_lang0905_% [ ? ] = 
+set /p option= %_lang0905_% [ ? ] = 
 cd /d "%bindir%"
 if "%offline%"=="0" goto :online
 if "%offline%"=="1" goto :offline

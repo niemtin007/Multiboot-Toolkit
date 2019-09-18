@@ -37,11 +37,12 @@ cd /d "%tmp%" & start welcome.vbs
 echo.
 echo ^  [ 1 ] = English  [ 2 ] = Vietnam  [ 3 ] = Turkish  [ 4 ] = Chinese
 echo.
-choice /c 1234 /cs /n /m "> Choose a default language [ ? ] = "
-    if errorlevel 1 set "lang=English" & set "langfm=en_US"
-    if errorlevel 2 set "lang=Vietnam" & set "langfm=vi_VN"
-    if errorlevel 3 set "lang=Turkish" & set "langfm=tr_TR"
+choice /c 1234a /cs /n /m "> Choose a default language [ ? ] = "
+    if errorlevel 1 set "lang=English"
+    if errorlevel 2 set "lang=Vietnam"
+    if errorlevel 3 set "lang=Turkish"
     if errorlevel 4 set "lang=SimplifiedChinese"
+    if errorlevel 5 set "lang=autodetect"
 taskkill /f /im wscript.exe /t /fi "status eq running">nul
 del /s /q "%tmp%\welcome.vbs" >nul
 goto :EOF

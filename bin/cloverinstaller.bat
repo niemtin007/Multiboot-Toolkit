@@ -140,7 +140,7 @@ echo %_lang0708_%
 echo %_lang0709_%
 echo ---------------------------------------------------------------------------------
 echo.
-choice /c 12 /cs /n /m "> Your option [ ? ] > "
+choice /c 12 /cs /n /m "%_lang0605_% [ ? ] > "
     if errorlevel 2 goto :MultibootOS
     if errorlevel 1 goto :MultibootUSB
 :MultibootUSB
