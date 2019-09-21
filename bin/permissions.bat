@@ -6,7 +6,7 @@ ver | findstr /i "6\.1\." > nul
 if not "%windows%"=="7" chcp 65001 > nul
 
 cd /d "%bindir%"
-    if exist "language.txt" (ren language.txt language.bat)
+    7za x "language.7z" -o"%bindir%" -aoa -y > nul
 
 rem >> code check permissions take from E2B. Thanks to Steve Si.
 
