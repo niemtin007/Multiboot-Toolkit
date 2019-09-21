@@ -18,6 +18,7 @@ cd /d "%bindir%"
     if exist "LogLogInfo.log" (del /S /Q "LogLogInfo.log" >nul)
     if exist ".wget-hsts" (del /S /Q ".wget-hsts" >nul)
     if exist "MULTIBOOT" (rd /S /Q "MULTIBOOT")
+    if exist "language.bat" (ren language.bat language.txt)
 cd /d "%tmp%\partassist"
     if "%processor_architecture%"=="x86" (
         SetupGreen32.exe -u > nul

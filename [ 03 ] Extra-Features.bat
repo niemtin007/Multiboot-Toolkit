@@ -35,16 +35,16 @@ if not exist "bin" (
 )
 cls & echo.
 echo =====================================================================
-echo                       ^> EXTRA FEATURES MENU ^<                      
+echo %_lang0819_%
 echo =====================================================================
-echo  [ 01 ] = Grub2  Theme                [ 09 ] = Fix Bootloader        
-echo  [ 02 ] = rEFInd Theme                [ 10 ] = Unhide Data Partition 
-echo  [ 03 ] = Clover Installer            [ 11 ] = Ease and Convert disk 
-echo  [ 04 ] = rEFInd Installer            [ 12 ] = NTFS Drive Protect    
-echo  [ 05 ] = Set Default Boot (UEFI)     [ 13 ] = Change Language       
-echo  [ 06 ] = Edit WinPE Boot Manager     [ 14 ] = Qemu Boot Tester      
-echo  [ 07 ] = Edit WinSetupFromUSB Menu   [ 15 ] = Update Multiboot      
-echo  [ 08 ] = Update Grub2-filemanager    [ 16 ] = Update grub4dos       
+echo  [ 01 ] = %_lang0821_% [ 09 ] = %_lang0829_%
+echo  [ 02 ] = %_lang0822_% [ 10 ] = %_lang0830_%
+echo  [ 03 ] = %_lang0823_% [ 11 ] = %_lang0831_%
+echo  [ 04 ] = %_lang0824_% [ 12 ] = %_lang0832_%
+echo  [ 05 ] = %_lang0825_% [ 13 ] = %_lang0833_%
+echo  [ 06 ] = %_lang0826_% [ 14 ] = %_lang0834_%
+echo  [ 07 ] = %_lang0827_% [ 15 ] = %_lang0835_%
+echo  [ 08 ] = %_lang0828_% [ 16 ] = %_lang0836_%
 echo =====================================================================
 echo.
 set "option=14" rem set default

@@ -21,11 +21,7 @@ cd /d "%ducky%\BOOT\"
     for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
 
 :refind
-cls & echo.
-echo ----------------------------------------------------------------------
-echo                          ^> rEFInd Installer ^<                       
-echo ----------------------------------------------------------------------
-echo.
+call :rEFIndinterface
 choice /c yn /cs /n /m "%_lang0600_% > "
     if errorlevel 2 goto :option
     if errorlevel 1 goto :download
@@ -82,12 +78,11 @@ cd /d "%tmp%"
 rem make option
 cd /d "%bindir%"
     call colortool.bat
-mode con lines=18 cols=75
 echo.
-echo ---------------------------------------------------------------------------
+echo ----------------------------------------------------------------------
 echo %_lang0603_%
 echo %_lang0604_%
-echo ---------------------------------------------------------------------------
+echo ----------------------------------------------------------------------
 echo.
 choice /c 12 /cs /n /m "%_lang0605_% [ ? ] > "
     if errorlevel 2 goto :MultibootOS
@@ -119,7 +114,7 @@ wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\ph
 :installrEFInd
 set "source=%tmp%\rEFInd"
 %partassist% /hd:%disk% /whide:%refindpart% /src:%source% /dest:EFI\BOOT
-call "%bindir%\exit.bat"
+goto :EasyUEFI
 
 :MultibootOS
 if "%structure%"=="MBR" (
@@ -138,8 +133,28 @@ cd /d "%tmp%"
 mountvol s: /d
 echo.
 echo %_lang0610_%
+timeout /t 2 >nul
+goto :EasyUEFI
+
+:EasyUEFI
 "%bindir%\7za.exe" x "%bindir%\extra-modules\EasyUEFI.7z" -o"%tmp%" -y >nul
-echo. & echo %_lang0611_% & timeout /t 300 >nul
-cd /d "%tmp%\EasyUEFI"
-    start EasyUEFIPortable.exe
-call "%bindir%\exit.bat"
+call :rEFIndinterface
+echo.
+choice /c yn /cs /n /m "%_lang0611_%"
+    if errorlevel 2 call "%bindir%\exit.bat"
+    if errorlevel 1 (
+        cd /d "%tmp%\EasyUEFI"
+            start EasyUEFIPortable.exe
+            call "%bindir%\exit.bat"
+    )
+
+
+
+:rEFIndinterface
+call "%bindir%\colortool.bat"
+echo.
+echo ----------------------------------------------------------------------
+echo                          ^> rEFInd Installer ^<                       
+echo ----------------------------------------------------------------------
+echo.
+exit /b 0

@@ -133,12 +133,11 @@ cd /d "%tmp%\gdisk"
 
 :option
 call "%bindir%\colortool.bat"
-mode con lines=20 cols=81
 echo.
-echo ---------------------------------------------------------------------------------
+echo ----------------------------------------------------------------------
 echo %_lang0708_%
 echo %_lang0709_%
-echo ---------------------------------------------------------------------------------
+echo ----------------------------------------------------------------------
 echo.
 choice /c 12 /cs /n /m "%_lang0605_% [ ? ] > "
     if errorlevel 2 goto :MultibootOS
@@ -157,9 +156,10 @@ cd /d "%bindir%"
     if not exist "%ducky%\EFI\CLOVER\" (mkdir "%ducky%\EFI\CLOVER\")
     7za x "clover.7z" -o"%ducky%\EFI\CLOVER\" -aoa -y >nul
 cd /d "%tmp%\rEFInd_themes\%rtheme%\icons"
-    xcopy "cloverx64.png" "%ducky%\EFI\CLOVER\" /s /z /y /q
-
-call "%bindir%\exit.bat"
+    xcopy "cloverx64.png" "%ducky%\EFI\CLOVER\" /s /z /y /q >nul
+echo %_lang0715_%
+timeout /t 2 >nul
+goto :EasyUEFI
 
 :MultibootOS
 if "%structure%"=="MBR" (
@@ -181,15 +181,27 @@ cd /d "%tmp%"
     )
 timeout /t 2 >nul
 mountvol s: /d
-echo. & echo %_lang0715_%
+echo.
+echo %_lang0715_%
+timeout /t 2 >nul
+goto :EasyUEFI
+
+:EasyUEFI
+cls
+call :cloverinterface
 "%bindir%\7za.exe" x "%bindir%\extra-modules\EasyUEFI.7z" -o"%tmp%" -y >nul
-echo. & echo %_lang0716_% & timeout /t 300 >nul
-cd /d "%tmp%\EasyUEFI"
-    start EasyUEFIPortable.exe
-call "%bindir%\exit.bat"
+echo.
+choice /c yn /cs /n /m "%_lang0716_%"
+    if errorlevel 2 call "%bindir%\exit.bat"
+    if errorlevel 1 (
+        cd /d "%tmp%\EasyUEFI"
+            start EasyUEFIPortable.exe
+            call "%bindir%\exit.bat"
+    )
 
 
-rem -----------------------------------------------------------------------
+
+
 :cloverinterface
 echo.
 echo ----------------------------------------------------------------------
@@ -197,4 +209,3 @@ echo                          ^> Clover Installer ^<
 echo ----------------------------------------------------------------------
 echo.
 exit /b 0
-rem -----------------------------------------------------------------------

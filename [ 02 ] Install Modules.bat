@@ -37,7 +37,9 @@ if exist "%bindir%\ISO_Extract" (
 )
 rem end move module to the source folder
 if not exist "%~dp0Modules" (mkdir "%~dp0Modules")
+
 call :check.letter X:
+
 if "%installmodules%"=="y" (
     call :check.empty
     goto :continue
@@ -51,9 +53,11 @@ echo %_lang0200_%
 echo ^   %curpath%
 echo %_lang0201_% %ducky%
 echo ======================================================================
+if not exist "%ducky%\PortableApps" call :PortableAppsPlatform
 echo.
 echo %_lang0202_%
-cd /d "%tmp%" & start modules.vbs
+cd /d "%tmp%"
+    start modules.vbs
     echo %_lang0203_% & timeout /t 300 > nul
     taskkill /f /im wscript.exe /t > nul 2>&1 & cls
     del /s /q "%tmp%\modules.vbs" >nul
@@ -301,11 +305,11 @@ cd /d "%curpath%"
         cls & echo. & echo %_lang0219_%
         "%bindir%\7za.exe" x "*portable.*" -o"%ducky%\PortableApps\" -aoa -y > nul
     )
-    if exist "*.exe" (xcopy "*.exe" "%ducky%\" /y /q)
-    if exist *.exe (move /y "*.exe" "%ducky%\PortableApps\Apps" > nul)
-    if exist %ducky%\PortableApps\Apps\start.exe (move /y %ducky%\PortableApps\Apps\start.exe %ducky% > nul)
-    if exist %ducky%\PortableApps\Apps\DLCBoot.exe (move /y %ducky%\PortableApps\Apps\DLCBoot.exe %ducky% > nul)
-    if exist %ducky%\PortableApps\Apps\DriveProtect.exe (move /y %ducky%\PortableApps\Apps\DriveProtect.exe %ducky% > nul)
+    rem if exist "*.exe" (xcopy "*.exe" "%ducky%\" /y /q)
+    rem if exist *.exe (move /y "*.exe" "%ducky%\PortableApps\Apps" > nul)
+    rem if exist %ducky%\PortableApps\Apps\start.exe (move /y %ducky%\PortableApps\Apps\start.exe %ducky% > nul)
+    rem if exist %ducky%\PortableApps\Apps\DLCBoot.exe (move /y %ducky%\PortableApps\Apps\DLCBoot.exe %ducky% > nul)
+    rem if exist %ducky%\PortableApps\Apps\DriveProtect.exe (move /y %ducky%\PortableApps\Apps\DriveProtect.exe %ducky% > nul)
     call "%bindir%\hidefile.bat"
 rem >> return iso file to modules folder
 cd /d "%bindir%"
@@ -322,7 +326,7 @@ cd /d "%ducky%\BOOT"
 cd /d "%ducky%\BOOT\grub\themes"
     for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
 cd /d "%bindir%\config"
-    call "main.bat" & call "smartfinn.bat"
+    call "main.bat"
 
 cd /d "%bindir%"
     rd /s /q Special_ISO > nul
@@ -482,6 +486,19 @@ cd /d "%tmp%"
 cd /d "%tmp%"
     wincdemu /unmount X:
     cls
+exit /b 0
+
+:PortableAppsPlatform
+echo.
+choice /c yn /cs /n /m "%_lang0223_%"
+    if errorlevel 1 set "portable=true"
+    if errorlevel 2 set "portable=false"
+    if "%portable%"=="true" (
+        cd /d "%bindir%"
+            7za x "PortableApps.7z" -o"%ducky%\" -aoa -y > nul
+            echo %_lang0012_%
+            timeout /t 2 > nul
+    )
 exit /b 0
 
 :check.partitiontable
