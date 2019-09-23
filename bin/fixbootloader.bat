@@ -35,14 +35,14 @@ cd /d "%ducky%\efi\boot"
 :grubefi
 cls
 echo.
-choice /c yn /cs /n /m "> Do you want to reinstall Grub2 Bootloader [ y/n ] > "
+choice /c yn /cs /n /m "%_lang0503_%"
     if errorlevel 2 goto :config
     if errorlevel 1 goto :grubintall
 
 :grubintall
 cd /d "%bindir%"
     echo.
-    echo ^>^> Reinstalling Grub2 Bootloader...
+    echo %_lang0504_%
     silentcmd grub2installer.bat MULTIBOOT
     rem wscript invisiblecmd.vbs grub2installer.bat MULTIBOOT
 
@@ -65,6 +65,7 @@ rem --------------------------------------------------------------------
 "%bindir%\7za.exe" x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y > nul
 cd /d "%bindir%\extra-modules"
     "%bindir%\7za.exe" x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
+    >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
 call "%bindir%\hidefile.bat"
 rem set "source=%bindir%\secureboot"
 rem if not "%secureboot%"=="n" (

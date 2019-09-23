@@ -330,7 +330,6 @@ wmic diskdrive get name, model, interfacetype, mediatype | find /i "\\.\physical
         if exist "X:\" (
             color 4f & echo. & echo %_lang0000_% & timeout /t 15 > nul
             call :assignletter.diskpart
-            exit
         )
     )
 exit /b 0
@@ -361,10 +360,11 @@ cd /d "%tmp%\diskpart"
         echo assign letter=%letter%
     )
     diskpart /s assigndriveletter.txt
-    pause > nul
+    timeout /t 1 > nul
 cd /d "%tmp%"
     if exist "diskpart" (rd /s /q "diskpart" > nul)
-    cls & mode con lines=18 cols=70
+cd /d "%~dp0"
+    call "[ 01 ] Install Multiboot.bat"
 exit /b 0
 
 :gdisk

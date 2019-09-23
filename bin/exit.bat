@@ -16,7 +16,6 @@ cd /d "%bindir%"
     mode con lines=18 cols=70
     if exist "log" (rd /s /q "log" >nul)
     if exist "LogLogInfo.log" (del /s /q "LogLogInfo.log" >nul)
-    if exist "language.bat" (del /s /q "language.bat" >nul)
     if exist ".wget-hsts" (del /s /q ".wget-hsts" >nul)
     if exist "MULTIBOOT" (rd /s /q "MULTIBOOT")
 cd /d "%tmp%\partassist"
