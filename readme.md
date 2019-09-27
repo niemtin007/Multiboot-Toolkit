@@ -39,7 +39,7 @@
 
 ## For my particular thanks to the author of the following projects:
 
- * [GRUB2 Bootloader](https://www.gnu.org/software/grubs)
+ * [GRUB2 Bootloader](https://www.gnu.org/software/grub)
  * [rEFInd Boot Manager](http://www.rodsbooks.com/refind)
  * [Clover EFI bootloader](https://clover-wiki.zetam.org)
  * [Syslinux Bootloader](http://www.syslinux.org)
