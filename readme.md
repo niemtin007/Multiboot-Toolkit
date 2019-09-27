@@ -7,14 +7,6 @@
 
 
 
-## Download
-   
-   `git clone https://github.com/niemtin007/Multiboot-Toolkit.git`
-   
-   Please do not use "Download ZIP" button on Github. It is the cause of some batch files inactive.
-   
-
-
 ## Platform
 
    Windows (7 or higher version)
