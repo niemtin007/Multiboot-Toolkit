@@ -74,12 +74,9 @@ echo ^*               Source^: %source%
 "%bindir%\bootice.exe" /edit_bcd /easymode /file="%source%"
 
 rem >> copy Configuration BCD file to the destination...
-rem if not "%virtualdisk%"=="true" (
-rem     call "%bindir%\bcdautoset.bat"
-rem )
-
-rem if not "%secureboot%"=="n" (
-rem     %partassist% /hd:%disk% /whide:%securepart% /src:%source% /dest:EFI\Microsoft\Boot
-rem )
+if not "%secureboot%"=="n" (
+    call "%bindir%\bcdautoset.bat"
+    %partassist% /hd:%disk% /whide:%securepart% /src:%source% /dest:EFI\Microsoft\Boot
+)
 
 call "%bindir%\exit.bat"

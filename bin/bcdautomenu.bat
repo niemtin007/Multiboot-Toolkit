@@ -55,7 +55,7 @@ echo %_lang0805_%
 cd /d "%ducky%\WIM"
     echo.
     echo %_lang0806_%
-    for /f "tokens=*" %%i in ('dir /a:-d /b') do (
+    for /f "tokens=*" %%i in ('dir /a:-d /b 2^>nul') do (
         if exist %%~ni.wim (
             echo.
             echo ^  %%~ni.wim
@@ -89,7 +89,11 @@ call :create.entry
 :: UEFI Mode
 echo.
 echo %_lang0811_%
-set "source=%ducky%\EFI\MICROSOFT\Boot\bcd"
+if "%secureboot%"=="n" (
+    set "source=%ducky%\EFI\Microsoft\Boot\bcd"
+) else (
+    set "source=%bindir%\secureboot\EFI\Microsoft\Boot\bcd"
+)
 call :create.entry
 
 echo.
