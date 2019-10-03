@@ -13,6 +13,7 @@ rem >> Thank you for using Multiboot Toolkit.
 rem >> clean up the trash and exit
 cd /d "%bindir%"
     call colortool.bat
+    call hidefile.bat
     mode con lines=18 cols=70
     if exist "log" (rd /s /q "log" >nul)
     if exist "LogLogInfo.log" (del /s /q "LogLogInfo.log" >nul)

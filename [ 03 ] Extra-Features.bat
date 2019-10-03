@@ -69,7 +69,7 @@ if "%option%"=="12" "%tmp%\hide.vbs" "NTFSDriveProtect.bat" & exit
 if "%option%"=="13" call "ChangeLanguage.bat"
 if "%option%"=="14" "%tmp%\hide.vbs" "QemuBootTester.bat" & exit
 if "%option%"=="15" call "UpdateMultiboot.bat"
-if "%option%"=="16" call "update-grub4dos.bat"
+if "%option%"=="16" call "sortgrub2menu.bat"
 color 4f & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :main
 
 :Offline

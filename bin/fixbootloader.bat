@@ -23,7 +23,7 @@ cd /d "%ducky%\EFI"
 if exist "%ducky%\WINSETUP" (
     goto :WINSETUP
 ) else (
-    goto :grubefi
+    goto :grub
 )
 :WINSETUP
 cd /d "%ducky%\efi\boot"
@@ -32,19 +32,38 @@ cd /d "%ducky%\efi\boot"
     xcopy /y /q /h /r %ducky%\BOOT\grub\menu.lst %ducky%\ > nul
     if exist %ducky%\winsetup.lst (del /S /Q /F %ducky%\winsetup.lst > nul)
 
-:grubefi
-cls
+:grub
+echo.
+choice /c yn /cs /n /m "%_lang0837_%"
+    if errorlevel 2 goto :grub2
+    if errorlevel 1 goto :grub4dos
+:grub4dos
+cd /d "%bindir%"
+    7za x "wget.7z" -o"%tmp%" -aoa -y >nul
+cd /d "%tmp%"
+    wget -q -O g4dtemp.log  http://grub4dos.chenall.net > nul
+    for /f "tokens=2,3 delims=/" %%a in ('type "g4dtemp.log" ^| findstr /i "<h1.*.7z" ^| find /n /v "" ^| find "[1]"') do (
+            set "ver=%%b"
+            set "sourcelink=http://dl.grub4dos.chenall.net/%%b.7z"
+    )
+    echo ^  Updating %ver%...
+    wget -q -O grub4dos.7z %sourcelink% >nul
+    del g4dtemp.log
+cd /d "%bindir%\extra-modules"
+    "%bindir%\7za.exe" e -ogrub4dos -aoa "%tmp%\grub4dos.7z" grub4dos-0.4.6a/grldr grub4dos-0.4.6a/grub.exe grub4dos0.4.6a/grldr_cd.bin >nul
+    del /s /q "%tmp%\grub4dos.7z" > nul
+    xcopy "grub4dos\grldr" "%ducky%\" /e /g /h /r /y /q > nul
+
+:grub2
 echo.
 choice /c yn /cs /n /m "%_lang0503_%"
     if errorlevel 2 goto :config
-    if errorlevel 1 goto :grubintall
-
-:grubintall
-cd /d "%bindir%"
-    echo.
-    echo %_lang0504_%
-    silentcmd grub2installer.bat MULTIBOOT
-    rem wscript invisiblecmd.vbs grub2installer.bat MULTIBOOT
+    if errorlevel 1 (
+    cd /d "%bindir%"
+        echo %_lang0504_%
+        silentcmd grub2installer.bat MULTIBOOT
+        rem wscript invisiblecmd.vbs grub2installer.bat MULTIBOOT
+    )
 
 :config
 cd /d "%ducky%\BOOT\"
@@ -75,3 +94,4 @@ rem     cd /d "%bindir%"
 rem         xcopy "secureboot" "%ducky%\" /e /g /h /r /y /q > nul
 rem )
 call "%bindir%\exit.bat"
+
