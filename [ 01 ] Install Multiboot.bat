@@ -375,67 +375,21 @@ cd /d "%bindir%"
     ) else (
         set gdisk=gdisk64.exe
     )
-
-> "%tmp%\gdisk.vbs" (
-    echo Dim Speak
-    echo Set Speak=CreateObject^("sapi.spvoice"^)
-    echo Speak.Speak "Welcome to GPT fdisk. It is an awesome tool made by Rod Smith. Visit this site: www.rodsbooks.com to meet him."
-    echo WScript.Sleep 3
-    echo Speak.Speak "To create BIOS Boot Partition, please follow the instructions:"
-    echo WScript.Sleep 2
-    echo Speak.Speak "Press n"
-    echo WScript.Sleep 2
-    echo Speak.Speak "then enter"
-    echo WScript.Sleep 2
-    echo Speak.Speak "enter"
-    echo WScript.Sleep 2
-    echo Speak.Speak "enter"
-    echo WScript.Sleep 2
-    echo Speak.Speak "enter"
-    echo WScript.Sleep 2
-    echo Speak.Speak "press"
-    echo Speak.Speak "e"
-    echo WScript.Sleep 1
-    echo Speak.Speak "f"
-    echo WScript.Sleep 1
-    echo Speak.Speak "0"
-    echo WScript.Sleep 1
-    echo Speak.Speak "2"
-    echo WScript.Sleep 2
-    echo Speak.Speak "then enter"
-    echo WScript.Sleep 2
-    echo Speak.Speak "press w"
-    echo WScript.Sleep 2
-    echo Speak.Speak "then enter"
-    echo WScript.Sleep 2
-    echo Speak.Speak "press y"
-    echo WScript.Sleep 2
-    echo Speak.Speak "enter to finish"
-)
-
-cd /d "%tmp%"
-    start gdisk.vbs
-    call "%bindir%\colortool.bat"
-    mode con lines=33 cols=70
-    echo.
-    echo ---------------------------------------------------------------------
-    echo      TO CREATE BIOS BOOT PARTITION, PLEASE FOLLOW THE INSTRUCTON:
-    echo.
-    echo                           press n then enter
-    echo                          enter ^> enter ^> enter
-    echo                          press ef02 then enter
-    echo                            press w then enter
-    echo                                 press y
-    echo                             enter to finish
-    echo ---------------------------------------------------------------------
-    echo.
-    echo.
 cd /d "%tmp%\gdisk"
-    %gdisk% \\.\physicaldrive%disk%
+    (
+        echo n
+        echo.
+        echo.
+        echo.
+        echo ef02
+        echo w
+        echo y
+    ) | %gdisk% \\.\physicaldrive%disk%
+    cls
+    echo.
+    echo %_lang0117_%
 cd /d "%bindir%"
-    taskkill /f /im wscript.exe /t > nul
-    del /s /q "%tmp%\gdisk.vbs" >nul
-    call colortool.bat
+    timeout /t 1 > nul
 exit /b 0
 
 :rEFInd.part

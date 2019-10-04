@@ -39,32 +39,3 @@ cd /d "%ducky%\BOOT\GRUB\themes\"
 cd /d "%bindir%\config"
     call "main.bat"
     call "%bindir%\exit.bat"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
