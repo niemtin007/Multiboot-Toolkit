@@ -384,7 +384,7 @@ cd /d "%tmp%\gdisk"
         echo ef02
         echo w
         echo y
-    ) | %gdisk% \\.\physicaldrive%disk%
+    ) | %gdisk% \\.\physicaldrive%disk% > nul
     cls
     echo.
     echo %_lang0117_%
