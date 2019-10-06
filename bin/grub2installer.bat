@@ -14,22 +14,25 @@ for /f %%b in ('wmic volume get driveletter^, label ^| findstr /i "%~1"') do set
     if exist "%dest%\EFI\BOOT\mark" (
         for /f "tokens=*" %%b in (%dest%\EFI\BOOT\mark) do set "author=%%b"
     )
-    if not "%author%"=="niemtin007" cls & echo. & echo ^> Finding destination... & timeout /t 2 >nul & goto :grub2begin
+    if not "%author%"=="niemtin007" (
+        cls & echo. & echo ^> Finding destination...
+        timeout /t 2 >nul & goto :grub2begin
+    )
 
 rem >> create vhd disk
 cd /d "%tmp%"
-    > "attachvhdscripts.txt" (
-    echo create vdisk file="%tmp%\Grub2.vhd" maximum=50 type=expandable
-    echo attach vdisk
-    echo create partition primary
-    echo format fs=fat32 label="Grub2"
-    echo assign letter=v
-    )
-if exist "%tmp%\Grub2.vhd" (del /S /Q "%tmp%\Grub2.vhd" >nul)
-diskpart /s attachvhdscripts.txt >nul
+    if exist "Grub2.vhd" (del /s /q "Grub2.vhd" >nul)
+    (
+        echo create vdisk file="%tmp%\Grub2.vhd" maximum=50 type=expandable
+        echo attach vdisk
+        echo create partition primary
+        echo format fs=fat32 label="Grub2"
+        echo assign letter=v
+    ) | diskpart
 rem >> install grub2 for Legacy BIOS mode
 move /y "%ducky%\BOOT\grub\*.lst" "%ducky%\BOOT" >nul
-"%tmp%\grub2\grub-install.exe" --target=i386-pc --force --boot-directory=%ducky%\BOOT \\.\physicaldrive%disk%
+cd /d "%tmp%\grub2"
+    grub-install --target=i386-pc --force --boot-directory=%ducky%\BOOT \\.\physicaldrive%disk%
 move /y "%ducky%\BOOT\*.lst" "%ducky%\BOOT\grub" >nul
 cd /d "%tmp%\grub2\i386-pc"
     copy "lnxboot.img" "%ducky%\BOOT\grub\i386-pc" /y >nul
@@ -37,8 +40,9 @@ cd /d "%ducky%\BOOT\grub\i386-pc"
     copy /b lnxboot.img+Core.img g2ldr
 
 rem >> install grub2 for EFI mode
-"%tmp%\grub2\grub-install.exe" --target=x86_64-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
-"%tmp%\grub2\grub-install.exe" --target=i386-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
+cd /d "%tmp%\grub2"
+    grub-install --target=x86_64-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
+    grub-install --target=i386-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
 
 cd /d "V:\EFI\BOOT"
     rem > copy to multiboot data partition
@@ -51,11 +55,8 @@ cd /d "V:\EFI\BOOT"
     copy "grub.efi" "%bindir%\secureboot\EFI\Boot\backup\Grub2\grub.efi" /y >nul
 
 cd /d "%tmp%"
-    > "detachvhdscripts.txt" (
-    echo select vdisk file="%tmp%\Grub2.vhd"
-    echo detach vdisk
-    )
-    diskpart /s detachvhdscripts.txt >nul
-    del /S /Q "attachvhdscripts.txt" >nul
-    del /S /Q "detachvhdscripts.txt" >nul
-    del /S /Q "Grub2.vhd" >nul
+    (
+        echo select vdisk file="%tmp%\Grub2.vhd"
+        echo detach vdisk
+    ) | diskpart
+    del /s /q "Grub2.vhd" >nul
