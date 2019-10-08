@@ -6,7 +6,7 @@ rem >> Thank you for using Multiboot Toolkit.
 
 title %~nx0
 cd /d "%~dp0"
-set "rtheme=Universe"
+set "rtheme=Leather"
 set "gtheme=Breeze-5"
 set "bindir=%~dp0bin"
 call :check.data
@@ -24,7 +24,7 @@ cd /d "%bindir%"
     7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y > nul
     7za x "refind.7z" -o"%tmp%" -aoa -y > nul
 rem list all disk drive
-%partassist% /list
+call :list.disk
 echo.
 set /p disk= %_lang0101_%
 set /a disk=%disk%+0
@@ -161,7 +161,7 @@ if not "%secureboot%"=="n" (
     set /a partition=2
 )
 call :check.partitiontable
-if "%GPT%"=="GPT:" (
+if "%GPT%"=="true" (
     %partassist% /hd:%disk% /cre /pri /size:auto /offset:%offset% /fs:ntfs /act /align /label:MULTIBOOT /letter:X
 ) else (
     %partassist% /hd:%disk% /cre /pri /size:auto /fs:ntfs /act /align /label:MULTIBOOT /letter:X
@@ -178,7 +178,7 @@ if not exist "X:\" (
 call :scan.label MULTIBOOT
 cd /d "%bindir%"
     if "%ducky%"=="X:" (
-        "%bindir%\7za.exe" x "data.7z" -o"X:\" -aoa -y
+        7za x "data.7z" -o"X:\" -aoa -y
     ) else (
         cls & echo. & color 4f
         echo %_lang0110_% & timeout /t 15 > nul & exit
@@ -192,7 +192,7 @@ cd /d "%bindir%"
     if "%virtualdisk%"=="true" (
         >"X:\BOOT\virtualdisk" (echo true)
     )
-    if "%GPT%"=="GPT:" (
+    if "%GPT%"=="true" (
         >"X:\BOOT\bootmgr\disk.gpt" (echo true)
     ) else (
         >"X:\BOOT\bootmgr\disk.mbr" (echo true)
@@ -211,7 +211,7 @@ cd /d "%bindir%"
     syslinux --force --directory /BOOT/syslinux X: X:\BOOT\syslinux\syslinux.bin
 rem >> install grub2 Bootloader
 cd /d "%bindir%"
-    if "%GPT%"=="GPT:" call :gdisk
+    if "%GPT%"=="true" call :gdisk
     echo.
     echo %_lang0116_%
     silentcmd grub2installer.bat MULTIBOOT
@@ -258,12 +258,12 @@ if "%usb%"=="true" if "%secureboot%"=="y" (
     %partassist% /hd:%disk% /setletter:0 /letter:auto
 )
 rem > for HDD/SSD
-if "%GPT%"=="GPT:" (set mpart=3) else (set mpart=2)
+if "%GPT%"=="true" (set mpart=3) else (set mpart=2)
 if not "%usb%"=="true" if "%secureboot%"=="y" (
     %partassist% /hd:%disk% /whide:0 /src:%source%
     %partassist% /hd:%disk% /setletter:%mpart% /letter:auto
 )
-if "%GPT%"=="GPT:" (set mpart=2) else (set mpart=1)
+if "%GPT%"=="true" (set mpart=2) else (set mpart=1)
 if not "%usb%"=="true" if "%secureboot%"=="n" (
     >"X:\BOOT\secureboot" (echo n)
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
@@ -311,8 +311,35 @@ if exist "%~1\EFI\BOOT\mark" if not defined author (
 )
 exit /b 0
 
+:list.disk
+setlocal
+rem find the last disk
+for /f "tokens=2" %%b in ('echo list disk ^| diskpart ^| find /i "Disk"') do (
+    set /a disk=%%b
+)
+rem check USB GPT
+echo.
+echo Loading, please wait...
+cd /d "%bindir%"
+    call checkdisktype.bat
+    if "%usb%"=="true" call :check.partitiontable
+rem list disk
+cls & %partassist% /list
+if "%usb%"=="true" if "%GPT%"=="true" (
+    if "%diskunit%"=="GB" echo   %disk%     ^| %disksize% %diskunit%         ^| %model% GPT
+    if "%diskunit%"=="MB" echo   %disk%     ^| %disksize% %diskunit%       ^| %model% GPT
+)
+endlocal
+exit /b 0
+
 :check.partitiontable
-for /f "tokens=2" %%b in ('wmic path win32_diskpartition get type ^, diskindex ^| find /i "%disk%"') do set "GPT=%%b"
+set GPT=false
+for /f "tokens=4,5,8" %%b in ('echo list disk ^| diskpart ^| find /i "Disk %disk%"') do (
+    set /a disksize=%%b
+    set    diskunit=%%c
+    if /i "%%d"=="*" set GPT=true
+)
+for /f "tokens=1 delims=\\.\" %%b in ('wmic diskdrive list brief ^| find /i "physicaldrive%disk%"') do set "model=%%b"
 exit /b 0
 
 :harddisk.warning
@@ -328,8 +355,10 @@ for /f "tokens=2 delims= " %%b in ('wmic path win32_logicaldisktopartition get a
 wmic diskdrive get name, model, interfacetype, mediatype | find /i "\\.\physicaldrive%disk%" | find /i "Fixed hard disk media" > nul
     if "%errorlevel%"=="0" (
         if exist "X:\" (
-            color 4f & echo. & echo %_lang0000_% & timeout /t 15 > nul
-            call :assignletter.diskpart
+            setlocal
+                set "skip=false"
+                call :assignletter.diskpart
+            endlocal
         )
     )
 exit /b 0
@@ -346,25 +375,18 @@ exit /b 0
 :assignletter.diskpart
 cd /d "%bindir%"
     call colortool.bat
-    mode con lines=20 cols=80
+    echo.
+    echo %_lang0123_%
 for %%p in (z y x w v u t s r q p o n m l k j i h g f e d) do (
     if not exist %%p:\nul set letter=%%p
 )
-cd /d "%tmp%"
-    if not exist "diskpart" (mkdir "diskpart")
-cd /d "%tmp%\diskpart"
-    for /f "tokens=2 delims= " %%b in ('echo list volume ^| diskpart ^| find /i "    X  "') do set "volume=%%b"
-    > "assigndriveletter.txt" (
-        echo list volume
-        echo select volume %volume%
-        echo assign letter=%letter%
-    )
-    diskpart /s assigndriveletter.txt
-    timeout /t 1 > nul
-cd /d "%tmp%"
-    if exist "diskpart" (rd /s /q "diskpart" > nul)
+for /f "tokens=2 delims= " %%b in ('echo list volume ^| diskpart ^| find /i "    X  "') do set "volume=%%b"
+(
+    echo select volume %volume%
+    echo assign letter=%letter%
+) | diskpart > nul
 cd /d "%~dp0"
-    call "[ 01 ] Install Multiboot.bat"
+    if "%skip%"=="false" call "[ 01 ] Install Multiboot.bat"
 exit /b 0
 
 :gdisk
@@ -393,6 +415,19 @@ cd /d "%bindir%"
 exit /b 0
 
 :rEFInd.part
+if "%usb%"=="true" (
+    color 0e
+    echo.
+    echo --------------------------------------------------------------------
+    echo %_lang0118_%
+    echo %_lang0119_%
+    echo --------------------------------------------------------------------
+    echo.
+    choice /c yn /cs /n /m "%_lang0120_%"
+        if errorlevel 2 goto :rEFInd.ask
+        if errorlevel 1 call :createusb.gpt
+)
+:rEFInd.ask
 call "%bindir%\colortool.bat"
 echo.
 echo 	  %_lang0006_%           %_lang0007_% (MB)
@@ -424,5 +459,77 @@ set /p esp= %_lang0010_% ^>
         echo. & echo %_lang0011_% 50MB & timeout /t 15 > nul
         goto :rEFIndsize
     )
+exit /b 0
+
+:createusb.gpt
+set ducky=X:
+rem > create multiboot data partition
+echo.
+echo %_lang0121_%
+(
+    echo select disk %disk%
+    echo clean
+    echo convert gpt
+    echo create partition primary
+    echo shrink minimum=50
+    echo format quick fs=ntfs label="MULTIBOOT"
+    echo assign letter=X
+    echo select volume X
+    echo remove letter X
+    echo create partition primary
+    echo format quick fs=fat label="ESP"
+    echo assign letter=X
+    echo exit
+) | diskpart > nul
+rem > installing data
+echo.
+echo %_lang0122_%
+cd /d "X:\"
+    mkdir "X:\ISO\"
+    mkdir "X:\EFI\BOOT\themes\"
+    >"X:\EFI\BOOT\mark" (echo niemtin007)
+cd /d "%tmp%"
+    xcopy "rEfind" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
+cd /d "%tmp%\rEfind_themes"
+    xcopy "%rtheme%" "X:\EFI\BOOT\themes\" /e /g /h /r /y /q > nul
+(
+    echo select volume X
+    echo remove letter X
+    echo select disk %disk%
+    echo select partition 1
+    echo assign letter=X
+    echo exit
+) | diskpart > nul
+cd /d "%bindir%"
+    xcopy "secureboot" "X:\" /e /g /h /r /y /q > nul
+    set "file=Autorun.inf usb.ico B64 XORBOOT"
+    set "efi=winsetupia32.efi winsetupx64.efi xorbootx64.efi"
+    7za x "data.7z" -o"X:\" %file% %efi% -r > nul
+cd /d "X:\EFI\Microsoft\Boot"
+    call "%bindir%\bcdautoset.bat" bcd
+    >"X:\BOOT\lang" (echo %lang%)
+    >"X:\EFI\BOOT\mark" (echo niemtin007)
+    >"X:\EFI\BOOT\usb.gpt" (echo USB GPT Bootable Disk)
+cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
+    copy "grubx64.png" "X:\EFI\BOOT\grubx64.png" > nul
+    copy "grubx64.png" "X:\EFI\BOOT\grubia32.png" > nul
+    copy "winsetupx64.png" "X:\EFI\BOOT\winsetupx64.png" > nul
+    copy "winsetupx64.png" "X:\EFI\BOOT\winsetupia32.png" > nul
+    copy "xorbootx64.png" "X:\EFI\BOOT\xorbootx64.png" > nul
+cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
+    xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
+cd /d "X:\"
+    mkdir APPS
+    mkdir WIM
+    call :assignletter.diskpart
+(
+    echo select disk %disk%
+    echo select partition 2
+    echo gpt attributes=0x4000000000000000
+    echo exit
+) | diskpart > nul
+cd /d "%bindir%"
+    call hidefile.bat
+    call exit.bat
 exit /b 0
 rem >> end functions

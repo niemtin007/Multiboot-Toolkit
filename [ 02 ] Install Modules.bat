@@ -181,13 +181,11 @@ cd /d "%bindir%"
     echo %_lang0209_%
     echo.
     for /f "delims=" %%f in (iso.list) do (
-        cd /d "%curpath%"
-            if exist "*%%f*.iso" (
-                if not exist "%ducky%\ISO\*%%f*.iso" (
-                    xcopy "*%%f*.iso" "%ducky%\ISO"
-                )
+        if not exist "%ducky%\ISO\*%%f*.iso" (
+            if exist "%curpath%\*%%f*.iso" (
+                robocopy "%curpath%" "%ducky%\ISO" *%%f*.iso /njh /njs /nc /ns
             )
-        cd /d "%bindir%"
+        )
     )
 
 rem >> copy Kaspersky Rescue Disk 18 to multiboot
@@ -213,15 +211,11 @@ cd /d "%bindir%"
     for /f "delims=" %%f in (wim.list) do (
         if not exist "%ducky%\WIM\%%f" (
             if not exist "%ducky%\APPS\%%f" (
-                if exist "%curpath%\%%f" (
-                    cd /d "%curpath%"
-                        if exist "%%f.wim" (
-                            xcopy "%%f.wim" "%ducky%\WIM\"
-                        )
-                        if exist "%%f.7z" (
-                            xcopy "%%f.7z" "%ducky%\WIM\"
-                        )
-                    cd /d "%bindir%"
+                if exist "%curpath%\%%f.wim" (
+                    robocopy "%curpath%" "%ducky%\WIM" %%f.wim /njh /njs /nc /ns
+                )
+                if exist "%curpath%\%%f.7z" (
+                    robocopy "%curpath%" "%ducky%\WIM" %%f.7z /njh /njs /nc /ns
                 )
             )
         )
@@ -289,7 +283,7 @@ cd /d "%bindir%"
     )
     endlocal & cls
 
-rem >> Windows Install ISO Module (ISO method
+rem >> Windows Install ISO Module (ISO method)
 cd /d "%ducky%\WIM"
     if not exist "bootisox64.wim" if not exist "bootisox86.wim" (
     cd /d "%curpath%"
@@ -299,18 +293,22 @@ cd /d "%ducky%\WIM"
         )
     )
 
+rem >> Install Grub2 File Manager
+cd /d "%curpath%"
+    if exist "grubfm-*.7z" (
+        cls & echo. & echo %_lang0224_%
+        set "list=grubfm.iso grubfmia32.efi grubfmx64.efi"
+        "%bindir%\7za.exe" x "grubfm-*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
+    )
+)
+
+
 rem >> copy all *.exe module on multiboot
 cd /d "%curpath%"
     if exist "*portable.*" (
         cls & echo. & echo %_lang0219_%
         "%bindir%\7za.exe" x "*portable.*" -o"%ducky%\PortableApps\" -aoa -y > nul
     )
-    rem if exist "*.exe" (xcopy "*.exe" "%ducky%\" /y /q)
-    rem if exist *.exe (move /y "*.exe" "%ducky%\PortableApps\Apps" > nul)
-    rem if exist %ducky%\PortableApps\Apps\start.exe (move /y %ducky%\PortableApps\Apps\start.exe %ducky% > nul)
-    rem if exist %ducky%\PortableApps\Apps\DLCBoot.exe (move /y %ducky%\PortableApps\Apps\DLCBoot.exe %ducky% > nul)
-    rem if exist %ducky%\PortableApps\Apps\DriveProtect.exe (move /y %ducky%\PortableApps\Apps\DriveProtect.exe %ducky% > nul)
-    call "%bindir%\hidefile.bat"
 rem >> return iso file to modules folder
 cd /d "%bindir%"
     if exist "ISO_Extract\*.iso" (move /y "ISO_Extract\*.iso" "%curpath%" > nul)
@@ -321,12 +319,14 @@ for /f "tokens=*" %%i in ('dir /s /a /b "%ducky%\BOOT\namelist\temp"') do set /a
     rd /s /q "%ducky%\BOOT\namelist\temp"
 
 rem >> update config for Grub2
-cd /d "%ducky%\BOOT"
-    for /f "tokens=*" %%b in (lang) do set "lang=%%b"
-cd /d "%ducky%\BOOT\grub\themes"
-    for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
-cd /d "%bindir%\config"
-    call "main.bat"
+if not exist "%ducky%\EFI\BOOT\usb.gpt" (
+    cd /d "%ducky%\BOOT"
+        for /f "tokens=*" %%b in (lang) do set "lang=%%b"
+    cd /d "%ducky%\BOOT\grub\themes"
+        for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
+    cd /d "%bindir%\config"
+        call "main.bat"
+)
 
 cd /d "%bindir%"
     rd /s /q Special_ISO > nul
@@ -368,7 +368,6 @@ exit /b 0
 :assignletter.diskpart
 cd /d "%bindir%"
     call colortool.bat
-    mode con lines=20 cols=80
 for %%p in (z y x w v u t s r q p o n m l k j i h g f e d) do (
     if not exist %%p:\nul set letter=%%p
 )
@@ -386,7 +385,6 @@ cd /d "%tmp%\diskpart"
 cd /d "%tmp%"
     if exist "diskpart" (rd /s /q "diskpart" > nul)
     cls
-    mode con lines=18 cols=70
 exit /b 0
 
 :check.empty

@@ -14,6 +14,8 @@
 * Supported Simplified Chinese language (thanks to A1ive)
 * Supported script to arrange the grub2 menu (add, remove, sort)
 * Supported script to create BIOS Boot Partition automatic
+* Supported to create UEFI GPT bootable USB disk (limited features)
+* Display copy percentage when integrating Wim, ISO modules type
   ------------------------------------------------------------------------------
 
 
