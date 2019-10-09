@@ -294,11 +294,11 @@ cd /d "%ducky%\WIM"
     )
 
 rem >> Install Grub2 File Manager
-cd /d "%curpath%"
-    if exist "grubfm-*.7z" (
+cd /d "%bindir%"
+    set "list=grubfmia32.efi grubfmx64.efi"
+    if exist "%curpath%\grubfm-*.7z" (
         cls & echo. & echo %_lang0224_%
-        set "list=grubfm.iso grubfmia32.efi grubfmx64.efi"
-        "%bindir%\7za.exe" x "grubfm-*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
+        7za x "%curpath%\grubfm-*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
     )
 )
 
@@ -355,36 +355,24 @@ for /f "tokens=2 delims= " %%b in ('wmic path win32_logicaldisktopartition get a
     if not defined disk set "match=false"
     set "disk=%disk:~1,1%"
     set /a disk=%disk%+0
-wmic diskdrive get name, model, interfacetype, mediatype | find /i "\\.\physicaldrive%disk%" | find /i "Fixed hard disk media" > nul
-    if "%errorlevel%"=="0" (
-        if exist "X:\" (
-            color 4f & echo. & echo %_lang0000_% & timeout /t 15 > nul
-            call :assignletter.diskpart
-            exit
-        )
-    )
+    if exist "X:\" call :assignletter.diskpart
 exit /b 0
 
 :assignletter.diskpart
 cd /d "%bindir%"
     call colortool.bat
+    echo.
+    echo %_lang0123_%
 for %%p in (z y x w v u t s r q p o n m l k j i h g f e d) do (
     if not exist %%p:\nul set letter=%%p
 )
-cd /d "%tmp%"
-    if not exist "diskpart" (mkdir "diskpart")
-cd /d "%tmp%\diskpart"
-    for /f "tokens=2 delims= " %%b in ('echo list volume ^| diskpart ^| find /i "    X  "') do set "volume=%%b"
-    > "assigndriveletter.txt" (
-        echo list volume
-        echo select volume %volume%
-        echo assign letter=%letter%
-    )
-    diskpart /s assigndriveletter.txt
-    pause> nul
-cd /d "%tmp%"
-    if exist "diskpart" (rd /s /q "diskpart" > nul)
-    cls
+for /f "tokens=2 delims= " %%b in ('echo list volume ^| diskpart ^| find /i "    X  "') do set "volume=%%b"
+(
+    echo select volume %volume%
+    echo assign letter=%letter%
+) | diskpart > nul
+cd /d "%~dp0"
+    call "[ 02 ] Install Modules.bat"
 exit /b 0
 
 :check.empty

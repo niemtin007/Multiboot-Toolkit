@@ -4,14 +4,10 @@ rem >> https://niemtin007.blogspot.com
 rem >> The batch file is written by niemtin007.
 rem >> Thank you for using Multiboot Toolkit.
 
-cd /d "%~dp0"
+cd /d "%bindir%"
     for /f "delims=" %%f in (hide.list) do (
-        cd /d "%ducky%\"
-        if exist "%%f" (attrib +s +h "%%f")
-        cd /d "%ducky%\ISO\"
-        if exist "%%f" (attrib +s +h "%%f")
-        cd /d "%ducky%\WIM\"
-        if exist "%%f" (attrib +s +h "%%f")
-        cd /d "%~dp0"
+        if exist "%ducky%\%%f" (attrib +s +h "%ducky%\%%f")
+        if exist "%ducky%\ISO\%%f" (attrib +s +h "%ducky%\ISO\%%f")
+        if exist "%ducky%\WIM\%%f" (attrib +s +h "%ducky%\WIM\%%f")
     )
-cls
+
