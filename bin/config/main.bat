@@ -165,31 +165,33 @@ cd /d "%ducky%\BOOT\grub"
         echo     }
         echo fi
         echo.
-        echo if [ -e "/SSTR/bootmgr" ]; then
-        echo menuentry "%_config0104_%" --class strelec {
-        echo     search --file /SSTR/bootmgr --set=root
-        echo     insmod ntldr
-        echo     ntldr /SSTR/bootmgr
-        echo }
-        echo fi
-        echo if [ -e "/SSTR/BOOTMGR" ]; then
-        echo menuentry "%_config0104_%" --class strelec {
-        echo     search --file /SSTR/BOOTMGR --set=root
-        echo     insmod ntldr
-        echo     ntldr /SSTR/BOOTMGR
-        echo }
-        echo fi
-        echo if [ -e "/DLC1/Boot/gru4.lst" ]; then
-        echo menuentry "%_config0105_% - Grub4dos" --class dlc {
-        echo     search --file /BOOT/bootdlc --set=root
-        echo     insmod ntldr
-        echo     ntldr /BOOT/bootdlc
-        echo }
-        echo fi
-        echo if [ -e "/DLC1/Boot/syslinux.bin" ]; then
-        echo menuentry "%_config0105_% - Syslinux" --class dlc {
-        echo     chainloader /DLC1/Boot/syslinux.bin
-        echo }
+        echo if [ -e "/BOOT/bootmgr/disk.mbr" ]; then
+        echo    if [ -e "/SSTR/bootmgr" ]; then
+        echo    menuentry "%_config0104_%" --class strelec {
+        echo        search --file /SSTR/bootmgr --set=root
+        echo        insmod ntldr
+        echo        ntldr /SSTR/bootmgr
+        echo    }
+        echo    fi
+        echo    if [ -e "/SSTR/BOOTMGR" ]; then
+        echo    menuentry "%_config0104_%" --class strelec {
+        echo        search --file /SSTR/BOOTMGR --set=root
+        echo        insmod ntldr
+        echo        ntldr /SSTR/BOOTMGR
+        echo    }
+        echo    fi
+        echo    if [ -e "/DLC1/Boot/gru4.lst" ]; then
+        echo    menuentry "%_config0105_% - Grub4dos" --class dlc {
+        echo        search --file /BOOT/bootdlc --set=root
+        echo        insmod ntldr
+        echo        ntldr /BOOT/bootdlc
+        echo    }
+        echo    fi
+        echo    if [ -e "/DLC1/Boot/syslinux.bin" ]; then
+        echo    menuentry "%_config0105_% - Syslinux" --class dlc {
+        echo        chainloader /DLC1/Boot/syslinux.bin
+        echo    }
+        echo    fi
         echo fi
         echo.
         echo if [ -e "/WIM/aomeibackup.wim" ]; then
@@ -285,8 +287,8 @@ cd /d "%ducky%\BOOT\grub"
         echo     }
         echo fi
         echo.
-        echo menuentry "return to main menu" --class arrow_left {
-        echo     echo "return to main menu"
+        echo menuentry "%_config0000_%" --class arrow_left {
+        echo     echo "%_config0000_%"
         echo     configfile "${prefix}/main.cfg"
         echo }
     )
@@ -394,46 +396,44 @@ exit /b 0
 :f
 :: WinSetupFromUSB Menu
 >>"main.cfg" (
-    echo if [ -e "/WINSETUP" ]; then
-    echo    if [ "${grub_platform}" == "efi" ]; then
-    echo          if [ "${grub_cpu}" == "x86_64" ]; then
-    echo             menuentry "%_config0101_%" --class winusb {
-    echo                 insmod part_%type%
-    echo                 insmod chain
-    echo                 chainloader /EFI/BOOT/winsetupx64.efi
-    echo             }
-    echo          fi
-    echo          if [ "${grub_cpu}" == "i386" ]; then
-    echo             menuentry "%_config0101_%" --class winusb { 
-    echo                 insmod part_%type%
-    echo                 insmod chain
-    echo                 chainloader /EFI/BOOT/winsetupia32.efi
-    echo             }
-    echo          fi
+    echo if [ "${grub_platform}" == "efi" ]; then
+    echo    if [ "${grub_cpu}" == "x86_64" ]; then
+    echo       menuentry "%_config0129_%" --class iso {
+    echo           insmod part_%type%
+    echo           insmod chain
+    echo           chainloader /EFI/BOOT/winsetupx64.efi
+    echo       }
     echo    fi
-    echo    if [ "${grub_platform}" == "pc" ]; then
-    echo       if [ -e "/bootmgr" ]; then
-    echo          menuentry "%_config0101_%" --class winusb {
-    echo              search --file /bootmgr --set=root
-    echo              insmod ntldr
-    echo              ntldr /bootmgr
-    echo          }
-    echo       fi
+    echo    if [ "${grub_cpu}" == "i386" ]; then
+    echo       menuentry "%_config0129_%" --class iso { 
+    echo           insmod part_%type%
+    echo           insmod chain
+    echo           chainloader /EFI/BOOT/winsetupia32.efi
+    echo       }
     echo    fi
     echo fi
     echo.
     echo if [ "${grub_platform}" == "pc" ]; then
-    echo    if [ -e "/BOOT/grub/winsetup.lst" ]; then
-    echo       menuentry "%_config0129_%" --class iso {
-    echo           search --file /BOOT/bootmgr/bootisowim --set=root
-    echo           insmod ntldr
-    echo           ntldr /BOOT/bootmgr/bootisowim
-    echo       }
-    echo       menuentry "%_config0130_%" --class icon-xp {
-    echo           set opts='find --set-root --ignore-floppies --ignore-cd /BOOT/grub/winsetup.lst;
-    echo                     configfile /BOOT/grub/winsetup.lst'
-    echo           linux /BOOT/grub/grub.exe --config-file=${opts}
-    echo       }
+    echo    if [ -e "/BOOT/bootmgr/disk.mbr" ]; then
+    echo        if [ -e "/bootmgr" ]; then
+    echo           menuentry "%_config0101_%" --class winusb {
+    echo               search --file /bootmgr --set=root
+    echo               insmod ntldr
+    echo               ntldr /bootmgr
+    echo           }
+    echo        fi
+    echo           menuentry "%_config0129_%" --class iso {
+    echo               search --file /BOOT/bootmgr/bootisowim --set=root
+    echo               insmod ntldr
+    echo               ntldr /BOOT/bootmgr/bootisowim
+    echo           }
+    echo        if [ -e "/BOOT/grub/winsetup.lst" ]; then
+    echo           menuentry "%_config0130_%" --class icon-xp {
+    echo               set opts='find --set-root --ignore-floppies --ignore-cd /BOOT/grub/winsetup.lst;
+    echo                         configfile /BOOT/grub/winsetup.lst'
+    echo               linux /BOOT/grub/grub.exe --config-file=${opts}
+    echo           }
+    echo        fi
     echo    fi
     echo fi
     echo.
@@ -506,11 +506,13 @@ exit /b 0
     echo    }
     echo fi
     echo if [ "${grub_platform}" == "pc" ]; then
-    echo    menuentry "%_config0127_%" --class win {
-    echo        search --file /BOOT/HDD --set=root/BOOT
-    echo        insmod ntldr
-    echo        ntldr /BOOT/HDD
-    echo    }
+    echo    if [ -e "/BOOT/bootmgr/disk.mbr" ]; then
+    echo       menuentry "%_config0127_%" --class win {
+    echo           search --file /BOOT/HDD --set=root/BOOT
+    echo           insmod ntldr
+    echo           ntldr /BOOT/HDD
+    echo       }
+    echo    fi
     echo fi
     echo.
 )
