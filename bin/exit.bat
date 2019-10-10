@@ -13,8 +13,11 @@ rem >> Thank you for using Multiboot Toolkit.
 rem >> clean up the trash and exit
 cd /d "%bindir%"
     call colortool.bat
-    call hidefile.bat
-    mode con lines=18 cols=70
+    for /f "delims=" %%f in (hide.list) do (
+        if exist "%ducky%\%%f" (attrib +s +h "%ducky%\%%f")
+        if exist "%ducky%\ISO\%%f" (attrib +s +h "%ducky%\ISO\%%f")
+        if exist "%ducky%\WIM\%%f" (attrib +s +h "%ducky%\WIM\%%f")
+    )
     if exist "log" (rd /s /q "log" >nul)
     if exist "LogLogInfo.log" (del /s /q "LogLogInfo.log" >nul)
     if exist ".wget-hsts" (del /s /q ".wget-hsts" >nul)

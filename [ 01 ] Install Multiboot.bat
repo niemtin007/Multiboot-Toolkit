@@ -7,7 +7,7 @@ rem >> Thank you for using Multiboot Toolkit.
 title %~nx0
 cd /d "%~dp0"
 set "rtheme=Leather"
-set "gtheme=Breeze-5"
+set "gtheme=Monochrome"
 set "bindir=%~dp0bin"
 call :check.data
 rem >> check device
@@ -19,8 +19,7 @@ call :check.letter X:
 rem begin preparing file
 cd /d "%tmp%"
     if not exist rEFInd_themes (mkdir rEFInd_themes)
-cd /d "%bindir%"
-    call colortool.bat
+call :colortool
     7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y > nul
     7za x "refind.7z" -o"%tmp%" -aoa -y > nul
 rem list all disk drive
@@ -29,7 +28,7 @@ echo.
 set /p disk= %_lang0101_%
 set /a disk=%disk%+0
 cd /d "%bindir%"
-    call checkdisktype.bat
+    call :checkdisktype
     if "%virtualdisk%"=="true"  call :rEFInd.part & goto :External
     if "%harddisk%"=="true"     call :harddisk.warning & goto :Select
     if "%usb%"=="true"          call :rEFInd.part & goto :Removable
@@ -43,6 +42,7 @@ rem need use bootice to rebuild MBR disk partition. It's important for flash dri
 %bootice% /device=%disk% /partitions /repartition /usb-hdd /fstype=fat32 /quiet
 %partassist% /hd:%disk% /del:all
 rem >> create rEFInd partition
+call :colortool
 %partassist% /hd:%disk% /cre /pri /size:%esp% /end /fs:fat32 /align /label:rEFInd /letter:X
 if not exist "X:\" (
     %partassist% /hd:%disk% /setletter:0 /letter:X
@@ -58,6 +58,7 @@ cd /d "%tmp%\rEfind_themes"
 %partassist% /hd:%disk% /hide:0
 if "%secureboot%"=="n" goto :usbmultibootdata
 rem >> create ESP partition
+call :colortool
 %partassist% /hd:%disk% /cre /pri /size:50 /fs:fat32 /label:M-ESP /letter:X
 %partassist% /move:X /right:auto /align
 if not exist "X:\" (
@@ -71,6 +72,7 @@ cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
 %partassist% /hd:%disk% /hide:0
 rem >> create Multiboot data partition
 :usbmultibootdata
+call :colortool
 %partassist% /hd:%disk% /cre /pri /size:auto /fs:ntfs /act /align /label:MULTIBOOT /letter:X
 if not exist "X:\" (
     %partassist% /hd:%disk% /setletter:0 /letter:X
@@ -79,11 +81,11 @@ goto :extractdata
 
 rem >> prepare partitions space for External hard disk media
 :External
-echo.
 call :count.partition
     if not defined part goto :Setup rem the disk is an unallocated
     set /a "part=%part%+0"
     set /a GB=0
+    echo.
     set /p GB= %_lang0106_%
     set /a GB=%GB%+0
     rem check the character of the number
@@ -102,8 +104,7 @@ call :count.partition
     )
     goto :continue
 :delete
-cd /d "%bindir%"
-    call colortool.bat
+call :colortool
 call :count.partition
     if "%part%"=="%deletedpart%" goto :continue rem all partition was deleted
 call :unhide.partition 0
@@ -121,8 +122,8 @@ if exist "X:\" (chkdsk X: /f)
 :Setup
 if "%secureboot%"=="y" (goto :esp1) else (goto :esp2)
 :esp1
-cd /d "%bindir%" & call colortool.bat
 rem >> Create EFI System Partition 1
+call :colortool
 %partassist% /hd:%disk% /cre /pri /size:50 /fs:fat32 /act /align /label:M-ESP /letter:X
 if not exist "X:\" (
     %partassist% /hd:%disk% /setletter:0 /letter:X
@@ -134,8 +135,8 @@ cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
     xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
 %partassist% /hd:%disk% /hide:0
 :esp2
-cd /d "%bindir%" & call colortool.bat
 rem >> Create EFI System Partition 2
+call :colortool
 %partassist% /hd:%disk% /cre /pri /size:%esp% /fs:fat32 /act /align /label:rEFInd /letter:X
 if "%secureboot%"=="n" (set /a partition=0) else (set /a partition=1)
 :recheckesp2
@@ -153,6 +154,7 @@ cd /d "%tmp%\rEfind_themes"
     xcopy "%rtheme%" "X:\EFI\BOOT\themes\" /e /g /h /r /y /q > nul
 %partassist% /hd:%disk% /hide:%partition%
 rem >> Create Multiboot Data Partition
+call :colortool
 if not "%secureboot%"=="n" (
     set /a offset=%esp%+58
     set /a partition=1
@@ -168,8 +170,7 @@ if "%GPT%"=="true" (
 )
 rem >> Installing Multiboot Data
 :recheckmultiboot
-cd /d "%bindir%"
-    call colortool.bat
+call :colortool
 if not exist "X:\" (
     call :unhide.partition %partition%
     goto :recheckmultiboot
@@ -203,14 +204,13 @@ cd /d "%bindir%\secureboot\BOOT"
     xcopy "boot.sdi" "X:\BOOT\" /e /g /h /r /y /q > nul
 cd /d "%bindir%\extra-modules"
     xcopy "grub4dos\grldr" "X:\" /e /g /h /r /y /q >nul
-    call "%bindir%\hidefile.bat"
 cd /d "%bindir%"
     7za x "wincdemu.7z" -o"X:\ISO\" -aoa -y >nul
 rem >> install Syslinux Bootloader
 cd /d "%bindir%"
     syslinux --force --directory /BOOT/syslinux X: X:\BOOT\syslinux\syslinux.bin
 rem >> install grub2 Bootloader
-cd /d "%bindir%"
+call :colortool
     if "%GPT%"=="true" call :gdisk
     echo.
     echo %_lang0116_%
@@ -242,6 +242,7 @@ cd /d "%bindir%\config"
 cd /d "%bindir%\secureboot\EFI\Microsoft\Boot"
     call "%bindir%\bcdautoset.bat" bcd
 rem >> install secure boot file
+call :colortool
 set "source=%bindir%\secureboot"
 rem > for USB
 if "%usb%"=="true" if "%secureboot%"=="n" (
@@ -282,16 +283,153 @@ call "%bindir%\exit.bat"
 
 rem >> begin functions
 :check.data
-if not exist "bin" (
-    color 4f & echo.
-    echo ^>^> Warning: Data Loss
-    timeout /t 15 > nul & exit
-) else (
-    call "%bindir%\permissions.bat"
-    call "%bindir%\license.bat"
+    if not exist "bin" (
+        color 4f & echo.
+        echo ^>^> Warning: Data Loss
+        timeout /t 15 > nul & exit
+    ) else (
+        call :permissions
+        call :license
+    )
+exit /b 0
+
+:permissions
+    call :colortool
+    
+    ver | findstr /i "6\.1\." > nul
+        if %errorlevel% equ 0 set "windows=7"
+        if not "%windows%"=="7" chcp 65001 > nul
+    
+    set randname=%random%%random%%random%%random%%random%
+    md "%windir%\%randname%" 2>nul
+    if %errorlevel%==0 goto :permissions.end
+    if %errorlevel%==1 (
+        echo.& echo ^>^> Please use right click - Run as administrator
+        color 4f & timeout /t 15 >nul
+        Set admin=fail
+        goto permissions.end
+    )
+    goto :permissions
+    
+    :permissions.end
+    rd "%windir%\%randname%" 2>nul
+    if "%admin%"=="fail" exit
+exit /b 0
+
+:license
+call :colortool
+for /f "tokens=*" %%b in (version) do set /a "cur_version=%%b"
+    set /a cur_a=%cur_version:~0,1%
+    set /a cur_b=%cur_version:~1,1%
+    set /a cur_c=%cur_version:~2,1%
+cd /d "%tmp%"
+    > welcome.vbs (
+        echo Dim Message, Speak
+        echo Set Speak=CreateObject^("sapi.spvoice"^)
+        echo Speak.Speak "Welcome to Multiboot Toolkit %cur_a%.%cur_b%.%cur_c%"
+        echo WScript.Sleep 1
+        echo Speak.Speak "Multiboot Toolkit is the open-source software."
+        echo Speak.Speak "It's released under General Public Licence."
+        echo Speak.Speak "You can use, modify and redistribute if you wish."
+        echo Speak.Speak "Choose a default language to continue..."
+    )
+    echo ^  __  __      _ _   _ _              _     _____         _ _   _ _   
+    echo ^ ^|  \/  ^|_  _^| ^| ^|_^(_^) ^|__  ___  ___^| ^|_  ^|_   _^|__  ___^| ^| ^|_^(_^) ^|_ 
+    echo ^ ^| ^|\/^| ^| ^|^| ^| ^|  _^| ^| '_ \/ _ \/ _ \  _^|   ^| ^|/ _ \/ _ \ ^| / / ^|  _^|
+    echo ^ ^|_^|  ^|_^|\_,_^|_^|\__^|_^|_.__/\___/\___/\__^|   ^|_^|\___/\___/_^|_\_\_^|\__^|
+    echo ^                                                                %cur_a%.%cur_b%.%cur_c%
+    echo.
+    echo ^  License:
+    echo ^  Multiboot Toolkit is the open-source software. It's released under
+    echo ^  General Public Licence ^(GPL^). You can use, modify and redistribute
+    echo ^  if you wish. You can download from my blog niemtin007.blogspot.com
+    echo.
+    echo ^  ------------------------------------------------------------------
+    echo ^  Thanks to Ha Son, Tayfun Akkoyun, anhdv, lethimaivi, Hoang Duch2..
+    echo ^  ------------------------------------------------------------------
+    start welcome.vbs
+    echo.
+    echo ^  [ 1 ] = English  [ 2 ] = Vietnam  [ 3 ] = Turkish  [ 4 ] = Chinese
+    echo.
+    choice /c 1234a /cs /n /m "> Choose a default language [ ? ] = "
+        if errorlevel 1 set "lang=English"
+        if errorlevel 2 set "lang=Vietnam"
+        if errorlevel 3 set "lang=Turkish"
+        if errorlevel 4 set "lang=SimplifiedChinese"
+        if errorlevel 5 set "lang=autodetect"
+    taskkill /f /im wscript.exe /t /fi "status eq running">nul
+    del /s /q welcome.vbs >nul
     call "%bindir%\language.bat"
-    call "%bindir%\partassist.bat"
-)
+    call :partassist.init
+exit /b 0
+
+:partassist.init
+    cls
+    echo.
+    cd /d "%bindir%"
+        echo ^>^> Loading, Please wait...
+        7za x "partassist.7z" -o"%tmp%" -aos -y > nul
+        set partassist="%tmp%\partassist\partassist.exe"
+        set bootice="%bindir%\bootice.exe"
+    cd /d "%tmp%\partassist"
+        if "%processor_architecture%"=="x86" (
+            SetupGreen32.exe -i > nul
+            LoadDrv_Win32.exe -i > nul
+        ) else (
+            SetupGreen64.exe -i > nul
+            LoadDrv_x64.exe -i > nul
+        )
+    >"%tmp%\partassist\cfg.ini" (
+        echo [Language]
+        echo LANGUAGE=lang\%langpa%.txt;%langcode%
+        echo LANGCHANGED=1
+        echo [Version]
+        echo Version=4
+        echo [Product Version]
+        echo v=2
+        echo Lang=%langpa%
+        echo [CONFIG]
+        echo COUNT=2
+        echo KEY=AOPR-21ROI-6Y7PL-Q4118
+        echo [PA]
+        echo POPUPMESSAGE=1
+    )
+    > "%tmp%\partassist\winpeshl.ini" (
+        echo [LaunchApp]
+        echo AppPath=%tmp%\partassist\PartAssist.exe
+    )
+    cls
+exit /b 0
+
+:colortool
+    cls
+    mode con lines=18 cols=70
+    cd /d "%bindir%"
+        set /a num=%random% %%114 +1
+        set "itermcolors=%num%.itermcolors"
+        if "%color%"=="true" goto :skipcheck.color
+        7za x "colortool.7z" -o"%tmp%" -aos -y > nul
+    rem Check for DotNet 4.0 Install
+    cd /d "%tmp%\colortool"
+        set "checkdotnet=%temp%\Output.log"
+        reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP" /s | find "v4" > %checkdotnet%
+            if %errorlevel% equ 0 (
+                colortool -b -q %itermcolors%
+                set "color=true"
+                goto :exit.color
+            ) else (
+                set "color=false"
+                goto :exit.color
+            )
+    
+    :skipcheck.color
+    cd /d "%tmp%\colortool"
+        colortool -b -q %itermcolors%
+    
+    :exit.color
+    cls
+    cd /d "%bindir%"
+    mode con lines=18 cols=70
 exit /b 0
 
 :scan.label
@@ -300,46 +438,70 @@ for /f %%b in ('wmic volume get driveletter^, label ^| findstr /i "%~1"') do set
 exit /b 0
 
 :check.author
-if exist "%~1\EFI\BOOT\mark" (
-    for /f "tokens=*" %%b in (%~1\EFI\BOOT\mark) do set "author=%%b"
-)
-if "%author%"=="niemtin007" set "installed=true"
-if "%offline%"=="true" goto :Select
-if exist "%~1\EFI\BOOT\mark" if not defined author (
-    cls & echo. & color 4f
-    echo %_lang0109_% & timeout /t 15 > nul & exit
-)
+    if exist "%~1\EFI\BOOT\mark" (
+        for /f "tokens=*" %%b in (%~1\EFI\BOOT\mark) do set "author=%%b"
+    )
+    if "%author%"=="niemtin007" set "installed=true"
+    if "%offline%"=="true" goto :Select
+    if exist "%~1\EFI\BOOT\mark" if not defined author (
+        cls & echo. & color 4f
+        echo %_lang0109_% & timeout /t 15 > nul & exit
+    )
 exit /b 0
 
 :list.disk
 setlocal
-rem find the last disk
-for /f "tokens=2" %%b in ('echo list disk ^| diskpart ^| find /i "Disk"') do (
-    set /a disk=%%b
-)
-rem check USB GPT
-echo.
-echo Loading, please wait...
-cd /d "%bindir%"
-    call checkdisktype.bat
-    if "%usb%"=="true" call :check.partitiontable
-rem list disk
-cls & %partassist% /list
-if "%usb%"=="true" if "%GPT%"=="true" (
-    if "%diskunit%"=="GB" echo   %disk%     ^| %disksize% %diskunit%         ^| %model% GPT
-    if "%diskunit%"=="MB" echo   %disk%     ^| %disksize% %diskunit%       ^| %model% GPT
-)
+    rem find the last disk
+    for /f "tokens=2" %%b in ('echo list disk ^| diskpart ^| find /i "Disk"') do (
+        set /a disk=%%b
+    )
+    rem check USB GPT
+    echo.
+    echo Loading, please wait...
+    cd /d "%bindir%"
+        call :checkdisktype
+        if "%usb%"=="true" call :check.partitiontable
+    rem list disk
+    cls & %partassist% /list
+    if "%usb%"=="true" if "%GPT%"=="true" (
+        if "%diskunit%"=="GB" echo   %disk%     ^| %disksize% %diskunit%         ^| %model% GPT
+        if "%diskunit%"=="MB" echo   %disk%     ^| %disksize% %diskunit%       ^| %model% GPT
+    )
 endlocal
 exit /b 0
 
+:checkdisktype
+    :: reset all disk variable
+    set "virtualdisk=false"
+    set "harddisk=false"
+    set "usb=false"
+    set "externaldisk=false"
+    :: check.virtualdisk
+    wmic diskdrive get name, model | find /i "Msft Virtual Disk SCSI Disk Device" | find /i "\\.\physicaldrive%disk%" > nul
+        if not errorlevel 1 set "virtualdisk=true"
+    wmic diskdrive get name, model | find /i "Microsoft Virtual Disk" | find /i "\\.\physicaldrive%disk%" > nul
+        if not errorlevel 1 set "virtualdisk=true"
+    wmic diskdrive get name, model | find /i "Microsoft Sanal Diski" | find /i "\\.\physicaldrive%disk%" > nul
+        if not errorlevel 1 set "virtualdisk=true"
+    :: check.harddisk
+    wmic diskdrive get name, mediatype | find /i "Fixed hard disk media" | find /i "\\.\physicaldrive%disk%" > nul
+        if not errorlevel 1 set "harddisk=true"
+    :: check.usbdisk
+    wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" > nul
+        if not errorlevel 1 set "usb=true"
+    :: check.externaldisk
+    wmic diskdrive get name, mediatype | find /i "External hard disk media" | find /i "\\.\physicaldrive%disk%" > nul
+        if not errorlevel 1 set "externaldisk=true"
+exit /b 0
+
 :check.partitiontable
-set GPT=false
-for /f "tokens=4,5,8" %%b in ('echo list disk ^| diskpart ^| find /i "Disk %disk%"') do (
-    set /a disksize=%%b
-    set    diskunit=%%c
-    if /i "%%d"=="*" set GPT=true
-)
-for /f "tokens=1 delims=\\.\" %%b in ('wmic diskdrive list brief ^| find /i "physicaldrive%disk%"') do set "model=%%b"
+    set GPT=false
+    for /f "tokens=4,5,8" %%b in ('echo list disk ^| diskpart ^| find /i "Disk %disk%"') do (
+        set /a disksize=%%b
+        set    diskunit=%%c
+        if /i "%%d"=="*" set GPT=true
+    )
+    for /f "tokens=1 delims=\\.\" %%b in ('wmic diskdrive list brief ^| find /i "physicaldrive%disk%"') do set "model=%%b"
 exit /b 0
 
 :harddisk.warning
@@ -364,29 +526,28 @@ wmic diskdrive get name, model, interfacetype, mediatype | find /i "\\.\physical
 exit /b 0
 
 :count.partition
-for /f "tokens=3 delims=#" %%b in ('wmic partition get name ^| findstr /i "#%disk%,"') do set "part=%%b"
+    for /f "tokens=3 delims=#" %%b in ('wmic partition get name ^| findstr /i "#%disk%,"') do set "part=%%b"
 exit /b 0
 
 :unhide.partition
-%partassist% /hd:%disk% /unhide:%~1
-%partassist% /hd:%disk% /setletter:%~1 /letter:X
+    %partassist% /hd:%disk% /unhide:%~1
+    %partassist% /hd:%disk% /setletter:%~1 /letter:X
 exit /b 0
 
 :assignletter.diskpart
-cd /d "%bindir%"
-    call colortool.bat
+    call :colortool
     echo.
     echo %_lang0123_%
-for %%p in (z y x w v u t s r q p o n m l k j i h g f e d) do (
-    if not exist %%p:\nul set letter=%%p
-)
-for /f "tokens=2 delims= " %%b in ('echo list volume ^| diskpart ^| find /i "    X  "') do set "volume=%%b"
-(
-    echo select volume %volume%
-    echo assign letter=%letter%
-) | diskpart > nul
-cd /d "%~dp0"
-    if "%skip%"=="false" call "[ 01 ] Install Multiboot.bat"
+    for %%p in (z y x w v u t s r q p o n m l k j i h g f e d) do (
+        if not exist %%p:\nul set letter=%%p
+    )
+    for /f "tokens=2 delims= " %%b in ('echo list volume ^| diskpart ^| find /i "    X  "') do set "volume=%%b"
+    (
+        echo select volume %volume%
+        echo assign letter=%letter%
+    ) | diskpart > nul
+    cd /d "%~dp0"
+        if "%skip%"=="false" call "[ 01 ] Install Multiboot.bat"
 exit /b 0
 
 :gdisk
@@ -415,121 +576,120 @@ cd /d "%bindir%"
 exit /b 0
 
 :rEFInd.part
-if "%usb%"=="true" (
-    color 0e
-    echo.
-    echo --------------------------------------------------------------------
-    echo %_lang0118_%
-    echo %_lang0119_%
-    echo --------------------------------------------------------------------
-    echo.
-    choice /c yn /cs /n /m "%_lang0120_%"
-        if errorlevel 2 goto :rEFInd.ask
-        if errorlevel 1 call :createusb.gpt
-)
-:rEFInd.ask
-call "%bindir%\colortool.bat"
-echo.
-echo 	  %_lang0006_%           %_lang0007_% (MB)
-echo 	==========================         ===============
-echo 	^* Bitdefender                                  900
-echo 	^* Fedora                                      1800
-echo 	^* Network Security Toolkit                    3400
-echo 	==========================         ===============
-echo 	^* %_lang0008_%                                 6100
-echo 	+++++++++++++++++++++++++++++++++++++++++++++++++++
-echo 	%_lang0009_%=50MB)
-echo.
-choice /c yn /cs /n /m "%_lang0114_%"
-    if errorlevel 1 set "installmodules=y"
-    if errorlevel 2 set "installmodules=n"
-echo.
-choice /c yn /cs /n /m "%_lang0115_%"
-    if errorlevel 1 set "secureboot=y"
-    if errorlevel 2 set "secureboot=n"
-:rEFIndsize
-echo.
-set esp=50
-set /p esp= %_lang0010_% ^> 
-    rem check the character of the number
-    echo %esp%| findstr /r "^[1-9][0-9]*$">nul
-    if not "%errorlevel%"=="0" goto :rEFIndsize
-    rem set the minimum size of the partition
-    if %esp% LSS 50 (
-        echo. & echo %_lang0011_% 50MB & timeout /t 15 > nul
-        goto :rEFIndsize
+    if "%usb%"=="true" (
+        color 0e
+        echo.
+        echo --------------------------------------------------------------------
+        echo %_lang0118_%
+        echo %_lang0119_%
+        echo --------------------------------------------------------------------
+        echo.
+        choice /c yn /cs /n /m "%_lang0120_%"
+            if errorlevel 2 goto :rEFInd.ask
+            if errorlevel 1 call :createusb.gpt
     )
+    :rEFInd.ask
+    call :colortool
+    echo.
+    echo 	  %_lang0006_%           %_lang0007_% (MB)
+    echo 	==========================         ===============
+    echo 	^* Bitdefender                                  900
+    echo 	^* Fedora                                      1800
+    echo 	^* Network Security Toolkit                    3400
+    echo 	==========================         ===============
+    echo 	^* %_lang0008_%                                 6100
+    echo 	+++++++++++++++++++++++++++++++++++++++++++++++++++
+    echo 	%_lang0009_%=50MB)
+    echo.
+    choice /c yn /cs /n /m "%_lang0114_%"
+        if errorlevel 1 set "installmodules=y"
+        if errorlevel 2 set "installmodules=n"
+    echo.
+    choice /c yn /cs /n /m "%_lang0115_%"
+        if errorlevel 1 set "secureboot=y"
+        if errorlevel 2 set "secureboot=n"
+    :rEFIndsize
+    echo.
+    set esp=50
+    set /p esp= %_lang0010_% ^> 
+        rem check the character of the number
+        echo %esp%| findstr /r "^[1-9][0-9]*$">nul
+        if not "%errorlevel%"=="0" goto :rEFIndsize
+        rem set the minimum size of the partition
+        if %esp% LSS 50 (
+            echo. & echo %_lang0011_% 50MB & timeout /t 15 > nul
+            goto :rEFIndsize
+        )
 exit /b 0
 
 :createusb.gpt
-set ducky=X:
-rem > create multiboot data partition
-echo.
-echo %_lang0121_%
-(
-    echo select disk %disk%
-    echo clean
-    echo convert gpt
-    echo create partition primary
-    echo shrink minimum=50
-    echo format quick fs=ntfs label="MULTIBOOT"
-    echo assign letter=X
-    echo select volume X
-    echo remove letter X
-    echo create partition primary
-    echo format quick fs=fat label="ESP"
-    echo assign letter=X
-    echo exit
-) | diskpart > nul
-rem > installing data
-echo.
-echo %_lang0122_%
-cd /d "X:\"
-    mkdir "X:\ISO\"
-    mkdir "X:\EFI\BOOT\themes\"
-    >"X:\EFI\BOOT\mark" (echo niemtin007)
-cd /d "%tmp%"
-    xcopy "rEfind" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
-cd /d "%tmp%\rEfind_themes"
-    xcopy "%rtheme%" "X:\EFI\BOOT\themes\" /e /g /h /r /y /q > nul
-(
-    echo select volume X
-    echo remove letter X
-    echo select disk %disk%
-    echo select partition 1
-    echo assign letter=X
-    echo exit
-) | diskpart > nul
-cd /d "%bindir%"
-    xcopy "secureboot" "X:\" /e /g /h /r /y /q > nul
-    set "file=Autorun.inf usb.ico B64 XORBOOT"
-    set "efi=winsetupia32.efi winsetupx64.efi xorbootx64.efi"
-    7za x "data.7z" -o"X:\" %file% %efi% -r > nul
-cd /d "X:\EFI\Microsoft\Boot"
-    call "%bindir%\bcdautoset.bat" bcd
-    >"X:\BOOT\lang" (echo %lang%)
-    >"X:\EFI\BOOT\mark" (echo niemtin007)
-    >"X:\EFI\BOOT\usb.gpt" (echo USB GPT Bootable Disk)
-cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-    copy "grubx64.png" "X:\EFI\BOOT\grubx64.png" > nul
-    copy "grubx64.png" "X:\EFI\BOOT\grubia32.png" > nul
-    copy "winsetupx64.png" "X:\EFI\BOOT\winsetupx64.png" > nul
-    copy "winsetupx64.png" "X:\EFI\BOOT\winsetupia32.png" > nul
-    copy "xorbootx64.png" "X:\EFI\BOOT\xorbootx64.png" > nul
-cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-    xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
-cd /d "X:\"
-    mkdir APPS
-    mkdir WIM
-    call :assignletter.diskpart
-(
-    echo select disk %disk%
-    echo select partition 2
-    echo gpt attributes=0x4000000000000000
-    echo exit
-) | diskpart > nul
-cd /d "%bindir%"
-    call hidefile.bat
-    call exit.bat
+    set ducky=X:
+    rem > create multiboot data partition
+    echo.
+    echo %_lang0121_%
+    (
+        echo select disk %disk%
+        echo clean
+        echo convert gpt
+        echo create partition primary
+        echo shrink minimum=50
+        echo format quick fs=ntfs label="MULTIBOOT"
+        echo assign letter=X
+        echo select volume X
+        echo remove letter X
+        echo create partition primary
+        echo format quick fs=fat label="ESP"
+        echo assign letter=X
+        echo exit
+    ) | diskpart > nul
+    rem > installing data
+    echo.
+    echo %_lang0122_%
+    cd /d "X:\"
+        mkdir "X:\ISO\"
+        mkdir "X:\EFI\BOOT\themes\"
+        >"X:\EFI\BOOT\mark" (echo niemtin007)
+    cd /d "%tmp%"
+        xcopy "rEfind" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
+    cd /d "%tmp%\rEfind_themes"
+        xcopy "%rtheme%" "X:\EFI\BOOT\themes\" /e /g /h /r /y /q > nul
+    (
+        echo select volume X
+        echo remove letter X
+        echo select disk %disk%
+        echo select partition 1
+        echo assign letter=X
+        echo exit
+    ) | diskpart > nul
+    cd /d "%bindir%"
+        xcopy "secureboot" "X:\" /e /g /h /r /y /q > nul
+        set "file=Autorun.inf usb.ico B64 XORBOOT"
+        set "efi=winsetupia32.efi winsetupx64.efi xorbootx64.efi"
+        7za x "data.7z" -o"X:\" %file% %efi% -r > nul
+    cd /d "X:\EFI\Microsoft\Boot"
+        call "%bindir%\bcdautoset.bat" bcd
+        >"X:\BOOT\lang" (echo %lang%)
+        >"X:\EFI\BOOT\mark" (echo niemtin007)
+        >"X:\EFI\BOOT\usb.gpt" (echo USB GPT Bootable Disk)
+    cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
+        copy "grubx64.png" "X:\EFI\BOOT\grubx64.png" > nul
+        copy "grubx64.png" "X:\EFI\BOOT\grubia32.png" > nul
+        copy "winsetupx64.png" "X:\EFI\BOOT\winsetupx64.png" > nul
+        copy "winsetupx64.png" "X:\EFI\BOOT\winsetupia32.png" > nul
+        copy "xorbootx64.png" "X:\EFI\BOOT\xorbootx64.png" > nul
+    cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
+        xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
+    cd /d "X:\"
+        mkdir APPS
+        mkdir WIM
+        call :assignletter.diskpart
+    (
+        echo select disk %disk%
+        echo select partition 2
+        echo gpt attributes=0x4000000000000000
+        echo exit
+    ) | diskpart > nul
+    cd /d "%bindir%"
+        call exit.bat
 exit /b 0
 rem >> end functions

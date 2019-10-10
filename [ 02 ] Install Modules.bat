@@ -13,11 +13,8 @@ if not exist "bin" (
     echo ^>^> Warning: Data Loss
     timeout /t 15 > nul & exit
 ) else (
-    call "%bindir%\colortool.bat"
-    call "%bindir%\permissions.bat"
-    call "%bindir%\multibootscan.bat"
-    call "%bindir%\language.bat"
-    call "%bindir%\partassist.bat"
+    call :permissions
+    call :multibootscan
 )
 
 :main
@@ -45,8 +42,7 @@ if "%installmodules%"=="y" (
     goto :continue
 )
 
-cd /d "%bindir%"
-    call colortool.bat
+call :colortool
 echo.
 echo ======================================================================
 echo %_lang0200_%
@@ -59,8 +55,8 @@ echo %_lang0202_%
 cd /d "%tmp%"
     start modules.vbs
     echo %_lang0203_% & timeout /t 300 > nul
-    taskkill /f /im wscript.exe /t > nul 2>&1 & cls
-    del /s /q "%tmp%\modules.vbs" >nul
+    taskkill /f /im wscript.exe /t /fi "status eq running">nul
+    del /s /q modules.vbs >nul
     call :check.empty
 
 :continue
@@ -136,7 +132,7 @@ cd /d "%tmp%"
 rem check special iso type 
 cd /d "%bindir%\Special_ISO"
     for /f "delims=" %%f in (%bindir%\specialiso.list) do (
-            if exist "*%%f*.iso" goto :specialiso-go
+        if exist "*%%f*.iso" goto :specialiso-go
     )
     goto :populariso
 :specialiso-go
@@ -148,13 +144,12 @@ cd /d "%ducky%\BOOT"
         for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
     )
     if "%secureboot%"=="n" (set rpart=0) else (set rpart=1)
-cd /d "%bindir%"
-    call colortool.bat
+call :colortool
     for /f "tokens=*" %%x in ('dir /s /a /b "Special_ISO"') do set /a "size+=%%~zx"
     set /a "size=%size%/1024/1024"
     set "source=%bindir%\Special_ISO"
 
-call :check.letter %ducky% rem get disk number of Multiboot
+call :check.letter %ducky% rem get disk number of Multiboot data partition
 
 if %size% LEQ %esp% (
     if exist "%bindir%\Special_ISO\*.iso" (
@@ -175,51 +170,45 @@ if %size% LEQ %esp% (
 
 :populariso
 rem >> copy all ISO to multiboot
-cd /d "%bindir%"
-    call colortool.bat
-    echo.
-    echo %_lang0209_%
-    echo.
-    for /f "delims=" %%f in (iso.list) do (
-        if not exist "%ducky%\ISO\*%%f*.iso" (
-            if exist "%curpath%\*%%f*.iso" (
-                robocopy "%curpath%" "%ducky%\ISO" *%%f*.iso /njh /njs /nc /ns
-            )
+call :colortool
+echo.
+echo %_lang0209_%
+for /f "delims=" %%f in (iso.list) do (
+    if not exist "%ducky%\ISO\*%%f*.iso" (
+        if exist "%curpath%\*%%f*.iso" (
+            robocopy "%curpath%" "%ducky%\ISO" *%%f*.iso /njh /njs /nc /ns
         )
     )
+)
 
 rem >> copy Kaspersky Rescue Disk 18 to multiboot
-cd /d "%bindir%"
-    call colortool.bat
-cd /d "%curpath%"
-    if exist "krd.iso" (
-        if not exist "%ducky%\DATA\krd.iso" (
-            echo.
-            echo ^> Kaspersky Rescue Disk 18 Module is being copied, please wait...
-            echo.
-            xcopy /s "krd.iso" "%ducky%\DATA\"
-        )
+call :colortool
+if exist "%curpath%\krd.iso" (
+    if not exist "%ducky%\DATA\krd.iso" (
+        echo.
+        echo ^> Kaspersky Rescue Disk 18 Module is being copied, please wait...
+        robocopy "%curpath%" "%ducky%\DATA" krd.iso /njh /njs /nc /ns
     )
+)
 
 :wimmodules
 rem >> copy all *.wim module on multiboot
-cd /d "%bindir%"
-    call colortool.bat
-    echo.
-    echo %_lang0210_%
-    echo.
-    for /f "delims=" %%f in (wim.list) do (
-        if not exist "%ducky%\WIM\%%f" (
-            if not exist "%ducky%\APPS\%%f" (
-                if exist "%curpath%\%%f.wim" (
-                    robocopy "%curpath%" "%ducky%\WIM" %%f.wim /njh /njs /nc /ns
-                )
-                if exist "%curpath%\%%f.7z" (
-                    robocopy "%curpath%" "%ducky%\WIM" %%f.7z /njh /njs /nc /ns
-                )
+call :colortool
+echo.
+echo %_lang0210_%
+echo.
+for /f "delims=" %%f in (wim.list) do (
+    if not exist "%ducky%\WIM\%%f" (
+        if not exist "%ducky%\APPS\%%f" (
+            if exist "%curpath%\%%f.wim" (
+                robocopy "%curpath%" "%ducky%\WIM" %%f.wim /njh /njs /nc /ns
+            )
+            if exist "%curpath%\%%f.7z" (
+                robocopy "%curpath%" "%ducky%\WIM" %%f.7z /njh /njs /nc /ns
             )
         )
     )
+)
 rem >> rename and move all *.wim to the destination
 cd /d "%ducky%\WIM"
     if exist *w*8*1*.wim (
@@ -255,33 +244,32 @@ if not exist "%ducky%\WIM\bootx64.wim" if not exist "%ducky%\WIM\bootx86.wim" (
     )
 )
 rem >> Windows install.wim module (wim method)
-cd /d "%bindir%"
-    call colortool.bat
-    echo.
-    echo %_lang0214_%
-    echo.
-    echo %_lang0215_%
-    echo.
-    setlocal enabledelayedexpansion
-    for %%i in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
-        if exist "%%i:\sources\setup.exe" (
-            if exist "%%i:\sources\install.wim" (
-                for /f "tokens=4 delims= " %%j in ('dism /Get-WimInfo /WimFile:%%i:\sources\install.wim /index:1 ^| Find "Name"') do (
-                    echo ^   * Windows %%j ISO found in %%i:\ drive
-                    echo %_lang0216_%
-                    if not exist "%ducky%\Sources\install%%~nj8664.wim" (
-                        copy "%%i:\sources\install.wim" "%ducky%\Sources\" > nul
-                        cd /d "%ducky%\Sources\"
-                        rename install.wim install%%~nj8664.wim
-                        echo %_lang0217_%
-                    ) else (
-                        echo ^     ^>^> Your Windows %%j doesn't need to install again
-                    )
+call :colortool
+echo.
+echo %_lang0214_%
+echo.
+echo %_lang0215_%
+echo.
+setlocal enabledelayedexpansion
+for %%i in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
+    if exist "%%i:\sources\setup.exe" (
+        if exist "%%i:\sources\install.wim" (
+            for /f "tokens=4 delims= " %%j in ('dism /Get-WimInfo /WimFile:%%i:\sources\install.wim /index:1 ^| Find "Name"') do (
+                echo ^   * Windows %%j ISO found in %%i:\ drive
+                echo %_lang0216_%
+                if not exist "%ducky%\Sources\install%%~nj8664.wim" (
+                    copy "%%i:\sources\install.wim" "%ducky%\Sources\" > nul
+                    cd /d "%ducky%\Sources\"
+                    rename install.wim install%%~nj8664.wim
+                    echo %_lang0217_%
+                ) else (
+                    echo ^     ^>^> Your Windows %%j doesn't need to install again
                 )
             )
         )
     )
-    endlocal & cls
+)
+endlocal & cls
 
 rem >> Windows Install ISO Module (ISO method)
 cd /d "%ducky%\WIM"
@@ -294,14 +282,13 @@ cd /d "%ducky%\WIM"
     )
 
 rem >> Install Grub2 File Manager
-cd /d "%bindir%"
+call :colortool
     set "list=grubfmia32.efi grubfmx64.efi"
     if exist "%curpath%\grubfm-*.7z" (
         cls & echo. & echo %_lang0224_%
         7za x "%curpath%\grubfm-*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
     )
 )
-
 
 rem >> copy all *.exe module on multiboot
 cd /d "%curpath%"
@@ -331,11 +318,10 @@ if not exist "%ducky%\EFI\BOOT\usb.gpt" (
 cd /d "%bindir%"
     rd /s /q Special_ISO > nul
     rd /s /q ISO_Extract > nul
-    if exist "MULTIBOOT" (rd /S /Q "MULTIBOOT")
 
 rem >> unhide the Multiboot Partition
 call :check.partitiontable
-    if not "%GPT%"=="GPT:" (
+    if not "%GPT%"=="true" (
         if "%secureboot%"=="n" (set /a "partition=1") else (set /a "partition=2")
     ) else (
         if "%secureboot%"=="n" (set /a "partition=2") else (set /a "partition=3")
@@ -349,7 +335,141 @@ call :scan.label MULTIBOOT
 call "%bindir%\exit.bat"
 
 
+
+
+
 rem >> begin functions
+
+:colortool
+    cls
+    mode con lines=18 cols=70
+    cd /d "%bindir%"
+        set /a num=%random% %%114 +1
+        set "itermcolors=%num%.itermcolors"
+        if "%color%"=="true" goto :skipcheck.color
+        7za x "colortool.7z" -o"%tmp%" -aos -y > nul
+    rem Check for DotNet 4.0 Install
+    cd /d "%tmp%\colortool"
+        set "checkdotnet=%temp%\Output.log"
+        reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP" /s | find "v4" > %checkdotnet%
+            if %errorlevel% equ 0 (
+                colortool -b -q %itermcolors%
+                set "color=true"
+                goto :exit.color
+            ) else (
+                set "color=false"
+                goto :exit.color
+            )
+    
+    :skipcheck.color
+    cd /d "%tmp%\colortool"
+        colortool -b -q %itermcolors%
+    
+    :exit.color
+    cls
+    cd /d "%bindir%"
+    mode con lines=18 cols=70
+exit /b 0
+
+:permissions
+    call :colortool
+    ver | findstr /i "6\.1\." > nul
+        if %errorlevel% equ 0 set "windows=7"
+        if not "%windows%"=="7" chcp 65001 > nul
+    set randname=%random%%random%%random%%random%%random%
+    md "%windir%\%randname%" 2>nul
+    if %errorlevel%==0 goto :permissions.end
+    if %errorlevel%==1 (
+        echo.& echo ^>^> Please use right click - Run as administrator
+        color 4f & timeout /t 15 >nul
+        Set admin=fail
+        goto permissions.end
+    )
+    goto :permissions
+    
+    :permissions.end
+    rd "%windir%\%randname%" 2>nul
+    if "%admin%"=="fail" exit
+exit /b 0
+
+:multibootscan
+    > "%tmp%\identify.vbs" (
+        echo Dim Message, Speak
+        echo Set Speak=CreateObject^("sapi.spvoice"^)
+        echo Speak.Speak "Multiboot Drive Found"
+    )
+    :while.scan
+    for /f %%b in ('wmic volume get driveletter^, label ^| findstr /i "MULTIBOOT"') do set "ducky=%%b"
+        if not exist "%ducky%\EFI\BOOT\mark" goto :progress.scan
+        for /f "tokens=*" %%b in (%ducky%\EFI\BOOT\mark) do set "author=%%b"
+        if not defined author (
+            set "offline=0"
+            goto :progress.scan
+        ) else (
+            cd /d "%tmp%" & start identify.vbs
+            cls & echo. & echo ^>^> Multiboot Drive Found ^^^^ & timeout /t 2 >nul
+            goto :break.scan
+        )
+        :progress.scan
+            if "%skipscan%"=="true" set "offline=1" & goto :EOF
+            cls & echo ^> Connecting   & timeout /t 1 >nul
+            cls & echo ^> Connecting.  & timeout /t 1 >nul
+            cls & echo ^> Connecting.. & timeout /t 1 >nul
+            cls & echo ^> Connecting...& timeout /t 1 >nul
+        goto :while.scan
+    :break.scan
+    if not "%author%"=="niemtin007" (
+        cls & color 4f & echo.
+        echo ^>^> Run [ 01 ] Install Multiboot.bat to reinstall & timeout /t 15 >nul & exit
+    )
+    for /f "tokens=2 delims= " %%b in ('wmic path win32_logicaldisktopartition get antecedent^, dependent ^| find "%ducky%"') do set "disk=%%b"
+        set "disk=%disk:~1,1%"
+        set /a disk=%disk%+0
+    for /f "tokens=3 delims=#" %%b in ('wmic partition get name ^| findstr /i "#%disk%,"') do set "partition=%%b"
+        set /a partition=%partition%+0
+        del /s /q "%tmp%\identify.vbs" >nul
+        call "%bindir%\language.bat"
+        call :partassist.init
+exit /b 0
+
+:partassist.init
+    cls
+    echo.
+    cd /d "%bindir%"
+        echo ^>^> Loading, Please wait...
+        7za x "partassist.7z" -o"%tmp%" -aos -y > nul
+        set partassist="%tmp%\partassist\partassist.exe"
+        set bootice="%bindir%\bootice.exe"
+    cd /d "%tmp%\partassist"
+        if "%processor_architecture%"=="x86" (
+            SetupGreen32.exe -i > nul
+            LoadDrv_Win32.exe -i > nul
+        ) else (
+            SetupGreen64.exe -i > nul
+            LoadDrv_x64.exe -i > nul
+        )
+    >"%tmp%\partassist\cfg.ini" (
+        echo [Language]
+        echo LANGUAGE=lang\%langpa%.txt;%langcode%
+        echo LANGCHANGED=1
+        echo [Version]
+        echo Version=4
+        echo [Product Version]
+        echo v=2
+        echo Lang=%langpa%
+        echo [CONFIG]
+        echo COUNT=2
+        echo KEY=AOPR-21ROI-6Y7PL-Q4118
+        echo [PA]
+        echo POPUPMESSAGE=1
+    )
+    > "%tmp%\partassist\winpeshl.ini" (
+        echo [LaunchApp]
+        echo AppPath=%tmp%\partassist\PartAssist.exe
+    )
+    cls
+exit /b 0
+
 :check.letter
 for /f "tokens=2 delims= " %%b in ('wmic path win32_logicaldisktopartition get antecedent^, dependent ^| find /i "%~1"') do set "disk=%%b"
     if not defined disk set "match=false"
@@ -359,29 +479,27 @@ for /f "tokens=2 delims= " %%b in ('wmic path win32_logicaldisktopartition get a
 exit /b 0
 
 :assignletter.diskpart
-cd /d "%bindir%"
-    call colortool.bat
+    call :colortool
     echo.
     echo %_lang0123_%
-for %%p in (z y x w v u t s r q p o n m l k j i h g f e d) do (
-    if not exist %%p:\nul set letter=%%p
-)
-for /f "tokens=2 delims= " %%b in ('echo list volume ^| diskpart ^| find /i "    X  "') do set "volume=%%b"
-(
-    echo select volume %volume%
-    echo assign letter=%letter%
-) | diskpart > nul
-cd /d "%~dp0"
-    call "[ 02 ] Install Modules.bat"
+    for %%p in (z y x w v u t s r q p o n m l k j i h g f e d) do (
+        if not exist %%p:\nul set letter=%%p
+    )
+    for /f "tokens=2 delims= " %%b in ('echo list volume ^| diskpart ^| find /i "    X  "') do set "volume=%%b"
+    (
+        echo select volume %volume%
+        echo assign letter=%letter%
+    ) | diskpart > nul
+    cd /d "%~dp0"
+        call "[ 02 ] Install Modules.bat"
 exit /b 0
 
 :check.empty
 setlocal
-set _tmp=
-for /f "delims=" %%b in ('dir /b "%curpath%"') do set _tmp="%%b"
-if {%_tmp%}=={} (
-    cd /d "%bindir%"
-        call colortool.bat
+    set _tmp=
+    for /f "delims=" %%b in ('dir /b "%curpath%"') do set _tmp="%%b"
+    if {%_tmp%}=={} (
+        call :colortool
         cls
         echo.
         echo %_lang0220_%
@@ -389,34 +507,33 @@ if {%_tmp%}=={} (
         choice /c yn /cs /n /m "%_lang0221_%"
         if errorlevel 2 goto :main
         if errorlevel 1 start https://docs.google.com/spreadsheets/d/1HzW6t3Rh_8_BnT8Ddawe1epwrMdVzvmRAjtN3qX-G9k/edit?usp=sharing & exit
-)
-cd /d "%bindir%"
-    set "module=false"
-    for /f "delims=" %%f in (iso.list, iso_extract.list, specialiso.list, wim.list) do (
-        cd /d "%curpath%"
-            if exist "*%%f*" set "module=true"
-        cd /d "%bindir%"
     )
-    if "%module%"=="false" (
-        cls & echo.
-        echo %_lang0222_%
-        pause > nul
-        goto :main
-    )
+    cd /d "%bindir%"
+        set "module=false"
+        for /f "delims=" %%f in (iso.list, iso_extract.list, specialiso.list, wim.list) do (
+            cd /d "%curpath%"
+                if exist "*%%f*" set "module=true"
+            cd /d "%bindir%"
+        )
+        if "%module%"=="false" (
+            cls & echo.
+            echo %_lang0222_%
+            pause > nul
+            goto :main
+        )
 endlocal
 exit /b 0
 
 :iso.extract
-if exist "%~1" if not exist "%ducky%\ISO_Extract\%~2\*.*" (
-    set "modulename=%~2"
-    for /f "tokens=*" %%b in (%~1) do set "isopath=%bindir%\ISO_Extract\%%b"
-    call :iso.mount & goto :extract
-)
+    if exist "%~1" if not exist "%ducky%\ISO_Extract\%~2\*.*" (
+        set "modulename=%~2"
+        for /f "tokens=*" %%b in (%~1) do set "isopath=%bindir%\ISO_Extract\%%b"
+        call :iso.mount & goto :extract
+    )
 exit /b 0
 
 :iso.mount
-cd /d "%bindir%"
-    call colortool.bat
+call :colortool
 cd /d "%tmp%"
     wincdemu "%isopath%" X: /wait
     cls
@@ -431,8 +548,10 @@ cd /d "%tmp%"
             goto :iso.unmount
         )
         if "%modulename%"=="anhdvPE" (
-            xcopy "APPS" "%ducky%\APPS\" /e /g /h /r /y
-            xcopy "WIM" "%ducky%\WIM\" /e /g /h /r /y
+            rem xcopy "APPS" "%ducky%\APPS\" /e /g /h /r /y
+            robocopy "X:\APPS" "%ducky%\APPS" /njh /njs /nc /ns
+            rem xcopy "WIM" "%ducky%\WIM\" /e /g /h /r /y
+            robocopy "X:\WIM" "%ducky%\WIM" /njh /njs /nc /ns
             mkdir "%ducky%\ISO_Extract\%modulename%\"
             >"%ducky%\ISO_Extract\%modulename%\Author.txt" (echo Dang Van Anh)
             goto :iso.unmount
@@ -475,24 +594,28 @@ cd /d "%tmp%"
 exit /b 0
 
 :PortableAppsPlatform
-echo.
-choice /c yn /cs /n /m "%_lang0223_%"
-    if errorlevel 1 set "portable=true"
-    if errorlevel 2 set "portable=false"
-    if "%portable%"=="true" (
-        cd /d "%bindir%"
-            7za x "PortableApps.7z" -o"%ducky%\" -aoa -y > nul
-            echo %_lang0012_%
-            timeout /t 2 > nul
-    )
+    echo.
+    choice /c yn /cs /n /m "%_lang0223_%"
+        if errorlevel 1 set "portable=true"
+        if errorlevel 2 set "portable=false"
+        if "%portable%"=="true" (
+            cd /d "%bindir%"
+                7za x "PortableApps.7z" -o"%ducky%\" -aoa -y > nul
+                echo %_lang0012_%
+                timeout /t 2 > nul
+        )
 exit /b 0
 
 :check.partitiontable
-for /f "tokens=2" %%b in ('wmic path win32_diskpartition get type ^, diskindex ^| find /i "%disk%"') do set "GPT=%%b"
+    set GPT=false
+    for /f "tokens=8" %%b in ('echo list disk ^| diskpart ^| find /i "Disk %disk%"') do (
+        if /i "%%b"=="*" set GPT=true
+    )
 exit /b 0
 
 :scan.label
 for /f %%b in ('wmic volume get driveletter^, label ^| findstr /i "%~1"') do set "ducky=%%b"
     if not defined ducky set "offline=true"
 exit /b 0
+
 rem >> end function
