@@ -332,7 +332,7 @@ call :scan.label MULTIBOOT
         %partassist% /hd:%disk% /setletter:%partition% /letter:auto
     )
 
-call "%bindir%\exit.bat"
+call :clean.bye
 
 
 
@@ -344,7 +344,7 @@ rem >> begin functions
     cls
     mode con lines=18 cols=70
     cd /d "%bindir%"
-        set /a num=%random% %%114 +1
+        set /a num=%random% %%112 +1
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
         7za x "colortool.7z" -o"%tmp%" -aos -y > nul
@@ -373,9 +373,11 @@ exit /b 0
 
 :permissions
     call :colortool
+    
     ver | findstr /i "6\.1\." > nul
         if %errorlevel% equ 0 set "windows=7"
         if not "%windows%"=="7" chcp 65001 > nul
+    
     set randname=%random%%random%%random%%random%%random%
     md "%windir%\%randname%" 2>nul
     if %errorlevel%==0 goto :permissions.end
@@ -428,7 +430,8 @@ exit /b 0
     for /f "tokens=3 delims=#" %%b in ('wmic partition get name ^| findstr /i "#%disk%,"') do set "partition=%%b"
         set /a partition=%partition%+0
         del /s /q "%tmp%\identify.vbs" >nul
-        call "%bindir%\language.bat"
+        call :colortool
+        call language.bat
         call :partassist.init
 exit /b 0
 
@@ -616,6 +619,47 @@ exit /b 0
 :scan.label
 for /f %%b in ('wmic volume get driveletter^, label ^| findstr /i "%~1"') do set "ducky=%%b"
     if not defined ducky set "offline=true"
+exit /b 0
+
+:clean.bye
+cd /d "%bindir%"
+    call colortool.bat
+    for /f "delims=" %%f in (hide.list) do (
+        if exist "%ducky%\%%f" (attrib +s +h "%ducky%\%%f")
+        if exist "%ducky%\ISO\%%f" (attrib +s +h "%ducky%\ISO\%%f")
+        if exist "%ducky%\WIM\%%f" (attrib +s +h "%ducky%\WIM\%%f")
+    )
+cd /d "%tmp%\partassist"
+    if "%processor_architecture%"=="x86" (
+        SetupGreen32.exe -u > nul
+        LoadDrv_Win32.exe -u > nul
+    ) else (
+        SetupGreen64.exe -u > nul
+        LoadDrv_x64.exe -u > nul
+    )
+cd /d "%tmp%"
+    rem >> clean up the trash and exit
+    set "dlist=colortool curl driveprotect gdisk grub2 partassist rEFInd rEFInd_themes"
+    for %%d in (%dlist%) do (
+        if exist "%%d" rmdir "%%d" /s /q > nul
+    )
+    set "flist=hide.vbs Output.log qemuboottester.exe SilentCMD.log wincdemu.exe wget.exe"
+    for %%f in (%flist%) do (
+        if exist "%%f" del "%%f" /s /q > nul
+    )
+    > thanks.vbs (
+        echo Dim Message, Speak
+        echo Set Speak=CreateObject^("sapi.spvoice"^)
+        echo Speak.Speak "Successful! Thank you for using Multiboot Toolkit"
+    )
+    cls
+    echo.
+    echo %_lang0012_%
+    echo %_lang0013_%
+    start thanks.vbs
+    timeout /t 3 >nul
+    del /s /q thanks.vbs >nul
+    exit
 exit /b 0
 
 rem >> end function

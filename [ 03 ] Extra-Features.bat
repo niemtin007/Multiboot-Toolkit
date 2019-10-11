@@ -19,7 +19,8 @@ if not exist "bin" (
 )
 
 :main
-cls & echo.
+call :colortool
+echo.
 echo =====================================================================
 echo %_lang0819_%
 echo =====================================================================
@@ -115,7 +116,7 @@ exit /b 0
             goto :break.scan
         )
         :progress.scan
-            if "%skipscan%"=="true" set "offline=1" & goto :EOF
+            if "%skipscan%"=="true" set "offline=1" & goto :offline.scan
             cls & echo ^> Connecting   & timeout /t 1 >nul
             cls & echo ^> Connecting.  & timeout /t 1 >nul
             cls & echo ^> Connecting.. & timeout /t 1 >nul
@@ -133,8 +134,10 @@ exit /b 0
     for /f "tokens=3 delims=#" %%b in ('wmic partition get name ^| findstr /i "#%disk%,"') do set "partition=%%b"
         set /a partition=%partition%+0
         del /s /q "%tmp%\identify.vbs" >nul
-        call "%bindir%\language.bat"
-        call :partassist.init
+    :offline.scan
+    call :colortool
+    call language.bat
+    call :partassist.init
 exit /b 0
 
 :partassist.init
@@ -181,7 +184,7 @@ exit /b 0
     cls
     mode con lines=18 cols=70
     cd /d "%bindir%"
-        set /a num=%random% %%115 +1
+        set /a num=%random% %%112 +1
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
         7za x "colortool.7z" -o"%tmp%" -aos -y > nul
@@ -253,7 +256,7 @@ exit /b 0
         call "main.bat"
     rem > setting language for grub2 file manager
         >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
-    call "%bindir%\exit.bat"
+    call :clean.bye
 exit /b 0
 
 :sortgrub2menu
@@ -287,7 +290,7 @@ exit /b 0
     
     cd /d "%bindir%\config"
         call "main.bat"
-        call "%bindir%\exit.bat"
+        call :clean.bye
 exit /b 0
 
 :grub2theme
@@ -350,7 +353,7 @@ exit /b 0
     )
     >"%ducky%\BOOT\grub\themes\theme" (echo %gtheme%)
     call "%bindir%\config\main.bat"
-    call "%bindir%\exit.bat"
+    call :clean.bye
 exit /b 0
 
 :rEFIndtheme
@@ -442,7 +445,7 @@ exit /b 0
     cd /d "%bindir%"
         call :checkdisktype
         if "%virtualdisk%"=="true"  goto :external.rtheme
-        if "%harddisk%"=="true"     goto :EOF
+        if "%harddisk%"=="true"     exit
         if "%usb%"=="true"          goto :removable.rtheme
         if "%externaldisk%"=="true" goto :external.rtheme
     
@@ -475,15 +478,15 @@ exit /b 0
     if not "%secureboot%"=="n" (
         %partassist% /hd:%disk% /whide:%securepart% /src:%source% /dest:EFI\BOOT
     )
-    call "%bindir%\exit.bat"
+    call :clean.bye
 exit /b 0
 
 :easeconvertdisk
+    call :colortool
     %partassist% /list
     echo.
     set /p disk= %_lang0101_%
     set /a disk=%disk%+0
-    call :colortool
     call :checkdisktype
     if "%virtualdisk%"=="true" goto :option.convert
     if "%harddisk%"=="true" (
@@ -496,6 +499,7 @@ exit /b 0
     color 4f & echo. & echo %_lang0104_% & timeout /t 15 > nul & goto :easeconvertdisk
     
     :option.convert
+    call :colortool
     cd /d "%tmp%"
         > warning.vbs (
             echo Dim Speak
@@ -555,7 +559,7 @@ exit /b 0
     timeout /t 2 >nul
     
     :exit.convert
-    call "%bindir%\exit.bat"
+    call :clean.bye
 exit /b 0
 
 :editWinPEbootmanager
@@ -584,7 +588,7 @@ exit /b 0
     echo ^*               Source^: %source%
     "%bindir%\bootice.exe" /edit_bcd /easymode /file=%source%
     call :colortool
-    call "exit.bat"
+    call :clean.bye
     
     :uefi3264bit
     cd /d "%bindir%"
@@ -630,7 +634,7 @@ exit /b 0
         %partassist% /hd:%disk% /whide:%securepart% /src:%source% /dest:EFI\Microsoft\Boot
     )
     call :colortool
-    call "exit.bat"
+    call :clean.bye
 exit /b 0
 
 :editwinsetupfromUSB
@@ -652,11 +656,11 @@ exit /b 0
     
     :legacy.winsetup
     "%bindir%\bootice.exe" /edit_bcd /easymode /file=%ducky%\BOOT\bcd
-    call "%bindir%\exit.bat"
+    call :clean.bye
     
     :uefi.winsetup
     "%bindir%\bootice.exe" /edit_bcd /easymode /file=%ducky%\EFI\MICROSOFT\Boot\bcd
-    call "%bindir%\exit.bat"
+    call :clean.bye
 exit /b 0
 
 :fixbootloader
@@ -746,7 +750,7 @@ exit /b 0
     rem     cd /d "%bindir%"
     rem         xcopy "secureboot" "%ducky%\" /e /g /h /r /y /q > nul
     rem )
-    call "%bindir%\exit.bat"
+    call :clean.bye
 exit /b 0
 
 :grub2-filemanager
@@ -809,12 +813,12 @@ exit /b 0
     cd /d "%bindir%\extra-modules"
         "%bindir%\7za.exe" a grub2-filemanager.7z .\grub2-filemanager\* >nul
         if exist "grub2-filemanager" (rd /s /q "grub2-filemanager" >nul)
-        if "%offline%"=="0" call "%bindir%\exit.bat"
+        if "%offline%"=="0" call :clean.bye
         echo.
         echo ^> Updating grub2-filemanager to MultibootUSB...
         "%bindir%\7za.exe" x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
         timeout /t 3 >nul
-        call "%bindir%\exit.bat"
+        call :clean.bye
 exit /b 0
 
 :setdefaultboot
@@ -880,7 +884,7 @@ exit /b 0
         %partassist% /hd:%disk% /whide:%refindpart% /src:%Grub2% /dest:\EFI\BOOT
         >"%ducky%\EFI\BOOT\WindowsGrub2" (echo true)
     )
-    call "%bindir%\exit.bat"
+    call :clean.bye
     
     :secure.default
     if "%option%"=="Secure_rEFInd" (
@@ -913,7 +917,7 @@ exit /b 0
             xcopy "secureboot" "%ducky%\" /e /g /h /r /y /q >nul
             >"%ducky%\EFI\BOOT\WindowsGrub2" (echo true)
     )
-    call "%bindir%\exit.bat"
+    call :clean.bye
 exit /b 0
 
 :updatemultiboot
@@ -995,7 +999,7 @@ exit /b 0
     cd /d "%bindir%\config"
         call "main.bat"
         timeout /t 2 >nul
-    call "%bindir%\exit.bat"
+        call :clean.bye
 exit /b 0
 
 :unhidedatapartition
@@ -1035,7 +1039,7 @@ exit /b 0
     :break.unhide
     for /f "tokens=*" %%b in (%ducky%\EFI\BOOT\mark) do set "author=%%b"
         if "%author%"=="niemtin007" (
-            call "%bindir%\exit.bat"
+            call :clean.bye
         )
 exit /b 0
 
@@ -1254,11 +1258,11 @@ exit /b 0
     "%bindir%\7za.exe" x "%bindir%\extra-modules\EasyUEFI.7z" -o"%tmp%" -y >nul
     echo.
     choice /c yn /cs /n /m "%_lang0716_%"
-        if errorlevel 2 call "%bindir%\exit.bat"
+        if errorlevel 2 call :clean.bye
         if errorlevel 1 (
             cd /d "%tmp%\EasyUEFI"
                 start EasyUEFIPortable.exe
-                call "%bindir%\exit.bat"
+                call :clean.bye
         )
 exit /b 0
 rem clover function
@@ -1406,11 +1410,11 @@ exit /b 0
     call :rEFIndinterface
     echo.
     choice /c yn /cs /n /m "%_lang0611_%"
-        if errorlevel 2 call "%bindir%\exit.bat"
+        if errorlevel 2 call :clean.bye
         if errorlevel 1 (
             cd /d "%tmp%\EasyUEFI"
                 start EasyUEFIPortable.exe
-                call "%bindir%\exit.bat"
+                call :clean.bye
         )
 exit /b 0
 rem >> rEFInd functions
@@ -1445,6 +1449,47 @@ exit /b 0
     :: check.externaldisk
     wmic diskdrive get name, mediatype | find /i "External hard disk media" | find /i "\\.\physicaldrive%disk%" > nul
         if not errorlevel 1 set "externaldisk=true"
+exit /b 0
+
+:clean.bye
+cd /d "%bindir%"
+    call colortool.bat
+    for /f "delims=" %%f in (hide.list) do (
+        if exist "%ducky%\%%f" (attrib +s +h "%ducky%\%%f")
+        if exist "%ducky%\ISO\%%f" (attrib +s +h "%ducky%\ISO\%%f")
+        if exist "%ducky%\WIM\%%f" (attrib +s +h "%ducky%\WIM\%%f")
+    )
+cd /d "%tmp%\partassist"
+    if "%processor_architecture%"=="x86" (
+        SetupGreen32.exe -u > nul
+        LoadDrv_Win32.exe -u > nul
+    ) else (
+        SetupGreen64.exe -u > nul
+        LoadDrv_x64.exe -u > nul
+    )
+cd /d "%tmp%"
+    rem >> clean up the trash and exit
+    set "dlist=colortool curl driveprotect gdisk grub2 partassist rEFInd rEFInd_themes"
+    for %%d in (%dlist%) do (
+        if exist "%%d" rmdir "%%d" /s /q > nul
+    )
+    set "flist=hide.vbs Output.log qemuboottester.exe SilentCMD.log wincdemu.exe wget.exe"
+    for %%f in (%flist%) do (
+        if exist "%%f" del "%%f" /s /q > nul
+    )
+    > thanks.vbs (
+        echo Dim Message, Speak
+        echo Set Speak=CreateObject^("sapi.spvoice"^)
+        echo Speak.Speak "Successful! Thank you for using Multiboot Toolkit"
+    )
+    cls
+    echo.
+    echo %_lang0012_%
+    echo %_lang0013_%
+    start thanks.vbs
+    timeout /t 3 >nul
+    del /s /q thanks.vbs >nul
+    exit
 exit /b 0
 
 rem >> end function
