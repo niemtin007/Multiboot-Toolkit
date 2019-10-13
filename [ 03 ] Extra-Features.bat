@@ -37,7 +37,7 @@ echo.
 set "option=14" rem set default
 set /p option= %_lang0905_% [ ? ] = 
 
-call :colortool
+if exist "%ducky%\EFI\Boot\usb.gpt" goto :usb.gpt
 if "%offline%"=="0" goto :online
 if "%offline%"=="1" goto :offline
 
@@ -66,6 +66,13 @@ if "%option%"=="4"  call :rEFIndInstaller
 if "%option%"=="8"  call :grub2-filemanager
 if "%option%"=="10" call :unhidedatapartition
 if "%option%"=="11" call :easeconvertdisk
+if "%option%"=="14" call :qemuboottester
+color 4f & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :main
+
+:usb.gpt
+if "%option%"=="6"  call :editWinPEbootmanager
+if "%option%"=="7"  call :editwinsetupfromUSB
+if "%option%"=="12" call :NTFSdriveprotect
 if "%option%"=="14" call :qemuboottester
 color 4f & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :main
 
@@ -295,6 +302,7 @@ exit /b 0
 exit /b 0
 
 :grub2theme
+    call :colortool
     cd /d "%ducky%\BOOT\"
         for /f "tokens=*" %%b in (lang) do set "lang=%%b"
     cd /d "%ducky%\BOOT\grub\themes"
@@ -371,6 +379,7 @@ exit /b 0
 exit /b 0
 
 :rEFIndtheme
+    call :colortool
     echo.
     cd /d "%ducky%\BOOT\"
         for /f "tokens=*" %%b in (rEFInd) do set "rtheme=%%b"

@@ -632,20 +632,11 @@ exit /b 0
         echo select disk %disk%
         echo clean
         echo convert gpt
-        echo create partition primary
-        echo shrink minimum=50
-        echo format quick fs=ntfs label="MULTIBOOT"
-        echo assign letter=X
-        echo select volume X
-        echo remove letter X
-        echo create partition primary
+        echo create partition primary size=50
         echo format quick fs=fat label="ESP"
         echo assign letter=X
         echo exit
     ) | diskpart > nul
-    rem > installing data
-    echo.
-    echo %_lang0122_%
     cd /d "X:\"
         mkdir "X:\ISO\"
         mkdir "X:\EFI\BOOT\themes\"
@@ -657,11 +648,18 @@ exit /b 0
     (
         echo select volume X
         echo remove letter X
+        echo exit
+    ) | diskpart > nul
+    (
         echo select disk %disk%
-        echo select partition 1
+        echo create partition primary
+        echo format quick fs=ntfs label="MULTIBOOT"
         echo assign letter=X
         echo exit
     ) | diskpart > nul
+    rem > installing data
+    echo.
+    echo %_lang0122_%
     cd /d "%bindir%"
         xcopy "secureboot" "X:\" /e /g /h /r /y /q > nul
         set "file=Autorun.inf usb.ico B64 XORBOOT"
@@ -686,7 +684,7 @@ exit /b 0
         call :assignletter.diskpart
     (
         echo select disk %disk%
-        echo select partition 2
+        echo select partition 1
         echo gpt attributes=0x4000000000000000
         echo exit
     ) | diskpart > nul
