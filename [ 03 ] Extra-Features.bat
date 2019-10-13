@@ -36,36 +36,37 @@ echo =====================================================================
 echo.
 set "option=14" rem set default
 set /p option= %_lang0905_% [ ? ] = 
-cd /d "%bindir%"
+
+call :colortool
 if "%offline%"=="0" goto :online
 if "%offline%"=="1" goto :offline
 
 :online
-if "%option%"=="1"  call :colortool & call :grub2theme
-if "%option%"=="2"  call :colortool & call :rEFIndtheme
-if "%option%"=="3"  call :colortool & call :cloverinstaller
-if "%option%"=="4"  call :colortool & call :rEFIndInstaller
-if "%option%"=="5"  call :colortool & call :setdefaultboot
-if "%option%"=="6"  call :colortool & call :editWinPEbootmanager
-if "%option%"=="7"  call :colortool & call :editwinsetupfromUSB
-if "%option%"=="8"  call :colortool & call :grub2-filemanager
-if "%option%"=="9"  call :colortool & call :fixbootloader
-if "%option%"=="10" call :colortool & call :unhidedatapartition
-if "%option%"=="11" call :colortool & call :easeconvertdisk
-if "%option%"=="12" call :colortool & call :NTFSdriveprotect
-if "%option%"=="13" call :colortool & call :changelanguage
-if "%option%"=="14" call :colortool & call :qemuboottester
-if "%option%"=="15" call :colortool & call :updatemultiboot
-if "%option%"=="16" call :colortool & call :sortgrub2menu
+if "%option%"=="1"  call :grub2theme
+if "%option%"=="2"  call :rEFIndtheme
+if "%option%"=="3"  call :cloverinstaller
+if "%option%"=="4"  call :rEFIndInstaller
+if "%option%"=="5"  call :setdefaultboot
+if "%option%"=="6"  call :editWinPEbootmanager
+if "%option%"=="7"  call :editwinsetupfromUSB
+if "%option%"=="8"  call :grub2-filemanager
+if "%option%"=="9"  call :fixbootloader
+if "%option%"=="10" call :unhidedatapartition
+if "%option%"=="11" call :easeconvertdisk
+if "%option%"=="12" call :NTFSdriveprotect
+if "%option%"=="13" call :changelanguage
+if "%option%"=="14" call :qemuboottester
+if "%option%"=="15" call :updatemultiboot
+if "%option%"=="16" call :sortgrub2menu
 color 4f & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :main
 
 :Offline
-if "%option%"=="3"  call :colortool & call :cloverinstaller
-if "%option%"=="4"  call :colortool & call :rEFIndInstaller
-if "%option%"=="8"  call :colortool & call :grub2-filemanager
-if "%option%"=="10" call :colortool & call :unhidedatapartition
-if "%option%"=="11" call :colortool & call :easeconvertdisk
-if "%option%"=="14" call :colortool & call :qemuboottester
+if "%option%"=="3"  call :cloverinstaller
+if "%option%"=="4"  call :rEFIndInstaller
+if "%option%"=="8"  call :grub2-filemanager
+if "%option%"=="10" call :unhidedatapartition
+if "%option%"=="11" call :easeconvertdisk
+if "%option%"=="14" call :qemuboottester
 color 4f & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :main
 
 
@@ -184,7 +185,7 @@ exit /b 0
     cls
     mode con lines=18 cols=70
     cd /d "%bindir%"
-        set /a num=%random% %%112 +1
+        set /a num=%random% %%110 +1
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
         7za x "colortool.7z" -o"%tmp%" -aos -y > nul
@@ -297,63 +298,76 @@ exit /b 0
     cd /d "%ducky%\BOOT\"
         for /f "tokens=*" %%b in (lang) do set "lang=%%b"
     cd /d "%ducky%\BOOT\grub\themes"
-        for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
+        for /f "tokens=*" %%b in (theme) do set "curtheme=%%b"
     
     echo.
-    echo %_lang0300_% %gtheme%
+    echo %_lang0300_% %curtheme%
     echo =====================================================================
-    echo 01 = Aero       09 = Breeze-1     17 = Gentoo      25 = RainbowDash  
-    echo 02 = Air_Vision 10 = Breeze_dark  18 = Grau        26 = Raindrops    
-    echo 03 = Alienware  11 = Breeze-5     19 = Huayralimbo 27 = SolarizedDark
-    echo 04 = Archlinux  12 = Dark_Colors  20 = Journey     28 = Solstice     
-    echo 05 = Ask-larry  13 = Dark_squares 21 = Monochrome  29 = Steam        
-    echo 06 = Aurora     14 = Devuan       22 = Oxygen      30 = StylishDark  
-    echo 07 = Axiom      15 = Eternity     23 = Plasma-dark 31 = Tela         
-    echo 08 = Bluec4d    16 = FagiadaBue   24 = Powerman    32 = Ubuntu-lucid 
+    echo 01 = Aero      11 = Breeze-1      21 = Gentoo      31 = Raindrops    
+    echo 02 = AirVision 12 = blur-grub2    22 = Grau        32 = SAO          
+    echo 03 = Alienware 13 = Breeze_dark   23 = Huayralimbo 33 = SolarizedDark
+    echo 04 = Anonymous 14 = Breeze-5      24 = Journey     34 = Solstice     
+    echo 05 = Archlinux 15 = CyberSecurity 25 = Monochrome  35 = Standby      
+    echo 06 = Ask-larry 16 = Dark_Colors   26 = Oxygen      36 = Steam        
+    echo 07 = Atomic    17 = Dark_squares  27 = Plasma-dark 37 = StylishDark  
+    echo 08 = Aurora    18 = Devuan        28 = poly-dark   38 = Tela         
+    echo 09 = Axiom     19 = Eternity      29 = Powerman    39 = Ubuntu-lucid 
+    echo 10 = Bluec4d   20 = FagiadaBue    30 = RainbowDash 40 = Vimix        
     echo =====================================================================
     echo.
     set /P ask= %_lang0301_% [ ? ]  = 
-    if "%ask%"=="1"  (set "gtheme=Aero" & goto :continue.gtheme)
-    if "%ask%"=="2"  (set "gtheme=Air_Vision" & goto :continue.gtheme)
-    if "%ask%"=="3"  (set "gtheme=Alienware" & goto :continue.gtheme)
-    if "%ask%"=="4"  (set "gtheme=Archlinux" & goto :continue.gtheme)
-    if "%ask%"=="5"  (set "gtheme=Ask-larry" & goto :continue.gtheme)
-    if "%ask%"=="6"  (set "gtheme=Aurora" & goto :continue.gtheme)
-    if "%ask%"=="7"  (set "gtheme=Axiom" & goto :continue.gtheme)
-    if "%ask%"=="8"  (set "gtheme=Bluec4d" & goto :continue.gtheme)
-    if "%ask%"=="9"  (set "gtheme=Breeze-1" & goto :continue.gtheme)
-    if "%ask%"=="10" (set "gtheme=Breeze_dark" & goto :continue.gtheme)
-    if "%ask%"=="11" (set "gtheme=Breeze-5" & goto :continue.gtheme)
-    if "%ask%"=="12" (set "gtheme=Dark_Colors" & goto :continue.gtheme)
-    if "%ask%"=="13" (set "gtheme=Dark_squares" & goto :continue.gtheme)
-    if "%ask%"=="14" (set "gtheme=Devuan" & goto :continue.gtheme)
-    if "%ask%"=="15" (set "gtheme=Eternity" & goto :continue.gtheme)
-    if "%ask%"=="16" (set "gtheme=FagiadaBue" & goto :continue.gtheme)
-    if "%ask%"=="17" (set "gtheme=Gentoo" & goto :continue.gtheme)
-    if "%ask%"=="18" (set "gtheme=Grau" & goto :continue.gtheme)
-    if "%ask%"=="19" (set "gtheme=Huayra-limbo" & goto :continue.gtheme)
-    if "%ask%"=="20" (set "gtheme=Journey" & goto :continue.gtheme)
-    if "%ask%"=="21" (set "gtheme=Monochrome" & goto :continue.gtheme)
-    if "%ask%"=="22" (set "gtheme=Oxygen" & goto :continue.gtheme)
-    if "%ask%"=="23" (set "gtheme=Plasma-dark" & goto :continue.gtheme)
-    if "%ask%"=="24" (set "gtheme=Powerman" & goto :continue.gtheme)
-    if "%ask%"=="25" (set "gtheme=RainbowDash" & goto :continue.gtheme)
-    if "%ask%"=="26" (set "gtheme=Raindrops" & goto :continue.gtheme)
-    if "%ask%"=="27" (set "gtheme=SolarizedDark" & goto :continue.gtheme)
-    if "%ask%"=="28" (set "gtheme=Solstice" & goto :continue.gtheme)
-    if "%ask%"=="29" (set "gtheme=Steam" & goto :continue.gtheme)
-    if "%ask%"=="30" (set "gtheme=StylishDark" & goto :continue.gtheme)
-    if "%ask%"=="31" (set "gtheme=Tela" & goto :continue.gtheme)
-    if "%ask%"=="32" (set "gtheme=Ubuntu-lucid" & goto :continue.gtheme)
+    if "%ask%"=="1"  (set "gtheme=Aero"            & goto :continue.gtheme)
+    if "%ask%"=="2"  (set "gtheme=Air_Vision"      & goto :continue.gtheme)
+    if "%ask%"=="3"  (set "gtheme=Alienware"       & goto :continue.gtheme)
+    if "%ask%"=="4"  (set "gtheme=Anonymous"       & goto :continue.gtheme)
+    if "%ask%"=="5"  (set "gtheme=Archlinux"       & goto :continue.gtheme)
+    if "%ask%"=="6"  (set "gtheme=Ask-larry"       & goto :continue.gtheme)
+    if "%ask%"=="7"  (set "gtheme=Atomic"          & goto :continue.gtheme)
+    if "%ask%"=="8"  (set "gtheme=Aurora"          & goto :continue.gtheme)
+    if "%ask%"=="9"  (set "gtheme=Axiom"           & goto :continue.gtheme)
+    if "%ask%"=="10" (set "gtheme=Bluec4d"         & goto :continue.gtheme)
+    if "%ask%"=="11" (set "gtheme=Breeze-1"        & goto :continue.gtheme)
+    if "%ask%"=="12" (set "gtheme=blur-grub2"      & goto :continue.gtheme)
+    if "%ask%"=="13" (set "gtheme=Breeze_dark"     & goto :continue.gtheme)
+    if "%ask%"=="14" (set "gtheme=Breeze-5"        & goto :continue.gtheme)
+    if "%ask%"=="15" (set "gtheme=CyberSecurity"   & goto :continue.gtheme)
+    if "%ask%"=="16" (set "gtheme=Dark_Colors"     & goto :continue.gtheme)
+    if "%ask%"=="17" (set "gtheme=Dark_squares"    & goto :continue.gtheme)
+    if "%ask%"=="18" (set "gtheme=Devuan"          & goto :continue.gtheme)
+    if "%ask%"=="19" (set "gtheme=Eternity"        & goto :continue.gtheme)
+    if "%ask%"=="20" (set "gtheme=FagiadaBue"      & goto :continue.gtheme)
+    if "%ask%"=="21" (set "gtheme=Gentoo"          & goto :continue.gtheme)
+    if "%ask%"=="22" (set "gtheme=Grau"            & goto :continue.gtheme)
+    if "%ask%"=="23" (set "gtheme=Huayralimbo"     & goto :continue.gtheme)
+    if "%ask%"=="24" (set "gtheme=Journey"         & goto :continue.gtheme)
+    if "%ask%"=="25" (set "gtheme=Monochrome"      & goto :continue.gtheme)
+    if "%ask%"=="26" (set "gtheme=Oxygen"          & goto :continue.gtheme)
+    if "%ask%"=="27" (set "gtheme=Plasma-dark"     & goto :continue.gtheme)
+    if "%ask%"=="28" (set "gtheme=poly-dark"       & goto :continue.gtheme)
+    if "%ask%"=="29" (set "gtheme=Powerman"        & goto :continue.gtheme)
+    if "%ask%"=="30" (set "gtheme=RainbowDash"     & goto :continue.gtheme)
+    if "%ask%"=="31" (set "gtheme=Raindrops"       & goto :continue.gtheme)
+    if "%ask%"=="32" (set "gtheme=SAO"             & goto :continue.gtheme)
+    if "%ask%"=="33" (set "gtheme=SolarizedDark"   & goto :continue.gtheme)
+    if "%ask%"=="34" (set "gtheme=Solstice"        & goto :continue.gtheme)
+    if "%ask%"=="35" (set "gtheme=Standby"         & goto :continue.gtheme)
+    if "%ask%"=="36" (set "gtheme=Steam"           & goto :continue.gtheme)
+    if "%ask%"=="37" (set "gtheme=StylishDark"     & goto :continue.gtheme)
+    if "%ask%"=="38" (set "gtheme=Tela"            & goto :continue.gtheme)
+    if "%ask%"=="39" (set "gtheme=Ubuntu-lucid"    & goto :continue.gtheme)
+    if "%ask%"=="40" (set "gtheme=Vimix"           & goto :continue.gtheme)
     color 4f & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :grub2theme
     
     :continue.gtheme
-    if not exist "%ducky%\BOOT\grub\themes\%gtheme%" (
-        "%bindir%\7za.exe" x "%bindir%\grub2_themes\%gtheme%.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y >nul
-    )
-    >"%ducky%\BOOT\grub\themes\theme" (echo %gtheme%)
-    call "%bindir%\config\main.bat"
-    call :clean.bye
+    cd /d "%ducky%\BOOT\grub\themes"
+        if exist "%curtheme%" rmdir /s /q "%curtheme%" > nul
+        if not exist "%gtheme%" (
+            "%bindir%\7za.exe" x "%bindir%\grub2_themes\%gtheme%.7z" -aoa -y >nul
+            "%bindir%\7za.exe" x "%bindir%\grub2font.7z" -o"%gtheme%" -aoa -y >nul
+        )
+        >"%ducky%\BOOT\grub\themes\theme" (echo %gtheme%)
+        call "%bindir%\config\main.bat"
+        call :clean.bye
 exit /b 0
 
 :rEFIndtheme

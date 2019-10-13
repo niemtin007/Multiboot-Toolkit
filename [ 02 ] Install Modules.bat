@@ -344,7 +344,7 @@ rem >> begin functions
     cls
     mode con lines=18 cols=70
     cd /d "%bindir%"
-        set /a num=%random% %%112 +1
+        set /a num=%random% %%110 +1
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
         7za x "colortool.7z" -o"%tmp%" -aos -y > nul

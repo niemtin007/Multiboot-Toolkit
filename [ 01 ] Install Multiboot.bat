@@ -6,9 +6,9 @@ rem >> Thank you for using Multiboot Toolkit.
 
 title %~nx0
 cd /d "%~dp0"
-set "rtheme=Leather"
-set "gtheme=Monochrome"
 set "bindir=%~dp0bin"
+set "rtheme=Leather"
+set "gtheme=CyberSecurity"
 call :check.data
 rem >> check device
 call :scan.label MULTIBOOT
@@ -406,7 +406,7 @@ exit /b 0
     cls
     mode con lines=18 cols=70
     cd /d "%bindir%"
-        set /a num=%random% %%112 +1
+        set /a num=%random% %%110 +1
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
         7za x "colortool.7z" -o"%tmp%" -aos -y > nul
