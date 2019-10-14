@@ -638,7 +638,6 @@ exit /b 0
         echo exit
     ) | diskpart > nul
     cd /d "X:\"
-        mkdir "X:\ISO\"
         mkdir "X:\EFI\BOOT\themes\"
         >"X:\EFI\BOOT\mark" (echo niemtin007)
     cd /d "%tmp%"
