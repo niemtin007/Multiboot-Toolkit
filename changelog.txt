@@ -1,6 +1,9 @@
-﻿                      =====================================                     
+﻿
+                      =====================================                     
                       == https://niemtin007.blogspot.com ==                     
                       =====================================                     
+
+
 
   Changelog Multiboot Toolkit 2.3.2: (work-in-process)
   ==============================================================================
@@ -16,6 +19,7 @@
 * Supported script to create BIOS Boot Partition automatic
 * Supported to create UEFI GPT bootable USB disk (limited features)
 * Display copy percentage when integrating Wim, ISO modules type
+* Disabled SpVoice on Windows lite, added more grub2 themes
   ------------------------------------------------------------------------------
 
 

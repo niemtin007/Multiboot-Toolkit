@@ -53,7 +53,7 @@ if not exist "%ducky%\PortableApps" call :PortableAppsPlatform
 echo.
 echo %_lang0202_%
 cd /d "%tmp%"
-    start modules.vbs
+    if exist "%systemroot%\SysWOW64\Speech\SpeechUX\sapi.cpl" start modules.vbs
     echo %_lang0203_% & timeout /t 300 > nul
     taskkill /f /im wscript.exe /t /fi "status eq running">nul
     del /s /q modules.vbs >nul
@@ -408,7 +408,8 @@ exit /b 0
             set "offline=0"
             goto :progress.scan
         ) else (
-            cd /d "%tmp%" & start identify.vbs
+            cd /d "%tmp%"
+            if exist "%systemroot%\SysWOW64\Speech\SpeechUX\sapi.cpl" start identify.vbs
             cls & echo. & echo ^>^> Multiboot Drive Found ^^^^ & timeout /t 2 >nul
             goto :break.scan
         )
@@ -622,20 +623,19 @@ for /f %%b in ('wmic volume get driveletter^, label ^| findstr /i "%~1"') do set
 exit /b 0
 
 :clean.bye
-cd /d "%bindir%"
-    call colortool.bat
-    for /f "delims=" %%f in (hide.list) do (
-        if exist "%ducky%\%%f" (attrib +s +h "%ducky%\%%f")
-        if exist "%ducky%\ISO\%%f" (attrib +s +h "%ducky%\ISO\%%f")
-        if exist "%ducky%\WIM\%%f" (attrib +s +h "%ducky%\WIM\%%f")
-    )
+call :colortool
+for /f "delims=" %%f in (hide.list) do (
+    if exist "%ducky%\%%f" (attrib +s +h "%ducky%\%%f")
+    if exist "%ducky%\ISO\%%f" (attrib +s +h "%ducky%\ISO\%%f")
+    if exist "%ducky%\WIM\%%f" (attrib +s +h "%ducky%\WIM\%%f")
+)
 cd /d "%tmp%\partassist"
     if "%processor_architecture%"=="x86" (
-        SetupGreen32.exe -u > nul
-        LoadDrv_Win32.exe -u > nul
+        SetupGreen32 -u > nul
+        LoadDrv_Win32 -u > nul
     ) else (
-        SetupGreen64.exe -u > nul
-        LoadDrv_x64.exe -u > nul
+        SetupGreen64 -u > nul
+        LoadDrv_x64 -u > nul
     )
 cd /d "%tmp%"
     rem >> clean up the trash and exit
@@ -656,7 +656,7 @@ cd /d "%tmp%"
     echo.
     echo %_lang0012_%
     echo %_lang0013_%
-    start thanks.vbs
+    if exist "%systemroot%\SysWOW64\Speech\SpeechUX\sapi.cpl" start thanks.vbs
     timeout /t 3 >nul
     del /s /q thanks.vbs >nul
     exit
