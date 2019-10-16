@@ -344,7 +344,7 @@ rem >> begin functions
     cls
     mode con lines=18 cols=70
     cd /d "%bindir%"
-        set /a num=%random% %%110 +1
+        set /a num=%random% %%105 +1
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
         7za x "colortool.7z" -o"%tmp%" -aos -y > nul
@@ -446,11 +446,11 @@ exit /b 0
         set bootice="%bindir%\bootice.exe"
     cd /d "%tmp%\partassist"
         if "%processor_architecture%"=="x86" (
-            SetupGreen32.exe -i > nul
-            LoadDrv_Win32.exe -i > nul
+            SetupGreen32 -i > nul
+            LoadDrv_Win32 -i > nul
         ) else (
-            SetupGreen64.exe -i > nul
-            LoadDrv_x64.exe -i > nul
+            SetupGreen64 -i > nul
+            LoadDrv_x64 -i > nul
         )
     >"%tmp%\partassist\cfg.ini" (
         echo [Language]

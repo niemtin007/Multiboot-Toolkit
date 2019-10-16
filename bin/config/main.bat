@@ -10,7 +10,13 @@ cd /d "%ducky%\BOOT\grub"
         set list=a b c d e f g h i k l m n o
     )
     >"main.cfg" (
-        echo insmod font
+        echo.
+        echo # Load grub2 modules
+        echo set modlist='font gettext jpeg png regexp search_fs_uuid'
+        echo for module in $modlist; do
+        echo     insmod $module
+        echo done
+        echo.
         echo if loadfont unicode ; then
         echo     if keystatus --shift ; then true ; else
         echo         if [ "${grub_platform}" == "efi" ]; then
@@ -30,70 +36,26 @@ cd /d "%ducky%\BOOT\grub"
         echo     fi
         echo fi
         echo.
-        echo if [ "${grub_platform}" == "pc" ]; then
-        echo     insmod vbe
-        echo     insmod vga
-        echo fi
-        echo.
         echo # Timeout for menu
         echo set timeout=30
-        echo # Default boot entry
-        echo set default=0
-        echo.
-        echo # Menu Themes
-        echo set theme=$prefix/themes/%gtheme%/theme.txt
-        echo set locale_dir=$prefix/locale
-        echo set icondir=$prefix/themes/icons
-        echo export theme
-        echo.
-        echo # Enable pager for GRUB command-line
-        echo set pager=1
-        echo.
-        echo # Partition holding files
-        echo probe -u $root --set=rootuuid
-        echo set imgdevpath="/dev/disk/by-uuid/$rootuuid"
-        echo export imgdevpath rootuuid
         echo.
         echo # Custom variables
+        echo set locale_dir=$prefix/locale
         echo set drive_label=multiboot
-        echo export drive_label
         echo set binpath="/BOOT"
         echo set isopath="/ISO"
-        echo export binpath isopath
-        echo.
-        echo insmod all_video
-        echo insmod video_bochs
-        echo insmod video_cirrus
-        echo insmod font
-        echo insmod gfxmenu
-        echo insmod gettext
-        echo insmod jpeg
-        echo insmod png
-        echo insmod part_acorn
-        echo insmod part_amiga
-        echo insmod part_apple
-        echo insmod part_bsd
-        echo insmod part_gpt
-        echo insmod part_msdos
-        echo insmod part_sun
-        echo insmod part_sunpc
-        echo insmod ext2
-        echo insmod ntfs
-        echo insmod fat
-        echo insmod insmod search_fs_uuid
-        echo insmod iso9660
+        echo export locale_dir drive_label binpath isopath
         echo.
         echo search.fs_label M-ESP edir
         echo search.fs_label rEFInd rdir
         echo search.fs_label MULTIBOOT mdir
+        echo export edir rdir mdir
         echo.
-        echo # Load personalized configuration
-        echo if [ -e "$prefix/grub.cfg.local" ]; then
-        echo   source "$prefix/grub.cfg.local"
-        echo fi
+        echo # Menu Themes
+        echo set theme=$prefix/themes/%gtheme%/theme.txt
+        echo set icondir=$prefix/themes/icons
+        echo export theme icondir
         echo.
-        echo # For globbing
-        echo insmod regexp
         echo.
         echo.
     )
@@ -103,7 +65,6 @@ cd /d "%ducky%\BOOT\grub"
     )
 
     >"bootfromwim.cfg" (
-        echo set icondir=$prefix/themes/icons
         echo.
         echo function bootfromwim {
         echo     echo Loading WinPE to ramdisk, please wait...
@@ -523,7 +484,6 @@ exit /b 0
 >>"main.cfg" (
     echo # Grub options
     echo submenu "%_config0116_%" --class tool_part {
-    echo     set icondir=$prefix/themes/icons
     echo.
     echo     menuentry "%_config0000_%" --class arrow_left {
     echo         echo "%_config0000_%"

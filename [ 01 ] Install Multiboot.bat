@@ -38,7 +38,7 @@ cd /d "%bindir%"
 :Removable
 rem >> prepare partitions space for Removable Media
 cls
-rem need use bootice to rebuild MBR disk partition. It's important for flash drive.
+rem need to use bootice to rebuild MBR disk partition. It's important for flash drive.
 %bootice% /device=%disk% /partitions /repartition /usb-hdd /fstype=fat32 /quiet
 %partassist% /hd:%disk% /del:all
 rem >> create rEFInd partition
@@ -106,7 +106,7 @@ call :count.partition
 :delete
 call :colortool
 call :count.partition
-    if "%part%"=="%deletedpart%" goto :continue rem all partition was deleted
+    if "%part%"=="%deletedpart%" goto :continue rem all partitions were deleted
 call :unhide.partition 0
 call :check.author X:
 if "%installed%"=="true" (
@@ -374,11 +374,11 @@ exit /b 0
         set bootice="%bindir%\bootice.exe"
     cd /d "%tmp%\partassist"
         if "%processor_architecture%"=="x86" (
-            SetupGreen32.exe -i > nul
-            LoadDrv_Win32.exe -i > nul
+            SetupGreen32 -i > nul
+            LoadDrv_Win32 -i > nul
         ) else (
-            SetupGreen64.exe -i > nul
-            LoadDrv_x64.exe -i > nul
+            SetupGreen64 -i > nul
+            LoadDrv_x64 -i > nul
         )
     >"%tmp%\partassist\cfg.ini" (
         echo [Language]
@@ -406,7 +406,7 @@ exit /b 0
     cls
     mode con lines=18 cols=70
     cd /d "%bindir%"
-        set /a num=%random% %%110 +1
+        set /a num=%random% %%105 +1
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
         7za x "colortool.7z" -o"%tmp%" -aos -y > nul
@@ -657,18 +657,38 @@ exit /b 0
         echo exit
     ) | diskpart > nul
     rem > installing data
+    cd /d "X:\"
+        for %%b in (APPS BOOT\grub\themes EFI\BOOT WIM) do mkdir %%b
+        >"BOOT\lang" (echo %lang%)
+        >"EFI\BOOT\mark" (echo niemtin007)
+        >"BOOT\grub\themes\theme" (echo %gtheme%)
+        >"EFI\BOOT\usb.gpt" (echo USB GPT Bootable Disk)
     echo.
     echo %_lang0122_%
     cd /d "%bindir%"
         xcopy "secureboot" "X:\" /e /g /h /r /y /q > nul
-        set "file=Autorun.inf usb.ico B64 XORBOOT"
+        set "file=Autorun.inf usb.ico B64 XORBOOT icons fonts"
         set "efi=winsetupia32.efi winsetupx64.efi xorbootx64.efi"
         7za x "data.7z" -o"X:\" %file% %efi% -r > nul
+    echo.
+    echo %_lang0116_%
+    cd /d "%bindir%"
+        silentcmd grub2installer.bat MULTIBOOT
+    cd /d "%bindir%\extra-modules"
+        "%bindir%\7za.exe" x "grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y > nul
+        >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
+    cd /d "%bindir%"
+        echo.
+        echo %_lang0112_% %lang%
+        7za x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y > nul
+    cd /d "%bindir%"
+        echo.
+        echo %_lang0113_% %gtheme%
+        7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y > nul
+    cd /d "%bindir%\config"
+        call "main.bat"
     cd /d "X:\EFI\Microsoft\Boot"
         call "%bindir%\bcdautoset.bat" bcd
-        >"X:\BOOT\lang" (echo %lang%)
-        >"X:\EFI\BOOT\mark" (echo niemtin007)
-        >"X:\EFI\BOOT\usb.gpt" (echo USB GPT Bootable Disk)
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
         copy "grubx64.png" "X:\EFI\BOOT\grubx64.png" > nul
         copy "grubx64.png" "X:\EFI\BOOT\grubia32.png" > nul
@@ -677,9 +697,6 @@ exit /b 0
         copy "xorbootx64.png" "X:\EFI\BOOT\xorbootx64.png" > nul
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
         xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
-    cd /d "X:\"
-        mkdir APPS
-        mkdir WIM
         call :assignletter.diskpart
     (
         echo select disk %disk%

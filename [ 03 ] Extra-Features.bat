@@ -70,9 +70,12 @@ if "%option%"=="14" call :qemuboottester
 color 4f & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :main
 
 :usb.gpt
+if "%option%"=="1"  call :grub2theme
 if "%option%"=="6"  call :editWinPEbootmanager
 if "%option%"=="7"  call :editwinsetupfromUSB
+if "%option%"=="8"  call :grub2-filemanager
 if "%option%"=="12" call :NTFSdriveprotect
+if "%option%"=="13" call :changelanguage
 if "%option%"=="14" call :qemuboottester
 color 4f & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :main
 
@@ -159,11 +162,11 @@ exit /b 0
         set bootice="%bindir%\bootice.exe"
     cd /d "%tmp%\partassist"
         if "%processor_architecture%"=="x86" (
-            SetupGreen32.exe -i > nul
-            LoadDrv_Win32.exe -i > nul
+            SetupGreen32 -i > nul
+            LoadDrv_Win32 -i > nul
         ) else (
-            SetupGreen64.exe -i > nul
-            LoadDrv_x64.exe -i > nul
+            SetupGreen64 -i > nul
+            LoadDrv_x64 -i > nul
         )
     
     >"%tmp%\partassist\cfg.ini" (
@@ -193,7 +196,7 @@ exit /b 0
     cls
     mode con lines=18 cols=70
     cd /d "%bindir%"
-        set /a num=%random% %%110 +1
+        set /a num=%random% %%105 +1
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
         7za x "colortool.7z" -o"%tmp%" -aos -y > nul
@@ -235,6 +238,7 @@ exit /b 0
 exit /b 0
 
 :changelanguage
+    call :colortool
     cd /d "%ducky%\BOOT"
         for /f "tokens=*" %%b in (lang) do set current=%%b
     echo.
@@ -250,7 +254,7 @@ exit /b 0
     if "%mylang%"=="2" set "lang=Vietnam" & goto :continue.lang
     if "%mylang%"=="3" set "lang=Turkish" & goto :continue.lang
     if "%mylang%"=="4" set "lang=SimplifiedChinese" & goto :continue.lang
-    color 4f & echo. & echo %_lang0003_% & timeout /t 15 >nul & cls & goto :changelanguage
+    color 4f & echo. & echo %_lang0003_% & timeout /t 15 > nul & goto :changelanguage
     
     :continue.lang
     echo.
@@ -269,6 +273,7 @@ exit /b 0
 exit /b 0
 
 :sortgrub2menu
+    call :colortool
     echo                   _    ____  
     echo   __ _ _ __ _   _^| ^|__^|___ \  a. %_config0115_%
     echo  / _` ^| '__^| ^| ^| ^| '_ \ __^) ^| b. %_config0109_%
@@ -587,6 +592,7 @@ exit /b 0
 exit /b 0
 
 :editWinPEbootmanager
+    call :colortool
     cd /d "%ducky%\BOOT"
         if exist "secureboot" (
             for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
@@ -662,6 +668,7 @@ exit /b 0
 exit /b 0
 
 :editwinsetupfromUSB
+    call :colortool
     if not exist "%ducky%\WINSETUP\" (
         color 4f & echo.
         echo ^>^> Please install winsetup module before running me
@@ -688,6 +695,7 @@ exit /b 0
 exit /b 0
 
 :fixbootloader
+    call :colortool
     cd /d "%ducky%\BOOT"
         if exist "secureboot" (
             for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
@@ -846,6 +854,7 @@ exit /b 0
 exit /b 0
 
 :setdefaultboot
+    call :colortool
     cd /d "%ducky%\BOOT"
         if not exist "secureboot" goto :option.default
         for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
@@ -946,6 +955,7 @@ exit /b 0
 
 :updatemultiboot
     rem >> Preparing files...
+    call :colortool
     cd /d "%ducky%\BOOT"
         for /f "tokens=*" %%b in (lang) do set "lang=%%b"
         echo. & echo ^>^>  Current language: %lang%
@@ -1027,6 +1037,7 @@ exit /b 0
 exit /b 0
 
 :unhidedatapartition
+    call :colortool
     %partassist% /list
     echo.
     set /p disk= %_lang0101_%
@@ -1068,7 +1079,7 @@ exit /b 0
 exit /b 0
 
 :NTFSdriveprotect
-    cd /d "%bindir%"
+    call :colortool
         7za x "driveprotect.7z" -o"%tmp%" -aos -y > nul
         if "%processor_architecture%" == "x86" (
             set DriveProtect=driveprotect.exe
@@ -1081,7 +1092,8 @@ exit /b 0
 exit /b 0
 
 :qemuboottester
-    cls & echo.
+    call :colortool
+    echo.
     echo ^>^> Cleaning up trash, wait a minute...
     echo.
     cd /d "%tmp%"
@@ -1096,6 +1108,7 @@ exit /b 0
 exit /b 0
 
 :cloverinstaller
+    call :colortool
     if "%PROCESSOR_ARCHITECTURE%"=="x86" (
         set gdisk=gdisk32.exe
         ) else (
@@ -1299,6 +1312,7 @@ rem clover function
 exit /b 0
 
 :rEFIndinstaller
+    call :colortool
     for /f "tokens=4 delims=\" %%b in ('wmic os get name') do set "harddisk=%%b"
         set "harddisk=%harddisk:~8,1%"
         set /a "harddisk=%harddisk%+0"

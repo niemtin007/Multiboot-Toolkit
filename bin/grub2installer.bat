@@ -30,14 +30,16 @@ cd /d "%tmp%"
         echo assign letter=v
     ) | diskpart
 rem >> install grub2 for Legacy BIOS mode
-move /y "%ducky%\BOOT\grub\*.lst" "%ducky%\BOOT" >nul
-cd /d "%tmp%\grub2"
-    grub-install --target=i386-pc --force --boot-directory=%ducky%\BOOT \\.\physicaldrive%disk%
-move /y "%ducky%\BOOT\*.lst" "%ducky%\BOOT\grub" >nul
-cd /d "%tmp%\grub2\i386-pc"
-    copy "lnxboot.img" "%ducky%\BOOT\grub\i386-pc" /y >nul
-cd /d "%ducky%\BOOT\grub\i386-pc"
-    copy /b lnxboot.img+Core.img g2ldr
+if not exist "%dest%\EFI\BOOT\usb.gpt" (
+    move /y "%ducky%\BOOT\grub\*.lst" "%ducky%\BOOT" >nul
+    cd /d "%tmp%\grub2"
+        grub-install --target=i386-pc --force --boot-directory=%ducky%\BOOT \\.\physicaldrive%disk%
+    move /y "%ducky%\BOOT\*.lst" "%ducky%\BOOT\grub" >nul
+    cd /d "%tmp%\grub2\i386-pc"
+        copy "lnxboot.img" "%ducky%\BOOT\grub\i386-pc" /y >nul
+    cd /d "%ducky%\BOOT\grub\i386-pc"
+        copy /b lnxboot.img+Core.img g2ldr
+)
 
 rem >> install grub2 for EFI mode
 cd /d "%tmp%\grub2"
