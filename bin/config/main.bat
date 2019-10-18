@@ -12,7 +12,7 @@ cd /d "%ducky%\BOOT\grub"
     >"main.cfg" (
         echo.
         echo # Load grub2 modules
-        echo set modlist='font gettext jpeg png regexp search_fs_uuid'
+        echo set modlist='font jpeg png regexp'
         echo for module in $modlist; do
         echo     insmod $module
         echo done
@@ -480,62 +480,21 @@ exit /b 0
 exit /b 0
 
 :m
-:: Grub2 Options Menu
+:: Super Grub2 Menu
 >>"main.cfg" (
-    echo # Grub options
-    echo submenu "%_config0116_%" --class tool_part {
-    echo.
-    echo     menuentry "%_config0000_%" --class arrow_left {
-    echo         echo "%_config0000_%"
-    echo         configfile "${prefix}/main.cfg"
-    echo     }
-    echo.
-    echo     menuentry "%_config0117_%" --class tool_part {
-    echo         ls -l
-    echo         sleep --interruptible 9999
-    echo     }
-    echo.
-    echo     menuentry "%_config0118_%" --class tool_part {
-    echo         insmod lvm
-    echo     }
-    echo.
-    echo     menuentry "%_config0119_%" --class tool_part {
-    echo         insmod dm_nv
-    echo         insmod mdraid09_be
-    echo         insmod mdraid09
-    echo         insmod mdraid1x
-    echo         insmod raid5rec
-    echo         insmod raid6rec
-    echo     }
-    echo.
-    echo     menuentry "%_config0120_%" --class tool_part {
-    echo         insmod ata
-    echo         update_paths
-    echo     }
-    echo.
-    echo     menuentry "%_config0121_%" --class tool_part {
-    echo         insmod ohci
-    echo         insmod uhci
-    echo         insmod usbms
-    echo         update_paths
-    echo     }
-    echo.
-    echo     menuentry "%_config0122_%" --class tool_part {
-    echo         insmod luks
-    echo         insmod geli
-    echo         cryptomount -a
-    echo     }
-    echo.
-    echo     menuentry "%_config0123_%" --class tool_part {
-    echo         serial
-    echo         terminal_input --append serial
-    echo         terminal_output --append serial
-    echo     }
-    echo.
-    echo     menuentry "%_config0000_%" --class arrow_left {
-    echo         echo "%_config0000_%"
-    echo         configfile "${prefix}/main.cfg"
-    echo     }
+    echo menuentry "%_config0116_%" --class tool_part {
+    echo     insmod datehook
+    echo     
+    echo     set sg2d_directory="${config_directory}/sgd"
+    echo     export sg2d_directory
+    echo     set afd_directory="${config_directory}"
+    echo     export afd_directory
+    echo     
+    echo     if [ "$MONTH" -eq "4" -a "$DAY" -eq "1" ] ; then
+    echo       configfile "${afd_directory}/afd2012.cfg"
+    echo     else
+    echo       configfile "${sg2d_directory}/main.cfg"
+    echo     fi
     echo }
     echo.
 )

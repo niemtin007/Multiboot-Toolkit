@@ -129,6 +129,8 @@ cd /d "%tmp%"
     wincdemu /uninstall
 
 :specialiso
+rem disabled iso linux run on fat32 partition (hidden partition)
+if exist "%ducky%\EFI\BOOT\usb.gpt" goto :populariso
 rem check special iso type 
 cd /d "%bindir%\Special_ISO"
     for /f "delims=" %%f in (%bindir%\specialiso.list) do (

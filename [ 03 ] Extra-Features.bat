@@ -74,9 +74,11 @@ if "%option%"=="1"  call :grub2theme
 if "%option%"=="6"  call :editWinPEbootmanager
 if "%option%"=="7"  call :editwinsetupfromUSB
 if "%option%"=="8"  call :grub2-filemanager
+if "%option%"=="9"  call :fixbootloader
 if "%option%"=="12" call :NTFSdriveprotect
 if "%option%"=="13" call :changelanguage
 if "%option%"=="14" call :qemuboottester
+if "%option%"=="16" call :sortgrub2menu
 color 4f & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :main
 
 
@@ -221,6 +223,15 @@ exit /b 0
     cls
     cd /d "%bindir%"
     mode con lines=18 cols=70
+exit /b 0
+
+:check.partitiontable
+    set GPT=false
+    for /f "tokens=4,5,8" %%b in ('echo list disk ^| diskpart ^| find /i "Disk %disk%"') do (
+        set /a disksize=%%b
+        set    diskunit=%%c
+        if /i "%%d"=="*" set GPT=true
+    )
 exit /b 0
 
 :silentcmd
@@ -696,6 +707,16 @@ exit /b 0
 
 :fixbootloader
     call :colortool
+    call :check.partitiontable
+    echo                  ------------------------------------
+    echo                    __ _        _                 _   
+    echo                   / _^(___  __ ^| ^|__   ___   ___ ^| ^|_ 
+    echo                  ^| ^|_^| \ \/ / ^| '_ \ / _ \ / _ \^| __^|
+    echo                  ^|  _^| ^|^>  ^<  ^| ^|_^) ^| ^(_^) ^| ^(_^) ^| ^|_ 
+    echo                  ^|_^| ^|_/_/\_\ ^|_.__/ \___/ \___/ \__^|
+    echo.
+    echo                  ------------------------------------
+    echo.
     cd /d "%ducky%\BOOT"
         if exist "secureboot" (
             for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
@@ -722,6 +743,7 @@ exit /b 0
         if exist %ducky%\winsetup.lst (del /S /Q /F %ducky%\winsetup.lst > nul)
     
     :grub.fix
+    if "%GPT%"=="true" goto :grub2.fix
     echo.
     choice /c yn /cs /n /m "%_lang0837_%"
         if errorlevel 2 goto :grub2.fix
@@ -765,23 +787,18 @@ exit /b 0
     cd /d "%ducky%\EFI\Microsoft\Boot"
         call "%bindir%\bcdautoset.bat" bcd
     rem >> install Syslinux Bootloader
-    "%bindir%\syslinux.exe" --force --directory /BOOT/syslinux %ducky% %ducky%\BOOT\syslinux\syslinux.bin
-    rem >> install Syslinux Bootloader
-    if exist "%ducky%\DLC1" (
-    "%bindir%\syslinux.exe" --force --directory /DLC1/Boot %ducky% %ducky%\DLC1\Boot\syslinux.bin
+    if "%GPT%"=="false" (
+        "%bindir%\syslinux.exe" --force --directory /BOOT/syslinux %ducky% %ducky%\BOOT\syslinux\syslinux.bin
+        if exist "%ducky%\DLC1" (
+        "%bindir%\syslinux.exe" --force --directory /DLC1/Boot %ducky% %ducky%\DLC1\Boot\syslinux.bin
+        )
     )
     rem --------------------------------------------------------------------
     "%bindir%\7za.exe" x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y > nul
     cd /d "%bindir%\extra-modules"
         "%bindir%\7za.exe" x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
         >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
-    rem set "source=%bindir%\secureboot"
-    rem if not "%secureboot%"=="n" (
-    rem     %partassist% /hd:%disk% /whide:0 /src:%source% /dest:
-    rem ) else (
-    rem     cd /d "%bindir%"
-    rem         xcopy "secureboot" "%ducky%\" /e /g /h /r /y /q > nul
-    rem )
+    
     call :clean.bye
 exit /b 0
 

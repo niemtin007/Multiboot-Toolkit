@@ -242,7 +242,6 @@ cd /d "%bindir%\config"
 cd /d "%bindir%\secureboot\EFI\Microsoft\Boot"
     call "%bindir%\bcdautoset.bat" bcd
 rem >> install secure boot file
-call :colortool
 set "source=%bindir%\secureboot"
 rem > for USB
 if "%usb%"=="true" if "%secureboot%"=="n" (
@@ -251,18 +250,18 @@ if "%usb%"=="true" if "%secureboot%"=="n" (
         xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
     cd /d "%bindir%"
         xcopy "secureboot" "X:\" /e /g /h /r /y /q > nul
-    %partassist% /hd:%disk% /setletter:0 /letter:auto
+    call :assignletter.diskpart
     call :clean.bye
 )
 if "%usb%"=="true" if "%secureboot%"=="y" (
     %partassist% /hd:%disk% /whide:1 /src:%source%
-    %partassist% /hd:%disk% /setletter:0 /letter:auto
+    call :assignletter.diskpart
 )
 rem > for HDD/SSD
 if "%GPT%"=="true" (set mpart=3) else (set mpart=2)
 if not "%usb%"=="true" if "%secureboot%"=="y" (
     %partassist% /hd:%disk% /whide:0 /src:%source%
-    %partassist% /hd:%disk% /setletter:%mpart% /letter:auto
+    call :assignletter.diskpart
 )
 if "%GPT%"=="true" (set mpart=2) else (set mpart=1)
 if not "%usb%"=="true" if "%secureboot%"=="n" (
@@ -271,7 +270,7 @@ if not "%usb%"=="true" if "%secureboot%"=="n" (
         xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
     cd /d "%bindir%"
         xcopy "secureboot" "X:\" /e /g /h /r /y /q > nul
-    %partassist% /hd:%disk% /setletter:%mpart% /letter:auto
+    call :assignletter.diskpart
 )
 if "%installmodules%"=="y" (
     cd /d "%~dp0"
@@ -536,15 +535,13 @@ exit /b 0
 exit /b 0
 
 :assignletter.diskpart
-    call :colortool
     echo.
     echo %_lang0123_%
     for %%p in (z y x w v u t s r q p o n m l k j i h g f e d) do (
         if not exist %%p:\nul set letter=%%p
     )
-    for /f "tokens=2 delims= " %%b in ('echo list volume ^| diskpart ^| find /i "    X  "') do set "volume=%%b"
     (
-        echo select volume %volume%
+        echo select volume X
         echo assign letter=%letter%
     ) | diskpart > nul
     cd /d "%~dp0"
@@ -658,7 +655,7 @@ exit /b 0
     ) | diskpart > nul
     rem > installing data
     cd /d "X:\"
-        for %%b in (APPS BOOT\grub\themes EFI\BOOT WIM) do mkdir %%b
+        for %%b in (APPS BOOT\grub\themes EFI\BOOT ISO WIM) do mkdir %%b
         >"BOOT\lang" (echo %lang%)
         >"EFI\BOOT\mark" (echo niemtin007)
         >"BOOT\grub\themes\theme" (echo %gtheme%)
