@@ -202,23 +202,22 @@ cd /d "%bindir%\config\bcd"
     xcopy "B84" "X:\BOOT\bootmgr\" /e /g /h /r /y /q > nul
 cd /d "%bindir%\secureboot\BOOT"
     xcopy "boot.sdi" "X:\BOOT\" /e /g /h /r /y /q > nul
-cd /d "%bindir%\extra-modules"
-    xcopy "grub4dos\grldr" "X:\" /e /g /h /r /y /q >nul
 cd /d "%bindir%"
+    rem install grub4dos
+    xcopy "extra-modules\grub4dos\grldr" "X:\" /e /g /h /r /y /q >nul
+    rem install wincdemu to mount iso files
     7za x "wincdemu.7z" -o"X:\ISO\" -aoa -y >nul
-rem >> install Syslinux Bootloader
-cd /d "%bindir%"
+    rem install Syslinux Bootloader
     syslinux --force --directory /BOOT/syslinux X: X:\BOOT\syslinux\syslinux.bin
-rem >> install grub2 Bootloader
-call :colortool
+    rem install grub2 Bootloader
+    call :colortool
     if "%GPT%"=="true" call :gdisk
     echo.
     echo %_lang0116_%
     silentcmd grub2installer.bat MULTIBOOT
-cd /d "%bindir%\extra-modules"
-    "%bindir%\7za.exe" x "grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y > nul
+    7za x "extra-modules\grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y > nul
     >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
-cd /d "%bindir%"
+    rem installing language
     echo.
     echo %_lang0112_% %lang%
     7za x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y > nul
@@ -226,21 +225,14 @@ cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
     echo.
     echo %_lang0111_% %rtheme%
     >"%ducky%\BOOT\rEFInd" (echo %rtheme%)
-    copy "grubx64.png" "X:\EFI\BOOT\grubx64.png" > nul
-    copy "grubx64.png" "X:\EFI\BOOT\grubia32.png" > nul
-    copy "winsetupx64.png" "X:\EFI\BOOT\winsetupx64.png" > nul
-    copy "winsetupx64.png" "X:\EFI\BOOT\winsetupia32.png" > nul
-    copy "xorbootx64.png" "X:\EFI\BOOT\xorbootx64.png" > nul
-cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-    xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
+    call :rEFInd.icons X:
 cd /d "%bindir%"
     echo.
     echo %_lang0113_% %gtheme%
     7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y > nul
-cd /d "%bindir%\config"
-    call "main.bat"
+    call "%bindir%\config\main.bat"
 cd /d "%bindir%\secureboot\EFI\Microsoft\Boot"
-    call "%bindir%\bcdautoset.bat" bcd
+    call :bcdautoset bcd
 rem >> install secure boot file
 set "source=%bindir%\secureboot"
 rem > for USB
@@ -274,7 +266,7 @@ if not "%usb%"=="true" if "%secureboot%"=="n" (
 )
 if "%installmodules%"=="y" (
     cd /d "%~dp0"
-    call "[ 02 ] Install Modules.bat"
+        call "[ 02 ] Install Modules.bat"
 )
 call :clean.bye
 
@@ -379,25 +371,25 @@ exit /b 0
             SetupGreen64 -i > nul
             LoadDrv_x64 -i > nul
         )
-    >"%tmp%\partassist\cfg.ini" (
-        echo [Language]
-        echo LANGUAGE=lang\%langpa%.txt;%langcode%
-        echo LANGCHANGED=1
-        echo [Version]
-        echo Version=4
-        echo [Product Version]
-        echo v=2
-        echo Lang=%langpa%
-        echo [CONFIG]
-        echo COUNT=2
-        echo KEY=AOPR-21ROI-6Y7PL-Q4118
-        echo [PA]
-        echo POPUPMESSAGE=1
-    )
-    > "%tmp%\partassist\winpeshl.ini" (
-        echo [LaunchApp]
-        echo AppPath=%tmp%\partassist\PartAssist.exe
-    )
+        > cfg.ini (
+            echo [Language]
+            echo LANGUAGE=lang\%langpa%.txt;%langcode%
+            echo LANGCHANGED=1
+            echo [Version]
+            echo Version=4
+            echo [Product Version]
+            echo v=2
+            echo Lang=%langpa%
+            echo [CONFIG]
+            echo COUNT=2
+            echo KEY=AOPR-21ROI-6Y7PL-Q4118
+            echo [PA]
+            echo POPUPMESSAGE=1
+        )
+        > winpeshl.ini (
+            echo [LaunchApp]
+            echo AppPath=%tmp%\partassist\PartAssist.exe
+        )
     cls
 exit /b 0
 
@@ -471,7 +463,7 @@ endlocal
 exit /b 0
 
 :checkdisktype
-    :: reset all disk variable
+    :: reset all disks variable
     set "virtualdisk=false"
     set "harddisk=false"
     set "usb=false"
@@ -620,9 +612,81 @@ exit /b 0
         )
 exit /b 0
 
+:rEFInd.icons
+    copy "grubx64.png" "%~1\EFI\BOOT\grubx64.png" > nul
+    copy "grubx64.png" "%~1\EFI\BOOT\grubia32.png" > nul
+    copy "os_linux.icns" "%~1\EFI\BOOT\OneFileLinux.png" > nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupx64.png" > nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupia32.png" > nul
+    copy "xorbootx64.png" "%~1\EFI\BOOT\xorbootx64.png" > nul
+    xcopy "others" "%~1\EFI\BOOT\" /e /g /h /r /y /q > nul
+exit /b 0
+
+:bcdautoset
+    echo.
+    echo %_lang0004_%
+    set "bcd=%~1"
+    set "Object={7619dcc8-fafe-11d9-b411-000476eba25f}"
+    rem >> edit menu [ 01 ] Win10PE SE                x64 UEFI
+    set "bootfile=\WIM\w10pe64.wim"
+    set "identifier={default}"
+    call :bcd.reset
+    rem >> edit menu [ 02 ] Win8PE                    x64 UEFI
+    set "bootfile=\WIM\w8pe64.wim"
+    set "identifier={6e700c3b-7cca-4b2b-bca6-5a486db4b4ec}"
+    call :bcd.reset
+    rem >> edit menu [ 03 ] Win10PE SE                x64 UEFI           DLC Boot
+    set "bootfile=\DLC1\W10PE\W10x64.wim"
+    set "identifier={1584ef96-c13d-4ee2-b1b1-8fce4a0834a1}"
+    call :bcd.reset
+    rem >> edit menu [ 04 ] Win10PE SE                x64 UEFI           Strelec
+    set "bootfile=\SSTR\strelec10x64Eng.wim"
+    set "identifier={ebb0ef9d-19d7-47a6-8f0a-ec37ffa958fb}"
+    call :bcd.reset
+    rem >> edit menu [ 05 ] Hiren’s BootCD PE         x64 UEFI
+    set "bootfile=\WIM\hbcdpe.wim"
+    set "identifier={9a349bcd-72ba-40e1-ba0d-c2638ebbeeab}"
+    call :bcd.reset
+    rem >> edit menu [ 06 ] Bob.Omb’s Modified Win10PEx64 UEFI
+    set "bootfile=\WIM\BobW10PE.wim"
+    set "identifier={dfbac4eb-329a-4665-a876-568ae3f1f3c4}"
+    call :bcd.reset
+    rem >> edit menu [ 07 ] Setup Windows from sources                   Wim & ISO
+    set "bootfile=\WIM\bootisox64.wim"
+    set "identifier={d314f67b-45b3-4dac-b244-46a733f2583c}"
+    call :bcd.reset
+    rem --------------------------------------------------------------------------
+    echo.& echo %_lang0005_%
+    rem >> edit menu [ 01 ] Win10PE SE                x86 UEFI
+    set "bootfile=\WIM\w10pe32.wim"
+    set "identifier={8b08eb1f-1588-45d5-9327-a8c3c9af04cb}"
+    call :bcd.reset
+    rem >> edit menu [ 02 ] Win8PE                    x86 UEFI
+    set "bootfile=\WIM\w8pe32.wim"
+    set "identifier={1d17bd3f-8d1f-45af-98ff-fde29926a9c5}"
+    call :bcd.reset
+    rem >> edit menu [ 03 ] Win10PE SE                x86 UEFI           DLC Boot
+    set "bootfile=\DLC1\W10PE\W10x86.wim"
+    set "identifier={0e695210-306a-45df-9a89-7710c2b80ed0}"
+    call :bcd.reset
+    rem >> edit menu [ 04 ] Win10PE SE                x86 UEFI           Strelec
+    set "bootfile=\SSTR\strelec10Eng.wim"
+    set "identifier={65fcaee2-301e-44b2-94ee-e8875e58f509}"
+    call :bcd.reset
+    rem >> edit menu [ 05 ] Setup Windows from sources                   Wim & ISO
+    set "bootfile=\WIM\bootisox86.wim"
+    set "identifier={2247cc17-b047-45e4-b2cd-d4196ff5d2fb}"
+    call :bcd.reset
+exit /b 0
+
+:bcd.reset
+    bcdedit /store %bcd% /set %identifier% device ramdisk=[%ducky%]%bootfile%,%Object% > nul
+    bcdedit /store %bcd% /set %identifier% osdevice ramdisk=[%ducky%]%bootfile%,%Object% > nul
+exit /b 0
+
 :createusb.gpt
     set ducky=X:
-    rem > create multiboot data partition
+    rem create ESP partition
     echo.
     echo %_lang0121_%
     (
@@ -634,6 +698,7 @@ exit /b 0
         echo assign letter=X
         echo exit
     ) | diskpart > nul
+    rem push files into the ESP partition
     cd /d "X:\"
         mkdir "X:\EFI\BOOT\themes\"
         >"X:\EFI\BOOT\mark" (echo niemtin007)
@@ -641,11 +706,13 @@ exit /b 0
         xcopy "rEfind" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
     cd /d "%tmp%\rEfind_themes"
         xcopy "%rtheme%" "X:\EFI\BOOT\themes\" /e /g /h /r /y /q > nul
+    rem remove drive letter
     (
         echo select volume X
         echo remove letter X
         echo exit
     ) | diskpart > nul
+    rem create MULTIBOOT partition
     (
         echo select disk %disk%
         echo create partition primary
@@ -654,47 +721,44 @@ exit /b 0
         echo exit
     ) | diskpart > nul
     rem > installing data
+    echo.
+    echo %_lang0122_%
     cd /d "X:\"
         for %%b in (APPS BOOT\grub\themes EFI\BOOT ISO WIM) do mkdir %%b
         >"BOOT\lang" (echo %lang%)
         >"EFI\BOOT\mark" (echo niemtin007)
         >"BOOT\grub\themes\theme" (echo %gtheme%)
         >"EFI\BOOT\usb.gpt" (echo USB GPT Bootable Disk)
-    echo.
-    echo %_lang0122_%
     cd /d "%bindir%"
         xcopy "secureboot" "X:\" /e /g /h /r /y /q > nul
-        set "file=Autorun.inf usb.ico B64 XORBOOT icons fonts"
-        set "efi=winsetupia32.efi winsetupx64.efi xorbootx64.efi"
+        set "file=Autorun.inf usb.ico B64 XORBOOT grub"
+        set "efi=gdisk.efi OneFileLinux.efi winsetupia32.efi winsetupx64.efi xorbootx64.efi"
         7za x "data.7z" -o"X:\" %file% %efi% -r > nul
-    echo.
-    echo %_lang0116_%
-    cd /d "%bindir%"
+        rem install grub2 bootloader
+        echo.
+        echo %_lang0116_%
         silentcmd grub2installer.bat MULTIBOOT
-    cd /d "%bindir%\extra-modules"
-        "%bindir%\7za.exe" x "grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y > nul
+        rem install grub2 file manager
+        7za x "extra-modules\grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y > nul
         >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
-    cd /d "%bindir%"
+        rem install language
         echo.
         echo %_lang0112_% %lang%
         7za x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y > nul
-    cd /d "%bindir%"
+        rem install grub2 theme
         echo.
         echo %_lang0113_% %gtheme%
         7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y > nul
-    cd /d "%bindir%\config"
-        call "main.bat"
+        rem make grub2 config
+        call "%bindir%\config\main.bat"
     cd /d "X:\EFI\Microsoft\Boot"
-        call "%bindir%\bcdautoset.bat" bcd
+        rem setup directory of WIM file in BCD store for UEFI mode
+        call :bcdautoset bcd
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-        copy "grubx64.png" "X:\EFI\BOOT\grubx64.png" > nul
-        copy "grubx64.png" "X:\EFI\BOOT\grubia32.png" > nul
-        copy "winsetupx64.png" "X:\EFI\BOOT\winsetupx64.png" > nul
-        copy "winsetupx64.png" "X:\EFI\BOOT\winsetupia32.png" > nul
-        copy "xorbootx64.png" "X:\EFI\BOOT\xorbootx64.png" > nul
-    cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-        xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
+        rem install icons for rEFInd Boot Manager
+        call :rEFInd.icons X:
         call :assignletter.diskpart
+    rem specifies that the ESP does not receive a drive letter by default
     (
         echo select disk %disk%
         echo select partition 1
@@ -706,10 +770,12 @@ exit /b 0
 
 :clean.bye
 call :colortool
+call :scan.label MULTIBOOT
+call :check.author %ducky%
 for /f "delims=" %%f in (hide.list) do (
-    if exist "%ducky%\%%f" (attrib +s +h "%ducky%\%%f")
-    if exist "%ducky%\ISO\%%f" (attrib +s +h "%ducky%\ISO\%%f")
-    if exist "%ducky%\WIM\%%f" (attrib +s +h "%ducky%\WIM\%%f")
+    if exist "%ducky%\%%f"     attrib +s +h "%ducky%\%%f"
+    if exist "%ducky%\ISO\%%f" attrib +s +h "%ducky%\ISO\%%f"
+    if exist "%ducky%\WIM\%%f" attrib +s +h "%ducky%\WIM\%%f"
 )
 cd /d "%tmp%\partassist"
     if "%processor_architecture%"=="x86" (

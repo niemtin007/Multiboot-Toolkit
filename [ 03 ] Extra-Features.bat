@@ -170,27 +170,25 @@ exit /b 0
             SetupGreen64 -i > nul
             LoadDrv_x64 -i > nul
         )
-    
-    >"%tmp%\partassist\cfg.ini" (
-        echo [Language]
-        echo LANGUAGE=lang\%langpa%.txt;%langcode%
-        echo LANGCHANGED=1
-        echo [Version]
-        echo Version=4
-        echo [Product Version]
-        echo v=2
-        echo Lang=%langpa%
-        echo [CONFIG]
-        echo COUNT=2
-        echo KEY=AOPR-21ROI-6Y7PL-Q4118
-        echo [PA]
-        echo POPUPMESSAGE=1
-    )
-    
-    > "%tmp%\partassist\winpeshl.ini" (
-        echo [LaunchApp]
-        echo AppPath=%tmp%\partassist\PartAssist.exe
-    )
+        > cfg.ini (
+            echo [Language]
+            echo LANGUAGE=lang\%langpa%.txt;%langcode%
+            echo LANGCHANGED=1
+            echo [Version]
+            echo Version=4
+            echo [Product Version]
+            echo v=2
+            echo Lang=%langpa%
+            echo [CONFIG]
+            echo COUNT=2
+            echo KEY=AOPR-21ROI-6Y7PL-Q4118
+            echo [PA]
+            echo POPUPMESSAGE=1
+        )
+        > winpeshl.ini (
+            echo [LaunchApp]
+            echo AppPath=%tmp%\partassist\PartAssist.exe
+        )
     cls
 exit /b 0
 
@@ -475,13 +473,7 @@ exit /b 0
         if exist "%ducky%\EFI\CLOVER\*.*" (
             xcopy "cloverx64.png" "%ducky%\EFI\CLOVER\" /e /z /r /y /q >nul
         )
-        copy "grubx64.png" "%ducky%\EFI\BOOT\grubx64.png" /y >nul
-        copy "grubx64.png" "%ducky%\EFI\BOOT\grubia32.png" /y >nul
-        copy "winsetupx64.png" "%ducky%\EFI\BOOT\winsetupx64.png" /y >nul
-        copy "winsetupx64.png" "%ducky%\EFI\BOOT\winsetupia32.png" /y >nul
-        copy "xorbootx64.png" "%ducky%\EFI\BOOT\xorbootx64.png" /y >nul
-    cd /d "%tmp%\rEfind_themes\%rtheme%\icons\"
-        xcopy "others" "%ducky%\EFI\BOOT\" /e /g /h /r /y /q >nul
+        call :rEFInd.icons %ducky%
     cd /d "%bindir%"
         call :checkdisktype
         if "%virtualdisk%"=="true"  goto :external.rtheme
@@ -519,6 +511,16 @@ exit /b 0
         %partassist% /hd:%disk% /whide:%securepart% /src:%source% /dest:EFI\BOOT
     )
     call :clean.bye
+exit /b 0
+
+:rEFInd.icons
+    copy "grubx64.png" "%~1\EFI\BOOT\grubx64.png" > nul
+    copy "grubx64.png" "%~1\EFI\BOOT\grubia32.png" > nul
+    copy "os_linux.icns" "%~1\EFI\BOOT\OneFileLinux.png" > nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupx64.png" > nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupia32.png" > nul
+    copy "xorbootx64.png" "%~1\EFI\BOOT\xorbootx64.png" > nul
+    xcopy "others" "%~1\EFI\BOOT\" /e /g /h /r /y /q > nul
 exit /b 0
 
 :easeconvertdisk
@@ -615,7 +617,7 @@ exit /b 0
     cd /d "%bindir%"
     choice /c yn /cs /n /m "%_lang0800_%"
         if errorlevel 2 goto :option.pe
-        if errorlevel 1 call bcdautomenu.bat
+        if errorlevel 1 call :bcdautomenu
     
     :option.pe
     echo.
@@ -671,11 +673,120 @@ exit /b 0
     "%bindir%\bootice.exe" /edit_bcd /easymode /file="%source%"
     rem >> copy Configuration BCD file to the destination...
     if not "%secureboot%"=="n" (
-        call "%bindir%\bcdautoset.bat"
+        call :bcdautoset bcd
         %partassist% /hd:%disk% /whide:%securepart% /src:%source% /dest:EFI\Microsoft\Boot
     )
     call :colortool
     call :clean.bye
+exit /b 0
+
+:bcdautomenu
+    mode con lines=100 cols=70
+    > "%tmp%\winpemenu.txt" (
+        echo.
+        echo %_lang0801_%
+        echo.
+        echo [ 01 ] Boot Win10PE SE          64bit
+        echo [ 02 ] Boot Win8PE              64bit
+        echo [ 03 ] Hiren’s BootCD PE        64bit
+        echo [ 04 ] Bob.Omb’s Modified Win10PE x64
+        echo [ 05 ] Boot Win10PE SE          32bit
+        echo [ 06 ] Boot Win8PE              32bit
+        echo [ 07 ] Boot Win7PE              32bit
+        echo [ 08 ] Boot MiniXP
+        echo [ 09 ] Install Win 7-8-10 with ISO method                  WIM ^& ISO
+        echo [ .. ] Switch to Grub4Dos Menu
+        echo [ .. ] Switch to GRUB2 Menu
+        echo.
+        echo %_lang0802_%
+        echo.
+        echo [ 01 ] Win10PE SE                x64 UEFI
+        echo [ 02 ] Win8PE                    x64 UEFI
+        echo [ 03 ] Win10PE SE                x64 UEFI               DLC Boot
+        echo [ 04 ] Win10PE SE                x64 UEFI               Strelec
+        echo [ 05 ] Hirens BootCD PE          x64 UEFI
+        echo [ 06 ] Bob.Omb Modified Win10PE  x64 UEFI
+        echo [ 07 ] Setup Windows from sources                       WIM ^& ISO
+        echo -------------------------------------------------------------------
+        echo [ 01 ] Win10PE SE                x86 UEFI
+        echo [ 02 ] Win8PE                    x86 UEFI
+        echo [ 03 ] Win10PE SE                x86 UEFI               DLC Boot
+        echo [ 04 ] Win10PE SE                x86 UEFI               Strelec
+        echo [ 05 ] Setup Windows from sources                       WIM ^& ISO
+        echo -------------------------------------------------------------------
+        echo.
+        echo %_lang0803_%
+        echo.
+        echo %_lang0804_%
+        echo.
+    )
+    
+    echo.
+    echo            ^	^>^> MINI WINDOWS BOOT MANAGER EDITOR ^<^<
+    echo                 --------------------------------------
+    echo.
+    echo %_lang0805_%
+    "%tmp%\winpemenu.txt"
+    
+    cd /d "%ducky%\WIM"
+        echo.
+        echo %_lang0806_%
+        for /f "tokens=*" %%i in ('dir /a:-d /b 2^>nul') do (
+            if exist %%~ni.wim (
+                echo.
+                echo ^  %%~ni.wim
+                set "wim=true"
+            )
+        )
+        if not "%wim%"=="true" (
+            echo.
+            echo. %_lang0807_%
+        )
+    
+    echo.
+    echo.  ------------------------------------------------------------------
+    echo. %_lang0808_%
+    echo.  ------------------------------------------------------------------
+    echo.
+    set /p bootfilename= %_lang0809_%
+    set "bootfile=\WIM\%bootfilename%"
+    
+    for /f "delims=" %%b in (%tmp%\winpemenu.txt) do set menutitle=%%b
+    del /f /q "%tmp%\winpemenu.txt"
+    
+    :: Legacy BIOS Mode
+    echo.
+    echo %menutitle%
+    echo.
+    echo %_lang0810_%
+    set "source=%ducky%\BOOT\bootmgr\B84"
+    call :create.entry
+    
+    :: UEFI Mode
+    echo.
+    echo %_lang0811_%
+    if "%secureboot%"=="n" (
+        set "source=%ducky%\EFI\Microsoft\Boot\bcd"
+    ) else (
+        set "source=%bindir%\secureboot\EFI\Microsoft\Boot\bcd"
+    )
+    call :create.entry
+    
+    echo.
+    echo.  ------------------------------------------------------------------
+    echo.  %_lang0812_%
+    echo.  ------------------------------------------------------------------
+    echo.
+exit /b 0
+
+:create.entry
+    set "Object={7619dcc8-fafe-11d9-b411-000476eba25f}"
+    bcdedit /store %source% /copy {default} /d "%menutitle%" > %tmp%\tmpuuid.txt
+    for /f "tokens=7 delims=. " %%b in (%tmp%\tmpuuid.txt) do set identifier=%%b
+    del /f /q "%tmp%\tmpuuid.txt"
+    bcdedit /store %source% /set %identifier% device ramdisk=[%ducky%]%bootfile%,%Object%
+    bcdedit /store %source% /set %identifier% osdevice ramdisk=[%ducky%]%bootfile%,%Object% >nul
+    timeout /t 1 >nul
 exit /b 0
 
 :editwinsetupfromUSB
@@ -724,11 +835,11 @@ exit /b 0
     cd /d "%ducky%"
         if exist boot (ren boot BOOT > nul)
     cd /d "%ducky%\boot"
-        if exist grub_old (rename grub_old grub)
-        if exist efi (rename efi EFI > nul)
+        if exist grub_old (ren grub_old grub)
+        if exist efi (ren efi EFI > nul)
     cd /d "%ducky%\EFI"
-        if exist boot (rename boot BOOT > nul)
-        if exist microsoft (rename microsoft MICROSOFT > nul)
+        if exist boot (ren boot BOOT > nul)
+        if exist microsoft (ren microsoft MICROSOFT > nul)
     if exist "%ducky%\WINSETUP" (
         goto :winsetup.fix
     ) else (
@@ -740,7 +851,7 @@ exit /b 0
         copy /y backup\WinSetup\winsetupx64.efi %ducky%\efi\boot\ > nul
         copy /y backup\WinSetup\winsetupia32.efi %ducky%\efi\boot\ > nul
         xcopy /y /q /h /r %ducky%\BOOT\grub\menu.lst %ducky%\ > nul
-        if exist %ducky%\winsetup.lst (del /S /Q /F %ducky%\winsetup.lst > nul)
+        if exist %ducky%\winsetup.lst (del /s /q /f %ducky%\winsetup.lst > nul)
     
     :grub.fix
     if "%GPT%"=="true" goto :grub2.fix
@@ -762,7 +873,8 @@ exit /b 0
         wget -q -O grub4dos.7z %sourcelink% >nul
         del g4dtemp.log
     cd /d "%bindir%\extra-modules"
-        "%bindir%\7za.exe" e -ogrub4dos -aoa "%tmp%\grub4dos.7z" grub4dos-0.4.6a/grldr grub4dos-0.4.6a/grub.exe grub4dos0.4.6a/grldr_cd.bin >nul
+        set "file=grub4dos-0.4.6a/grldr grub4dos-0.4.6a/grub.exe grub4dos0.4.6a/grldr_cd.bin"
+        "%bindir%\7za.exe" e -ogrub4dos -aoa "%tmp%\grub4dos.7z" %file% >nul
         del /s /q "%tmp%\grub4dos.7z" > nul
         xcopy "grub4dos\grldr" "%ducky%\" /e /g /h /r /y /q > nul
     
@@ -785,7 +897,7 @@ exit /b 0
     cd /d "%bindir%\config\"
         call "main.bat"
     cd /d "%ducky%\EFI\Microsoft\Boot"
-        call "%bindir%\bcdautoset.bat" bcd
+        call :bcdautoset bcd
     rem >> install Syslinux Bootloader
     if "%GPT%"=="false" (
         "%bindir%\syslinux.exe" --force --directory /BOOT/syslinux %ducky% %ducky%\BOOT\syslinux\syslinux.bin
@@ -1044,7 +1156,7 @@ exit /b 0
     cd /d "%bindir%"
         7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y > nul
     cd /d "%ducky%\EFI\Microsoft\Boot"
-        call "%bindir%\bcdautoset.bat" bcd
+        call :bcdautoset bcd
     
     :updateconfig
     cd /d "%bindir%\config"
@@ -1506,12 +1618,74 @@ exit /b 0
         if not errorlevel 1 set "externaldisk=true"
 exit /b 0
 
+:bcdautoset
+    echo.
+    echo %_lang0004_%
+    set "bcd=%~1"
+    set "Object={7619dcc8-fafe-11d9-b411-000476eba25f}"
+    rem >> edit menu [ 01 ] Win10PE SE                x64 UEFI
+    set "bootfile=\WIM\w10pe64.wim"
+    set "identifier={default}"
+    call :bcd.reset
+    rem >> edit menu [ 02 ] Win8PE                    x64 UEFI
+    set "bootfile=\WIM\w8pe64.wim"
+    set "identifier={6e700c3b-7cca-4b2b-bca6-5a486db4b4ec}"
+    call :bcd.reset
+    rem >> edit menu [ 03 ] Win10PE SE                x64 UEFI           DLC Boot
+    set "bootfile=\DLC1\W10PE\W10x64.wim"
+    set "identifier={1584ef96-c13d-4ee2-b1b1-8fce4a0834a1}"
+    call :bcd.reset
+    rem >> edit menu [ 04 ] Win10PE SE                x64 UEFI           Strelec
+    set "bootfile=\SSTR\strelec10x64Eng.wim"
+    set "identifier={ebb0ef9d-19d7-47a6-8f0a-ec37ffa958fb}"
+    call :bcd.reset
+    rem >> edit menu [ 05 ] Hiren’s BootCD PE         x64 UEFI
+    set "bootfile=\WIM\hbcdpe.wim"
+    set "identifier={9a349bcd-72ba-40e1-ba0d-c2638ebbeeab}"
+    call :bcd.reset
+    rem >> edit menu [ 06 ] Bob.Omb’s Modified Win10PEx64 UEFI
+    set "bootfile=\WIM\BobW10PE.wim"
+    set "identifier={dfbac4eb-329a-4665-a876-568ae3f1f3c4}"
+    call :bcd.reset
+    rem >> edit menu [ 07 ] Setup Windows from sources                   Wim & ISO
+    set "bootfile=\WIM\bootisox64.wim"
+    set "identifier={d314f67b-45b3-4dac-b244-46a733f2583c}"
+    call :bcd.reset
+    rem --------------------------------------------------------------------------
+    echo.& echo %_lang0005_%
+    rem >> edit menu [ 01 ] Win10PE SE                x86 UEFI
+    set "bootfile=\WIM\w10pe32.wim"
+    set "identifier={8b08eb1f-1588-45d5-9327-a8c3c9af04cb}"
+    call :bcd.reset
+    rem >> edit menu [ 02 ] Win8PE                    x86 UEFI
+    set "bootfile=\WIM\w8pe32.wim"
+    set "identifier={1d17bd3f-8d1f-45af-98ff-fde29926a9c5}"
+    call :bcd.reset
+    rem >> edit menu [ 03 ] Win10PE SE                x86 UEFI           DLC Boot
+    set "bootfile=\DLC1\W10PE\W10x86.wim"
+    set "identifier={0e695210-306a-45df-9a89-7710c2b80ed0}"
+    call :bcd.reset
+    rem >> edit menu [ 04 ] Win10PE SE                x86 UEFI           Strelec
+    set "bootfile=\SSTR\strelec10Eng.wim"
+    set "identifier={65fcaee2-301e-44b2-94ee-e8875e58f509}"
+    call :bcd.reset
+    rem >> edit menu [ 05 ] Setup Windows from sources                   Wim & ISO
+    set "bootfile=\WIM\bootisox86.wim"
+    set "identifier={2247cc17-b047-45e4-b2cd-d4196ff5d2fb}"
+    call :bcd.reset
+exit /b 0
+
+:bcd.reset
+    bcdedit /store %bcd% /set %identifier% device ramdisk=[%ducky%]%bootfile%,%Object% > nul
+    bcdedit /store %bcd% /set %identifier% osdevice ramdisk=[%ducky%]%bootfile%,%Object% > nul
+exit /b 0
+
 :clean.bye
 call :colortool
 for /f "delims=" %%f in (hide.list) do (
-    if exist "%ducky%\%%f" (attrib +s +h "%ducky%\%%f")
-    if exist "%ducky%\ISO\%%f" (attrib +s +h "%ducky%\ISO\%%f")
-    if exist "%ducky%\WIM\%%f" (attrib +s +h "%ducky%\WIM\%%f")
+    if exist "%ducky%\%%f"     attrib +s +h "%ducky%\%%f"
+    if exist "%ducky%\ISO\%%f" attrib +s +h "%ducky%\ISO\%%f"
+    if exist "%ducky%\WIM\%%f" attrib +s +h "%ducky%\WIM\%%f"
 )
 cd /d "%tmp%\partassist"
     if "%processor_architecture%"=="x86" (

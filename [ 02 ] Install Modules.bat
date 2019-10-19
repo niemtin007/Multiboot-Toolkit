@@ -454,25 +454,25 @@ exit /b 0
             SetupGreen64 -i > nul
             LoadDrv_x64 -i > nul
         )
-    >"%tmp%\partassist\cfg.ini" (
-        echo [Language]
-        echo LANGUAGE=lang\%langpa%.txt;%langcode%
-        echo LANGCHANGED=1
-        echo [Version]
-        echo Version=4
-        echo [Product Version]
-        echo v=2
-        echo Lang=%langpa%
-        echo [CONFIG]
-        echo COUNT=2
-        echo KEY=AOPR-21ROI-6Y7PL-Q4118
-        echo [PA]
-        echo POPUPMESSAGE=1
-    )
-    > "%tmp%\partassist\winpeshl.ini" (
-        echo [LaunchApp]
-        echo AppPath=%tmp%\partassist\PartAssist.exe
-    )
+        > cfg.ini (
+            echo [Language]
+            echo LANGUAGE=lang\%langpa%.txt;%langcode%
+            echo LANGCHANGED=1
+            echo [Version]
+            echo Version=4
+            echo [Product Version]
+            echo v=2
+            echo Lang=%langpa%
+            echo [CONFIG]
+            echo COUNT=2
+            echo KEY=AOPR-21ROI-6Y7PL-Q4118
+            echo [PA]
+            echo POPUPMESSAGE=1
+        )
+        > winpeshl.ini (
+            echo [LaunchApp]
+            echo AppPath=%tmp%\partassist\PartAssist.exe
+        )
     cls
 exit /b 0
 
@@ -627,9 +627,9 @@ exit /b 0
 :clean.bye
 call :colortool
 for /f "delims=" %%f in (hide.list) do (
-    if exist "%ducky%\%%f" (attrib +s +h "%ducky%\%%f")
-    if exist "%ducky%\ISO\%%f" (attrib +s +h "%ducky%\ISO\%%f")
-    if exist "%ducky%\WIM\%%f" (attrib +s +h "%ducky%\WIM\%%f")
+    if exist "%ducky%\%%f"     attrib +s +h "%ducky%\%%f"
+    if exist "%ducky%\ISO\%%f" attrib +s +h "%ducky%\ISO\%%f"
+    if exist "%ducky%\WIM\%%f" attrib +s +h "%ducky%\WIM\%%f"
 )
 cd /d "%tmp%\partassist"
     if "%processor_architecture%"=="x86" (
