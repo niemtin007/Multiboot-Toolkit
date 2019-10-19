@@ -20,6 +20,7 @@
 * Supported to create UEFI GPT bootable USB disk (limited features)
 * Display copy percentage when integrating Wim, ISO modules type
 * Disabled SpVoice on Windows lite, added more grub2 themes
+* Added gdisk.efi & OneFileLinux.efi as modules
   ------------------------------------------------------------------------------
 
 
