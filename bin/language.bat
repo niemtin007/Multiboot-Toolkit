@@ -118,6 +118,7 @@ set "_lang0120_=# Do you want to create UEFI GPT bootable USB disk? [ y/n ] > "
 set "_lang0121_=^>^> Creating Multiboot Partition..."
 set "_lang0122_=^>^> Installing data..."
 set "_lang0123_=^>^> Normalize drive letter..."
+set "_lang0124_=--> Disable boot into Legacy BIOS mode  (recommend) [ y/n ] > "
 rem >> [ 02 ] Install Modules
 set "_lang0200_=^>^> Default module directory is:"
 set "_lang0201_=^>^> All modules will be installed to"
@@ -355,6 +356,7 @@ set "_lang0120_=# Bạn có muốn tạo USB khởi động ở bảng phân vù
 set "_lang0121_=^>^> Đang tạo phân vùng đa khởi động..."
 set "_lang0122_=^>^> Đang cài đặt dữ liệu..."
 set "_lang0123_=^>^> Đưa ký tự ổ đĩa về mặc định..."
+set "_lang0124_=--> Vô hiệu hóa khởi động ở chế độ Legacy   (đề nghị) [ y/n ] > "
 rem >> [ 02 ] Install Modules
 set "_lang0200_=^>^> Thư mục module mặc định là:"
 set "_lang0201_=^>^> Tất cả Module sẽ được cài đặt vào"
@@ -592,6 +594,7 @@ set "_lang0120_=# UEFI GPT ön yüklemeli bir USB disk oluşturmak istermisiniz?
 set "_lang0121_=^>^> Multiboot partisyon oluşturuluyor..."
 set "_lang0122_=^>^> Veriler yükleniyor..."
 set "_lang0123_=^>^> Sürücü harfini düzelt...."
+set "_lang0124_=--> Eski Legacy BIOS modunda önyüklemeyi devre dışı bırak (önerilir)    [ y/n ] > "
 rem >> [ 02 ] Install Modules
 set "_lang0200_=^>^> Varsayilan Module dizini:"
 set "_lang0201_=^>^> Tum moduller yuklenecek"
@@ -829,6 +832,7 @@ set "_lang0120_=# Do you want to create UEFI GPT bootable USB disk? [ y/n ] > "
 set "_lang0121_=^>^> Creating Multiboot Partition..."
 set "_lang0122_=^>^> Installing data..."
 set "_lang0123_=^>^> Normalize drive letter..."
+set "_lang0124_=--> Disable boot into Legacy BIOS mode  (recommend) [ y/n ] > "
 rem >> [ 02 ] Install Modules
 set "_lang0200_=^>^> 默认模块目录为:"
 set "_lang0201_=^>^> 所有模块将会被安装到"

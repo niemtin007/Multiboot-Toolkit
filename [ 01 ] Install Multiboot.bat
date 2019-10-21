@@ -566,18 +566,22 @@ cd /d "%bindir%"
 exit /b 0
 
 :rEFInd.part
-    if "%usb%"=="true" (
-        color 0e
-        echo.
-        echo --------------------------------------------------------------------
-        echo %_lang0118_%
-        echo %_lang0119_%
-        echo --------------------------------------------------------------------
-        echo.
-        choice /c yn /cs /n /m "%_lang0120_%"
-            if errorlevel 2 goto :rEFInd.ask
-            if errorlevel 1 call :createusb.gpt
-    )
+    if "%usb%"=="false" goto :rEFInd.ask
+    color 0e
+    echo.
+    echo --------------------------------------------------------------------
+    echo %_lang0118_%
+    echo %_lang0119_%
+    echo --------------------------------------------------------------------
+    echo.
+    choice /c yn /cs /n /m "%_lang0120_%"
+        if errorlevel 2 set "usbgpt=false"
+        if errorlevel 1 set "usbgpt=true"
+        if "%usbgpt%"=="false" goto :rEFInd.ask
+    choice /c yn /cs /n /m "%_lang0124_%"
+        if errorlevel 1 set "usblegacy=false"
+        if errorlevel 2 set "usblegacy=true"
+        if "%usbgpt%"=="true" call :createusb.gpt
     :rEFInd.ask
     call :colortool
     echo.
@@ -685,7 +689,6 @@ exit /b 0
 exit /b 0
 
 :createusb.gpt
-    set ducky=X:
     rem create ESP partition
     echo.
     echo %_lang0121_%
@@ -717,9 +720,18 @@ exit /b 0
         echo select disk %disk%
         echo create partition primary
         echo format quick fs=ntfs label="MULTIBOOT"
+        echo shrink desired=8
         echo assign letter=X
         echo exit
     ) | diskpart > nul
+    rem create BIOS Boot Partition for Legacy BIOS Mode
+    if "%usblegacy%"=="true" call :gdisk
+    rem recheck data partition
+    call :scan.label MULTIBOOT
+    if not "%ducky%"=="X:" (
+        cls & echo. & color 4f
+        echo %_lang0110_% & timeout /t 15 > nul & exit
+    )
     rem > installing data
     echo.
     echo %_lang0122_%
@@ -733,11 +745,19 @@ exit /b 0
         xcopy "secureboot" "X:\" /e /g /h /r /y /q > nul
         set "file=Autorun.inf usb.ico B64 XORBOOT grub"
         set "efi=gdisk.efi OneFileLinux.efi winsetupia32.efi winsetupx64.efi xorbootx64.efi"
-        7za x "data.7z" -o"X:\" %file% %efi% -r > nul
+        if "%usblegacy%"=="true" (
+            7za x "data.7z" -o"X:\" -aoa -y > nul
+        ) else (
+            7za x "data.7z" -o"X:\" %file% %efi% -r > nul
+        )
         rem install grub2 bootloader
         echo.
         echo %_lang0116_%
-        silentcmd grub2installer.bat MULTIBOOT
+        if "%usblegacy%"=="true" (
+            silentcmd grub2installer.bat MULTIBOOT
+        ) else (
+            silentcmd grub2installer.bat MULTIBOOT legacydisable
+        )
         rem install grub2 file manager
         7za x "extra-modules\grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y > nul
         >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
@@ -757,7 +777,8 @@ exit /b 0
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
         rem install icons for rEFInd Boot Manager
         call :rEFInd.icons X:
-        call :assignletter.diskpart
+        rem normalize drive letter
+        if "%usblegacy%"=="false" call :assignletter.diskpart
     rem specifies that the ESP does not receive a drive letter by default
     (
         echo select disk %disk%
@@ -771,7 +792,6 @@ exit /b 0
 :clean.bye
 call :colortool
 call :scan.label MULTIBOOT
-call :check.author %ducky%
 for /f "delims=" %%f in (hide.list) do (
     if exist "%ducky%\%%f"     attrib +s +h "%ducky%\%%f"
     if exist "%ducky%\ISO\%%f" attrib +s +h "%ducky%\ISO\%%f"

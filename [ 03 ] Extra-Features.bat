@@ -582,11 +582,6 @@ exit /b 0
         if errorlevel 1 goto :continue.convert
     
     :continue.convert
-    for /l %%i in (5,-1,0) do (
-        cls & echo.
-        echo ^> Goodbye your data in %%i seconds...
-        timeout /t 1 >nul
-    )
     if "%option%"=="1" cls & goto :GPT.convert
     if "%option%"=="2" cls & goto :MBR.convert
     

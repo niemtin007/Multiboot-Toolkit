@@ -30,7 +30,7 @@ cd /d "%tmp%"
         echo assign letter=v
     ) | diskpart
 rem >> install grub2 for Legacy BIOS mode
-if not exist "%dest%\EFI\BOOT\usb.gpt" (
+if not "%~2"=="legacydisable" (
     move /y "%ducky%\BOOT\grub\*.lst" "%ducky%\BOOT" >nul
     cd /d "%tmp%\grub2"
         grub-install --target=i386-pc --force --boot-directory=%ducky%\BOOT \\.\physicaldrive%disk%
