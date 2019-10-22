@@ -726,6 +726,8 @@ exit /b 0
     ) | diskpart > nul
     rem create BIOS Boot Partition for Legacy BIOS Mode
     if "%usblegacy%"=="true" call :gdisk
+    rem delete drive letter for BIOS Boot Partition
+    %bootice% /device=%disk%:2 /partitions /delete_letter /quiet
     rem recheck data partition
     call :scan.label MULTIBOOT
     if not "%ducky%"=="X:" (
@@ -778,11 +780,13 @@ exit /b 0
         rem install icons for rEFInd Boot Manager
         call :rEFInd.icons X:
         rem normalize drive letter
-        if "%usblegacy%"=="false" call :assignletter.diskpart
+        call :assignletter.diskpart
     rem specifies that the ESP does not receive a drive letter by default
     (
         echo select disk %disk%
         echo select partition 1
+        echo gpt attributes=0x4000000000000000
+        echo select partition 3
         echo gpt attributes=0x4000000000000000
         echo exit
     ) | diskpart > nul
