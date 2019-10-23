@@ -578,6 +578,9 @@ exit /b 0
         if errorlevel 2 set "usbgpt=false"
         if errorlevel 1 set "usbgpt=true"
         if "%usbgpt%"=="false" goto :rEFInd.ask
+        if "%usbgpt%"=="true" if "%windows%"=="7" (
+            echo %_lang0125_% & timeout /t 15 > nul & goto :rEFInd.ask
+        )
     choice /c yn /cs /n /m "%_lang0124_%"
         if errorlevel 1 set "usblegacy=false"
         if errorlevel 2 set "usblegacy=true"
@@ -725,9 +728,16 @@ exit /b 0
         echo exit
     ) | diskpart > nul
     rem create BIOS Boot Partition for Legacy BIOS Mode
-    if "%usblegacy%"=="true" call :gdisk
-    rem delete drive letter for BIOS Boot Partition
-    %bootice% /device=%disk%:2 /partitions /delete_letter /quiet
+    if "%usblegacy%"=="true" (
+        call :gdisk
+        rem a guide of the disk format waning messenger
+        echo --------------------------------------------------------------------
+        echo %_lang0126_%
+        echo %_lang0127_%
+        echo --------------------------------------------------------------------
+        rem delete drive letter for BIOS Boot Partition
+        %bootice% /device=%disk%:2 /partitions /delete_letter /quiet
+    )
     rem recheck data partition
     call :scan.label MULTIBOOT
     if not "%ducky%"=="X:" (
