@@ -4,7 +4,6 @@ rem >> https://niemtin007.blogspot.com
 rem >> The batch file is written by niemtin007.
 rem >> Thank you for using Multiboot Toolkit.
 
-title %~nx0
 cd /d "%~dp0"
 set "bindir=%~dp0bin"
 set "rtheme=Leather"
@@ -16,19 +15,12 @@ call :check.author %ducky%
 call :check.letter X:
 
 :Select
-rem begin preparing file
-cd /d "%tmp%"
-    if not exist rEFInd_themes (mkdir rEFInd_themes)
-call :colortool
-    7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y > nul
-    7za x "refind.7z" -o"%tmp%" -aoa -y > nul
 rem list all disk drive
 call :list.disk
 echo.
 set /p disk= %_lang0101_%
 set /a disk=%disk%+0
-cd /d "%bindir%"
-    call :checkdisktype
+call :checkdisktype
     if "%virtualdisk%"=="true"  call :rEFInd.part & goto :External
     if "%harddisk%"=="true"     call :harddisk.warning & goto :Select
     if "%usb%"=="true"          call :rEFInd.part & goto :Removable
@@ -44,39 +36,22 @@ rem need to use bootice to rebuild MBR disk partition. It's important for flash 
 rem >> create rEFInd partition
 call :colortool
 %partassist% /hd:%disk% /cre /pri /size:%esp% /end /fs:fat32 /align /label:rEFInd /letter:X
-if not exist "X:\" (
-    %partassist% /hd:%disk% /setletter:0 /letter:X
-)
-cd /d "X:\"
-    mkdir "X:\ISO\"
-    mkdir "X:\EFI\BOOT\themes\"
-    >"X:\EFI\BOOT\mark" (echo niemtin007)
-cd /d "%tmp%"
-    xcopy "rEfind" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
-cd /d "%tmp%\rEfind_themes"
-    xcopy "%rtheme%" "X:\EFI\BOOT\themes\" /e /g /h /r /y /q > nul
+call :unhide.partition 0
+call :pushdata.rEFInd
 %partassist% /hd:%disk% /hide:0
 if "%secureboot%"=="n" goto :usbmultibootdata
 rem >> create ESP partition
 call :colortool
 %partassist% /hd:%disk% /cre /pri /size:50 /fs:fat32 /label:M-ESP /letter:X
 %partassist% /move:X /right:auto /align
-if not exist "X:\" (
-    %partassist% /hd:%disk% /setletter:0 /letter:X
-)
-cd /d "X:\"
-    mkdir "X:\EFI\BOOT\"
-    >"X:\EFI\BOOT\mark" (echo niemtin007)
-cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-    xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q
+call :unhide.partition 0
+call :pushdata.ESP
 %partassist% /hd:%disk% /hide:0
 rem >> create Multiboot data partition
 :usbmultibootdata
 call :colortool
 %partassist% /hd:%disk% /cre /pri /size:auto /fs:ntfs /act /align /label:MULTIBOOT /letter:X
-if not exist "X:\" (
-    %partassist% /hd:%disk% /setletter:0 /letter:X
-)
+call :unhide.partition 0
 goto :extractdata
 
 rem >> prepare partitions space for External hard disk media
@@ -107,7 +82,8 @@ call :count.partition
 call :colortool
 call :count.partition
     if "%part%"=="%deletedpart%" goto :continue rem all partitions were deleted
-call :unhide.partition 0
+%partassist% /hd:%disk% /unhide:0
+%partassist% /hd:%disk% /setletter:0 /letter:X
 call :check.author X:
 if "%installed%"=="true" (
     set deletedpart=%part%
@@ -115,66 +91,46 @@ if "%installed%"=="true" (
     goto :delete
 )
 :continue
-if exist "X:\" (chkdsk X: /f)
+chkdsk X: /f
 %partassist% /hd:%disk% /setletter:0 /letter:auto
 %partassist% /hd:%disk% /resize:0 /reduce-left:%MB% /align
 
 :Setup
-if "%secureboot%"=="y" (goto :esp1) else (goto :esp2)
+if "%secureboot%"=="n" (
+    set /a rpart=0
+    set /a mpart=1
+    set /a offset=%esp%+8
+    goto :esp2
+) else (
+    set /a rpart=1
+    set /a mpart=2
+    set /a offset=%esp%+58
+    goto :esp1
+)
 :esp1
-rem >> Create EFI System Partition 1
+rem >> Create ESP Partition
 call :colortool
 %partassist% /hd:%disk% /cre /pri /size:50 /fs:fat32 /act /align /label:M-ESP /letter:X
-if not exist "X:\" (
-    %partassist% /hd:%disk% /setletter:0 /letter:X
-)
-cd /d "X:\"
-    mkdir "X:\EFI\BOOT\"
-    >"X:\EFI\BOOT\mark" (echo niemtin007)
-cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-    xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
+call :unhide.partition 0
+call :pushdata.ESP
 %partassist% /hd:%disk% /hide:0
 :esp2
-rem >> Create EFI System Partition 2
+rem >> Create rEFInd partition
 call :colortool
 %partassist% /hd:%disk% /cre /pri /size:%esp% /fs:fat32 /act /align /label:rEFInd /letter:X
-if "%secureboot%"=="n" (set /a partition=0) else (set /a partition=1)
-:recheckesp2
-if not exist "X:\" (
-    call :unhide.partition %partition%
-    goto :recheckesp2
-)
-cd /d "X:\"
-    mkdir "X:\ISO\"
-    mkdir "X:\EFI\BOOT\themes\"
-    >"X:\EFI\BOOT\mark" (echo niemtin007)
-cd /d "%tmp%"
-    xcopy "rEfind" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
-cd /d "%tmp%\rEfind_themes"
-    xcopy "%rtheme%" "X:\EFI\BOOT\themes\" /e /g /h /r /y /q > nul
-%partassist% /hd:%disk% /hide:%partition%
+call :unhide.partition %rpart%
+call :pushdata.rEFInd
+%partassist% /hd:%disk% /hide:%rpart%
 rem >> Create Multiboot Data Partition
 call :colortool
-if not "%secureboot%"=="n" (
-    set /a offset=%esp%+58
-    set /a partition=1
-) else (
-    set /a offset=%esp%+8
-    set /a partition=2
-)
 call :check.partitiontable
 if "%GPT%"=="true" (
     %partassist% /hd:%disk% /cre /pri /size:auto /offset:%offset% /fs:ntfs /act /align /label:MULTIBOOT /letter:X
 ) else (
     %partassist% /hd:%disk% /cre /pri /size:auto /fs:ntfs /act /align /label:MULTIBOOT /letter:X
 )
-rem >> Installing Multiboot Data
-:recheckmultiboot
-call :colortool
-if not exist "X:\" (
-    call :unhide.partition %partition%
-    goto :recheckmultiboot
-)
+call :unhide.partition %mpart%
+
 :extractdata
 call :scan.label MULTIBOOT
 cd /d "%bindir%"
@@ -235,35 +191,21 @@ cd /d "%bindir%\secureboot\EFI\Microsoft\Boot"
     call :bcdautoset bcd
 rem >> install secure boot file
 set "source=%bindir%\secureboot"
-rem > for USB
-if "%usb%"=="true" if "%secureboot%"=="n" (
-    >"X:\BOOT\secureboot" (echo n)
-    cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-        xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
-    cd /d "%bindir%"
-        xcopy "secureboot" "X:\" /e /g /h /r /y /q > nul
+if "%secureboot%"=="n" (
+    call :pushdata.secure
     call :assignletter.diskpart
-    call :clean.bye
 )
-if "%usb%"=="true" if "%secureboot%"=="y" (
+rem > push secure boot files for USB
+if "%secureboot%"=="y" if "%usb%"=="true" (
     %partassist% /hd:%disk% /whide:1 /src:%source%
-    call :assignletter.diskpart
+    call :assignletter.diskpart > nul
 )
-rem > for HDD/SSD
-if "%GPT%"=="true" (set mpart=3) else (set mpart=2)
-if not "%usb%"=="true" if "%secureboot%"=="y" (
+rem > push secure boot files for HDD/SSD
+if "%secureboot%"=="y" if "%usb%"=="false" (
     %partassist% /hd:%disk% /whide:0 /src:%source%
-    call :assignletter.diskpart
+    call :assignletter.diskpart > nul
 )
-if "%GPT%"=="true" (set mpart=2) else (set mpart=1)
-if not "%usb%"=="true" if "%secureboot%"=="n" (
-    >"X:\BOOT\secureboot" (echo n)
-    cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-        xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
-    cd /d "%bindir%"
-        xcopy "secureboot" "X:\" /e /g /h /r /y /q > nul
-    call :assignletter.diskpart
-)
+rem start modules installer
 if "%installmodules%"=="y" (
     cd /d "%~dp0"
         call "[ 02 ] Install Modules.bat"
@@ -309,10 +251,6 @@ exit /b 0
 
 :license
 call :colortool
-for /f "tokens=*" %%b in (version) do set /a "cur_version=%%b"
-    set /a cur_a=%cur_version:~0,1%
-    set /a cur_b=%cur_version:~1,1%
-    set /a cur_c=%cur_version:~2,1%
 cd /d "%tmp%"
     > welcome.vbs (
         echo Dim Message, Speak
@@ -359,10 +297,16 @@ exit /b 0
     cls
     echo.
     cd /d "%bindir%"
-        echo ^>^> Loading, Please wait...
+        echo Loading, Please wait...
         7za x "partassist.7z" -o"%tmp%" -aos -y > nul
         set partassist="%tmp%\partassist\partassist.exe"
         set bootice="%bindir%\bootice.exe"
+    rem begin preparing file
+    cd /d "%tmp%"
+        if not exist rEFInd_themes (mkdir rEFInd_themes)
+    call :colortool
+        7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y > nul
+        7za x "refind.7z" -o"%tmp%" -aoa -y > nul
     cd /d "%tmp%\partassist"
         if "%processor_architecture%"=="x86" (
             SetupGreen32 -i > nul
@@ -401,6 +345,11 @@ exit /b 0
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
         7za x "colortool.7z" -o"%tmp%" -aos -y > nul
+        rem get Multiboot Toolkit Version
+        for /f "tokens=*" %%b in (version) do set /a "cur_version=%%b"
+            set /a cur_a=%cur_version:~0,1%
+            set /a cur_b=%cur_version:~1,1%
+            set /a cur_c=%cur_version:~2,1%
     rem Check for DotNet 4.0 Install
     cd /d "%tmp%\colortool"
         set "checkdotnet=%temp%\Output.log"
@@ -422,6 +371,7 @@ exit /b 0
     cls
     cd /d "%bindir%"
     mode con lines=18 cols=70
+    title Multiboot Toolkit %cur_a%.%cur_b%.%cur_c% - Bootable Creator
 exit /b 0
 
 :scan.label
@@ -453,7 +403,7 @@ setlocal
     cd /d "%bindir%"
         call :checkdisktype
         if "%usb%"=="true" call :check.partitiontable
-    rem list disk
+    rem display USB GPT information for partassist
     cls & %partassist% /list
     if "%usb%"=="true" if "%GPT%"=="true" (
         if "%diskunit%"=="GB" echo   %disk%     ^| %disksize% %diskunit%         ^| %model% GPT
@@ -522,19 +472,54 @@ exit /b 0
 exit /b 0
 
 :unhide.partition
-    %partassist% /hd:%disk% /unhide:%~1
-    %partassist% /hd:%disk% /setletter:%~1 /letter:X
+    if not exist "X:\" (
+        %partassist% /hd:%disk% /unhide:%~1
+        %partassist% /hd:%disk% /setletter:%~1 /letter:X
+        goto :unhide.partition
+    )
+exit /b 0
+
+:pushdata.ESP
+    cd /d "X:\"
+        mkdir "X:\EFI\BOOT\"
+        >"X:\EFI\BOOT\mark" (echo niemtin007)
+    cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
+        xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
+exit /b 0
+
+:pushdata.rEFInd
+    cd /d "X:\"
+        mkdir "X:\ISO\"
+        mkdir "X:\EFI\BOOT\themes\"
+        >"X:\EFI\BOOT\mark" (echo niemtin007)
+    cd /d "%tmp%"
+        xcopy "rEfind" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
+    cd /d "%tmp%\rEfind_themes"
+        xcopy "%rtheme%" "X:\EFI\BOOT\themes\" /e /g /h /r /y /q > nul
+exit /b 0
+
+:pushdata.secure
+    >"X:\BOOT\secureboot" (echo n)
+    cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
+        xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q > nul
+    cd /d "%bindir%"
+        xcopy "secureboot" "X:\" /e /g /h /r /y /q > nul
 exit /b 0
 
 :assignletter.diskpart
     echo.
     echo %_lang0123_%
-    for %%p in (z y x w v u t s r q p o n m l k j i h g f e d) do (
-        if not exist %%p:\nul set letter=%%p
+    rem http://wiki.uniformserver.com/index.php/Batch_files:_First_Free_Drive#Final_Solution
+    for %%a in (z y x w v u t s r q p o n m l k j i h g f e d c) do (
+        cd %%a: 1>> nul 2>&1 & if errorlevel 1 set freedrive=%%a
+    )
+    rem get volume number instead of specifying a drive letter for missing drive letter case
+    for /f "tokens=2" %%b in ('echo list volume ^| diskpart ^| find /i "MULTIBOOT"') do (
+        set "volume=%%b"
     )
     (
-        echo select volume X
-        echo assign letter=%letter%
+        echo select volume %volume%
+        echo assign letter=%freedrive%
     ) | diskpart > nul
     cd /d "%~dp0"
         if "%skip%"=="false" call "[ 01 ] Install Multiboot.bat"
@@ -575,8 +560,8 @@ exit /b 0
     echo --------------------------------------------------------------------
     echo.
     choice /c yn /cs /n /m "%_lang0120_%"
-        if errorlevel 2 set "usbgpt=false"
         if errorlevel 1 set "usbgpt=true"
+        if errorlevel 2 set "usbgpt=false"
         if "%usbgpt%"=="false" goto :rEFInd.ask
         if "%usbgpt%"=="true" if "%windows%"=="7" (
             echo %_lang0125_% & timeout /t 15 > nul & goto :rEFInd.ask

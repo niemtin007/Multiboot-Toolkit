@@ -4,7 +4,6 @@ rem >> https://niemtin007.blogspot.com
 rem >> The batch file is written by niemtin007.
 rem >> Thank you for using Multiboot Toolkit.
 
-title %~nx0
 cd /d "%~dp0"
 set "skipscan=true"
 set "curdir=%~dp0"
@@ -200,6 +199,11 @@ exit /b 0
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
         7za x "colortool.7z" -o"%tmp%" -aos -y > nul
+        rem get Multiboot Toolkit Version
+        for /f "tokens=*" %%b in (version) do set /a "cur_version=%%b"
+            set /a cur_a=%cur_version:~0,1%
+            set /a cur_b=%cur_version:~1,1%
+            set /a cur_c=%cur_version:~2,1%
     rem Check for DotNet 4.0 Install
     cd /d "%tmp%\colortool"
         set "checkdotnet=%temp%\Output.log"
@@ -221,6 +225,7 @@ exit /b 0
     cls
     cd /d "%bindir%"
     mode con lines=18 cols=70
+    title Multiboot Toolkit %cur_a%.%cur_b%.%cur_c% - Extra Features
 exit /b 0
 
 :check.partitiontable
@@ -582,18 +587,19 @@ exit /b 0
         if errorlevel 1 goto :continue.convert
     
     :continue.convert
+    timeout /t 2 > nul
     if "%option%"=="1" cls & goto :GPT.convert
     if "%option%"=="2" cls & goto :MBR.convert
     
     :GPT.convert
     %partassist% /hd:%disk% /del:all
     %partassist% /init:%disk% /gpt
-    timeout /t 2 >nul & goto :exit.convert
+    timeout /t 2 > nul & goto :exit.convert
     
     :MBR.convert
     %partassist% /hd:%disk% /del:all
     %partassist% /init:%disk%
-    timeout /t 2 >nul
+    timeout /t 2 > nul
     
     :exit.convert
     call :clean.bye

@@ -4,7 +4,6 @@ rem >> https://niemtin007.blogspot.com
 rem >> The batch file is written by niemtin007.
 rem >> Thank you for using Multiboot Toolkit.
 
-title %~nx0
 cd /d "%~dp0"
 set "bindir=%~dp0bin"
 set "curpath=%~dp0Modules"
@@ -350,6 +349,11 @@ rem >> begin functions
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
         7za x "colortool.7z" -o"%tmp%" -aos -y > nul
+        rem get Multiboot Toolkit Version
+        for /f "tokens=*" %%b in (version) do set /a "cur_version=%%b"
+            set /a cur_a=%cur_version:~0,1%
+            set /a cur_b=%cur_version:~1,1%
+            set /a cur_c=%cur_version:~2,1%
     rem Check for DotNet 4.0 Install
     cd /d "%tmp%\colortool"
         set "checkdotnet=%temp%\Output.log"
@@ -371,6 +375,7 @@ rem >> begin functions
     cls
     cd /d "%bindir%"
     mode con lines=18 cols=70
+    title Multiboot Toolkit %cur_a%.%cur_b%.%cur_c% - Module Installer
 exit /b 0
 
 :permissions
