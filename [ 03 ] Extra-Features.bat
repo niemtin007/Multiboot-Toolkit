@@ -408,17 +408,17 @@ exit /b 0
         )
     echo %_lang0400_% %rtheme%
     echo =====================================================================
-    echo 01 = Apocalypse   12 = CloverBootcamp 23 = GoldClover 34 = Pandora   
-    echo 02 = BGM          13 = Clovernity     24 = Gothic     35 = Red       
-    echo 03 = BGM256       14 = Clover-X       25 = HighSierra 36 = Shield    
-    echo 04 = black        15 = CrispyOSX      26 = HMF        37 = SimpleGrey
-    echo 05 = Bluemac      16 = Crystal        27 = iclover    38 = Simplicity
-    echo 06 = Buttons      17 = Dark           28 = Leather    39 = Smooth    
-    echo 07 = Carbon       18 = DarkBoot       29 = MacOSX     40 = Sphere    
-    echo 08 = Catalina     19 = DarkBootX      30 = MavsStyle  41 = Universe  
-    echo 09 = Chrome       20 = ElCapitan      31 = Mojave     42 = Woody     
-    echo 10 = Circla       21 = Emerald        32 = Neon                      
-    echo 11 = ClassicMacOS 22 = Glassy         33 = Oceanix                   
+    echo 01 = Apocalypse   12 = CloverBootcam 23 = Glassy     34 = Oceanix    
+    echo 02 = BGM          13 = Clovernity    24 = GoldClover 35 = Pandora    
+    echo 03 = BGM256       14 = Clover-X      25 = Gothic     36 = Red        
+    echo 04 = black        15 = CrispyOSX     26 = HighSierra 37 = Shield     
+    echo 05 = Bluemac      16 = Crystal       27 = HMF        38 = SimpleGrey 
+    echo 06 = Buttons      17 = Dark          28 = iclover    39 = Simplicity 
+    echo 07 = Carbon       18 = DarkBoot      29 = Leather    40 = Smooth     
+    echo 08 = Catalina     19 = DarkBootX     30 = MacOSX     41 = Sphere     
+    echo 09 = Chrome       20 = ElCapitan     31 = MavsStyle  42 = Underground
+    echo 10 = Circla       21 = Emerald       32 = Mojave     43 = Universe   
+    echo 11 = ClassicMacOS 22 = GameOfThrones 33 = Neon       44 = Woody      
     echo =====================================================================
     echo.
     set /P ask= %_lang0401_% [ ? ]  = 
@@ -443,27 +443,29 @@ exit /b 0
     if "%ask%"=="19" (set "rtheme=DarkBootX" & goto :continue.rtheme)
     if "%ask%"=="20" (set "rtheme=ElCapitan" & goto :continue.rtheme)
     if "%ask%"=="21" (set "rtheme=Emerald" & goto :continue.rtheme)
-    if "%ask%"=="22" (set "rtheme=Glassy" & goto :continue.rtheme)
-    if "%ask%"=="23" (set "rtheme=GoldClover" & goto :continue.rtheme)
-    if "%ask%"=="24" (set "rtheme=Gothic" & goto :continue.rtheme)
-    if "%ask%"=="25" (set "rtheme=HighSierra" & goto :continue.rtheme)
-    if "%ask%"=="26" (set "rtheme=HMF" & goto :continue.rtheme)
-    if "%ask%"=="27" (set "rtheme=iclover" & goto :continue.rtheme)
-    if "%ask%"=="28" (set "rtheme=Leather" & goto :continue.rtheme)
-    if "%ask%"=="29" (set "rtheme=MacOSX" & goto :continue.rtheme)
-    if "%ask%"=="30" (set "rtheme=MavsStyle" & goto :continue.rtheme)
-    if "%ask%"=="31" (set "rtheme=Mojave" & goto :continue.rtheme)
-    if "%ask%"=="32" (set "rtheme=Neon" & goto :continue.rtheme)
-    if "%ask%"=="33" (set "rtheme=Oceanix" & goto :continue.rtheme)
-    if "%ask%"=="34" (set "rtheme=Pandora" & goto :continue.rtheme)
-    if "%ask%"=="35" (set "rtheme=Red" & goto :continue.rtheme)
-    if "%ask%"=="36" (set "rtheme=Shield" & goto :continue.rtheme)
-    if "%ask%"=="37" (set "rtheme=SimpleGrey" & goto :continue.rtheme)
-    if "%ask%"=="38" (set "rtheme=Simplicity" & goto :continue.rtheme)
-    if "%ask%"=="39" (set "rtheme=Smooth" & goto :continue.rtheme)
-    if "%ask%"=="40" (set "rtheme=Sphere" & goto :continue.rtheme)
-    if "%ask%"=="41" (set "rtheme=Universe" & goto :continue.rtheme)
-    if "%ask%"=="42" (set "rtheme=Woody" & goto :continue.rtheme)
+    if "%ask%"=="22" (set "rtheme=GameOfThrones" & goto :continue.rtheme)
+    if "%ask%"=="23" (set "rtheme=Glassy" & goto :continue.rtheme)
+    if "%ask%"=="24" (set "rtheme=GoldClover" & goto :continue.rtheme)
+    if "%ask%"=="25" (set "rtheme=Gothic" & goto :continue.rtheme)
+    if "%ask%"=="26" (set "rtheme=HighSierra" & goto :continue.rtheme)
+    if "%ask%"=="27" (set "rtheme=HMF" & goto :continue.rtheme)
+    if "%ask%"=="28" (set "rtheme=iclover" & goto :continue.rtheme)
+    if "%ask%"=="29" (set "rtheme=Leather" & goto :continue.rtheme)
+    if "%ask%"=="30" (set "rtheme=MacOSX" & goto :continue.rtheme)
+    if "%ask%"=="31" (set "rtheme=MavsStyle" & goto :continue.rtheme)
+    if "%ask%"=="32" (set "rtheme=Mojave" & goto :continue.rtheme)
+    if "%ask%"=="33" (set "rtheme=Neon" & goto :continue.rtheme)
+    if "%ask%"=="34" (set "rtheme=Oceanix" & goto :continue.rtheme)
+    if "%ask%"=="35" (set "rtheme=Pandora" & goto :continue.rtheme)
+    if "%ask%"=="36" (set "rtheme=Red" & goto :continue.rtheme)
+    if "%ask%"=="37" (set "rtheme=Shield" & goto :continue.rtheme)
+    if "%ask%"=="38" (set "rtheme=SimpleGrey" & goto :continue.rtheme)
+    if "%ask%"=="39" (set "rtheme=Simplicity" & goto :continue.rtheme)
+    if "%ask%"=="40" (set "rtheme=Smooth" & goto :continue.rtheme)
+    if "%ask%"=="41" (set "rtheme=Sphere" & goto :continue.rtheme)
+    if "%ask%"=="42" (set "rtheme=Underground" & goto :continue.rtheme)
+    if "%ask%"=="43" (set "rtheme=Universe" & goto :continue.rtheme)
+    if "%ask%"=="44" (set "rtheme=Woody" & goto :continue.rtheme)
     color 4f & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :rEFIndtheme
     
     :continue.rtheme
