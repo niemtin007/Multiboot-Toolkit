@@ -88,9 +88,9 @@ rem >> begin functions
 :permissions
     call :colortool
     
-    ver | findstr /i "6\.1\." > nul
+    ver | findstr /i "6\.1\." >nul
         if %errorlevel% equ 0 set "windows=7"
-        if not "%windows%"=="7" chcp 65001 > nul
+        if not "%windows%"=="7" chcp 65001 >nul
     
     set randname=%random%%random%%random%%random%%random%
     md "%windir%\%randname%" 2>nul
@@ -158,16 +158,16 @@ exit /b 0
     echo.
     cd /d "%bindir%"
         echo ^>^> Loading, Please wait...
-        7za x "partassist.7z" -o"%tmp%" -aos -y > nul
+        7za x "partassist.7z" -o"%tmp%" -aos -y >nul
         set partassist="%tmp%\partassist\partassist.exe"
         set bootice="%bindir%\bootice.exe"
     cd /d "%tmp%\partassist"
         if "%processor_architecture%"=="x86" (
-            SetupGreen32 -i > nul
-            LoadDrv_Win32 -i > nul
+            SetupGreen32 -i >nul
+            LoadDrv_Win32 -i >nul
         ) else (
-            SetupGreen64 -i > nul
-            LoadDrv_x64 -i > nul
+            SetupGreen64 -i >nul
+            LoadDrv_x64 -i >nul
         )
         > cfg.ini (
             echo [Language]
@@ -198,7 +198,7 @@ exit /b 0
         set /a num=%random% %%105 +1
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
-        7za x "colortool.7z" -o"%tmp%" -aos -y > nul
+        7za x "colortool.7z" -o"%tmp%" -aos -y >nul
         rem get Multiboot Toolkit Version
         for /f "tokens=*" %%b in (version) do set /a "cur_version=%%b"
             set /a cur_a=%cur_version:~0,1%
@@ -268,13 +268,13 @@ exit /b 0
     if "%mylang%"=="2" set "lang=Vietnam" & goto :continue.lang
     if "%mylang%"=="3" set "lang=Turkish" & goto :continue.lang
     if "%mylang%"=="4" set "lang=SimplifiedChinese" & goto :continue.lang
-    color 4f & echo. & echo %_lang0003_% & timeout /t 15 > nul & goto :changelanguage
+    color 4f & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :changelanguage
     
     :continue.lang
     echo.
     echo %_lang0014_%
     cd /d "%bindir%"
-        7za.exe x "config\%lang%.7z" -o"%ducky%\" -aoa -y > nul
+        7za.exe x "config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
         >"%ducky%\BOOT\lang" (echo %lang%)
         call language.bat
     cd /d "%ducky%\BOOT\GRUB\themes\"
@@ -307,7 +307,7 @@ exit /b 0
     set list=a b c d e f g h i k l m n o
     set /p list= "%_lang0838_%"
         rem check the character of the string
-        echo %list%| findstr /r /c:"[a-o]" > nul
+        echo %list%| findstr /r /c:"[a-o]" >nul
         if not "%errorlevel%"=="0" goto :sortgrub2menu
     
     cd /d "%ducky%\BOOT\grub"
@@ -388,7 +388,7 @@ exit /b 0
     
     :continue.gtheme
     cd /d "%ducky%\BOOT\grub\themes"
-        if exist "%curtheme%" rmdir /s /q "%curtheme%" > nul
+        if exist "%curtheme%" rmdir /s /q "%curtheme%" >nul
         if not exist "%gtheme%" (
             "%bindir%\7za.exe" x "%bindir%\grub2_themes\%gtheme%.7z" -aoa -y >nul
             "%bindir%\7za.exe" x "%bindir%\grub2font.7z" -o"%gtheme%" -aoa -y >nul
@@ -521,13 +521,13 @@ exit /b 0
 exit /b 0
 
 :rEFInd.icons
-    copy "grubx64.png" "%~1\EFI\BOOT\grubx64.png" > nul
-    copy "grubx64.png" "%~1\EFI\BOOT\grubia32.png" > nul
-    copy "os_linux.icns" "%~1\EFI\BOOT\OneFileLinux.png" > nul
-    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupx64.png" > nul
-    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupia32.png" > nul
-    copy "xorbootx64.png" "%~1\EFI\BOOT\xorbootx64.png" > nul
-    xcopy "others" "%~1\EFI\BOOT\" /e /g /h /r /y /q > nul
+    copy "grubx64.png" "%~1\EFI\BOOT\grubx64.png" >nul
+    copy "grubx64.png" "%~1\EFI\BOOT\grubia32.png" >nul
+    copy "os_linux.icns" "%~1\EFI\BOOT\OneFileLinux.png" >nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupx64.png" >nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupia32.png" >nul
+    copy "xorbootx64.png" "%~1\EFI\BOOT\xorbootx64.png" >nul
+    xcopy "others" "%~1\EFI\BOOT\" /e /g /h /r /y /q >nul
 exit /b 0
 
 :easeconvertdisk
@@ -540,12 +540,12 @@ exit /b 0
     if "%virtualdisk%"=="true" goto :option.convert
     if "%harddisk%"=="true" (
         echo. & echo. & echo %_lang0102_%
-        color 4f & echo %_lang0103_% & timeout /t 15 > nul & cls
+        color 4f & echo %_lang0103_% & timeout /t 15 >nul & cls
         goto :easeconvertdisk
     )
     if "%usb%"=="true" goto :option.convert
     if "%externaldisk%"=="true" goto :option.convert
-    color 4f & echo. & echo %_lang0104_% & timeout /t 15 > nul & goto :easeconvertdisk
+    color 4f & echo. & echo %_lang0104_% & timeout /t 15 >nul & goto :easeconvertdisk
     
     :option.convert
     call :colortool
@@ -589,19 +589,19 @@ exit /b 0
         if errorlevel 1 goto :continue.convert
     
     :continue.convert
-    timeout /t 2 > nul
+    timeout /t 2 >nul
     if "%option%"=="1" cls & goto :GPT.convert
     if "%option%"=="2" cls & goto :MBR.convert
     
     :GPT.convert
     %partassist% /hd:%disk% /del:all
     %partassist% /init:%disk% /gpt
-    timeout /t 2 > nul & goto :exit.convert
+    timeout /t 2 >nul & goto :exit.convert
     
     :MBR.convert
     %partassist% /hd:%disk% /del:all
     %partassist% /init:%disk%
-    timeout /t 2 > nul
+    timeout /t 2 >nul
     
     :exit.convert
     call :clean.bye
@@ -836,13 +836,13 @@ exit /b 0
             for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
         )
     cd /d "%ducky%"
-        if exist boot (ren boot BOOT > nul)
+        if exist boot (ren boot BOOT >nul)
     cd /d "%ducky%\boot"
         if exist grub_old (ren grub_old grub)
-        if exist efi (ren efi EFI > nul)
+        if exist efi (ren efi EFI >nul)
     cd /d "%ducky%\EFI"
-        if exist boot (ren boot BOOT > nul)
-        if exist microsoft (ren microsoft MICROSOFT > nul)
+        if exist boot (ren boot BOOT >nul)
+        if exist microsoft (ren microsoft MICROSOFT >nul)
     if exist "%ducky%\WINSETUP" (
         goto :winsetup.fix
     ) else (
@@ -851,10 +851,10 @@ exit /b 0
     
     :winsetup.fix
     cd /d "%ducky%\efi\boot"
-        copy /y backup\WinSetup\winsetupx64.efi %ducky%\efi\boot\ > nul
-        copy /y backup\WinSetup\winsetupia32.efi %ducky%\efi\boot\ > nul
-        xcopy /y /q /h /r %ducky%\BOOT\grub\menu.lst %ducky%\ > nul
-        if exist %ducky%\winsetup.lst (del /s /q /f %ducky%\winsetup.lst > nul)
+        copy /y backup\WinSetup\winsetupx64.efi %ducky%\efi\boot\ >nul
+        copy /y backup\WinSetup\winsetupia32.efi %ducky%\efi\boot\ >nul
+        xcopy /y /q /h /r %ducky%\BOOT\grub\menu.lst %ducky%\ >nul
+        if exist %ducky%\winsetup.lst (del /s /q /f %ducky%\winsetup.lst >nul)
     
     :grub.fix
     if "%GPT%"=="true" goto :grub2.fix
@@ -867,7 +867,7 @@ exit /b 0
     cd /d "%bindir%"
         7za x "wget.7z" -o"%tmp%" -aoa -y >nul
     cd /d "%tmp%"
-        wget -q -O g4dtemp.log  http://grub4dos.chenall.net > nul
+        wget -q -O g4dtemp.log  http://grub4dos.chenall.net >nul
         for /f "tokens=2,3 delims=/" %%a in ('type "g4dtemp.log" ^| findstr /i "<h1.*.7z" ^| find /n /v "" ^| find "[1]"') do (
                 set "ver=%%b"
                 set "sourcelink=http://dl.grub4dos.chenall.net/%%b.7z"
@@ -878,8 +878,8 @@ exit /b 0
     cd /d "%bindir%\extra-modules"
         set "file=grub4dos-0.4.6a/grldr grub4dos-0.4.6a/grub.exe grub4dos0.4.6a/grldr_cd.bin"
         "%bindir%\7za.exe" e -ogrub4dos -aoa "%tmp%\grub4dos.7z" %file% >nul
-        del /s /q "%tmp%\grub4dos.7z" > nul
-        xcopy "grub4dos\grldr" "%ducky%\" /e /g /h /r /y /q > nul
+        del /s /q "%tmp%\grub4dos.7z" >nul
+        xcopy "grub4dos\grldr" "%ducky%\" /e /g /h /r /y /q >nul
     
     :grub2.fix
     echo.
@@ -888,7 +888,7 @@ exit /b 0
         if errorlevel 1 (
         cd /d "%bindir%"
             echo %_lang0504_%
-            silentcmd grub2installer.bat MULTIBOOT
+            call grub2installer.bat MULTIBOOT >nul 2>&1
             rem wscript invisiblecmd.vbs grub2installer.bat MULTIBOOT
         )
     
@@ -909,7 +909,7 @@ exit /b 0
         )
     )
     rem --------------------------------------------------------------------
-    "%bindir%\7za.exe" x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y > nul
+    "%bindir%\7za.exe" x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
     cd /d "%bindir%\extra-modules"
         "%bindir%\7za.exe" x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
         >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
@@ -922,7 +922,7 @@ exit /b 0
     echo.
     echo ^> Downloading grub2-filemanager...
     cd /d "%bindir%\extra-modules"
-        "%bindir%\7za.exe" x "%bindir%\curl.7z" -o"%tmp%" -aos -y > nul
+        "%bindir%\7za.exe" x "%bindir%\curl.7z" -o"%tmp%" -aos -y >nul
         "%tmp%\curl\curl.exe" -L -s -o master.zip https://github.com/a1ive/grub2-filemanager/archive/master.zip
         "%bindir%\7za.exe" x "%bindir%\extra-modules\master.zip" -o"%bindir%\extra-modules\" -y >nul
         del "master.zip" /s /q /f >nul
@@ -1111,8 +1111,8 @@ exit /b 0
     
     cd /d "%bindir%"
         7za x "grub2.7z" -o"%tmp%" -aos -y >nul
-        7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y > nul
-        7za x "refind.7z" -o"%tmp%" -aoa -y > nul
+        7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
+        7za x "refind.7z" -o"%tmp%" -aoa -y >nul
     
     echo.
     echo ---------------------------------------------------------------------
@@ -1127,15 +1127,15 @@ exit /b 0
     cd /d "%bindir%"
         echo. & echo ^> Updating data...
         "%bindir%\7za.exe" x "data.7z" -o"%ducky%\" -aoa -y >nul
-        xcopy /y "version" "%ducky%\EFI\BOOT\" > nul
+        xcopy /y "version" "%ducky%\EFI\BOOT\" >nul
     cd /d "%bindir%"
         7za x "wincdemu.7z" -o"%ducky%\ISO\" -aoa -y >nul
     cd /d "%bindir%\secureboot\BOOT"
-        xcopy "boot.sdi" "%ducky%\BOOT\" /e /g /h /r /y /q > nul
+        xcopy "boot.sdi" "%ducky%\BOOT\" /e /g /h /r /y /q >nul
     cd /d "%bindir%\extra-modules"
         xcopy "grub4dos\grldr" "%ducky%\" /e /g /h /r /y /q >nul
     cd /d "%bindir%\extra-modules"
-        "%bindir%\7za.exe" x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y > nul
+        "%bindir%\7za.exe" x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
     
     rem >> install Syslinux Bootloader
     cd /d "%bindir%"
@@ -1145,19 +1145,19 @@ exit /b 0
     cd /d "%bindir%"
         echo.
         echo %_lang0116_%
-        silentcmd grub2installer.bat MULTIBOOT
+        call grub2installer.bat MULTIBOOT >nul 2>&1
     cd /d "%bindir%"
-        7za x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y > nul
+        7za x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-        copy "grubx64.png" "%ducky%\EFI\BOOT\grubx64.png" > nul
-        copy "grubx64.png" "%ducky%\EFI\BOOT\grubia32.png" > nul
-        copy "winsetupx64.png" "%ducky%\EFI\BOOT\winsetupx64.png" > nul
-        copy "winsetupx64.png" "%ducky%\EFI\BOOT\winsetupia32.png" > nul
-        copy "xorbootx64.png" "%ducky%\EFI\BOOT\xorbootx64.png" > nul
+        copy "grubx64.png" "%ducky%\EFI\BOOT\grubx64.png" >nul
+        copy "grubx64.png" "%ducky%\EFI\BOOT\grubia32.png" >nul
+        copy "winsetupx64.png" "%ducky%\EFI\BOOT\winsetupx64.png" >nul
+        copy "winsetupx64.png" "%ducky%\EFI\BOOT\winsetupia32.png" >nul
+        copy "xorbootx64.png" "%ducky%\EFI\BOOT\xorbootx64.png" >nul
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-        xcopy "others" "%ducky%\EFI\BOOT\" /e /g /h /r /y /q > nul
+        xcopy "others" "%ducky%\EFI\BOOT\" /e /g /h /r /y /q >nul
     cd /d "%bindir%"
-        7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y > nul
+        7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y >nul
     cd /d "%ducky%\EFI\Microsoft\Boot"
         call :bcdautoset bcd
     
@@ -1180,7 +1180,7 @@ exit /b 0
         if "%harddisk%"=="true"     goto :unhidedatapartition
         if "%usb%"=="true"          goto :continue.unhide
         if "%externaldisk%"=="true" goto :continue.unhide
-        color 4f & echo. & echo %_lang0104_% & timeout /t 15 > nul & goto :unhidedatapartition
+        color 4f & echo. & echo %_lang0104_% & timeout /t 15 >nul & goto :unhidedatapartition
     
     :continue.unhide
     for /f %%b in ('wmic volume get driveletter^, label ^| findstr /i "MULTIBOOT"') do set "ducky=%%b"
@@ -1212,7 +1212,7 @@ exit /b 0
 
 :NTFSdriveprotect
     call :colortool
-        7za x "driveprotect.7z" -o"%tmp%" -aos -y > nul
+        7za x "driveprotect.7z" -o"%tmp%" -aos -y >nul
         if "%processor_architecture%" == "x86" (
             set DriveProtect=driveprotect.exe
         ) else (
@@ -1229,11 +1229,11 @@ exit /b 0
     echo ^>^> Cleaning up trash, wait a minute...
     echo.
     cd /d "%tmp%"
-        del "%tmp%\*.*" /s /q /f > nul
+        del "%tmp%\*.*" /s /q /f >nul
         for /d %%i in ("%tmp%\*.*") do rmdir "%%i" /s /q >nul
         cls
     cd /d "%bindir%"
-        7za x "qemu.7z" -o"%tmp%" -aoa -y > nul
+        7za x "qemu.7z" -o"%tmp%" -aoa -y >nul
     cd /d "%tmp%"
         start qemuboottester.exe
         exit
@@ -1346,7 +1346,7 @@ exit /b 0
     
     :gdisk.clover
     call :colortool
-    7za x "gdisk.7z" -o"%tmp%" -aos -y > nul
+    7za x "gdisk.7z" -o"%tmp%" -aos -y >nul
     if "%PROCESSOR_ARCHITECTURE%"=="x86" (
         set gdisk=gdisk32.exe
     ) else (
@@ -1529,7 +1529,7 @@ exit /b 0
     :MultibootUSB.rEFInd
     if "%offline%"=="1" goto :option.rEFInd
     rem detected USB
-    wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" > nul
+    wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" >nul
         if not errorlevel 1 (goto :Removable.rEFInd) else (goto :External.rEFInd)
         :Removable.rEFInd
         if "%secureboot%"=="n" (
@@ -1604,20 +1604,20 @@ exit /b 0
     set "usb=false"
     set "externaldisk=false"
     :: check.virtualdisk
-    wmic diskdrive get name, model | find /i "Msft Virtual Disk SCSI Disk Device" | find /i "\\.\physicaldrive%disk%" > nul
+    wmic diskdrive get name, model | find /i "Msft Virtual Disk SCSI Disk Device" | find /i "\\.\physicaldrive%disk%" >nul
         if not errorlevel 1 set "virtualdisk=true"
-    wmic diskdrive get name, model | find /i "Microsoft Virtual Disk" | find /i "\\.\physicaldrive%disk%" > nul
+    wmic diskdrive get name, model | find /i "Microsoft Virtual Disk" | find /i "\\.\physicaldrive%disk%" >nul
         if not errorlevel 1 set "virtualdisk=true"
-    wmic diskdrive get name, model | find /i "Microsoft Sanal Diski" | find /i "\\.\physicaldrive%disk%" > nul
+    wmic diskdrive get name, model | find /i "Microsoft Sanal Diski" | find /i "\\.\physicaldrive%disk%" >nul
         if not errorlevel 1 set "virtualdisk=true"
     :: check.harddisk
-    wmic diskdrive get name, mediatype | find /i "Fixed hard disk media" | find /i "\\.\physicaldrive%disk%" > nul
+    wmic diskdrive get name, mediatype | find /i "Fixed hard disk media" | find /i "\\.\physicaldrive%disk%" >nul
         if not errorlevel 1 set "harddisk=true"
     :: check.usbdisk
-    wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" > nul
+    wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" >nul
         if not errorlevel 1 set "usb=true"
     :: check.externaldisk
-    wmic diskdrive get name, mediatype | find /i "External hard disk media" | find /i "\\.\physicaldrive%disk%" > nul
+    wmic diskdrive get name, mediatype | find /i "External hard disk media" | find /i "\\.\physicaldrive%disk%" >nul
         if not errorlevel 1 set "externaldisk=true"
 exit /b 0
 
@@ -1679,8 +1679,8 @@ exit /b 0
 exit /b 0
 
 :bcd.reset
-    bcdedit /store %bcd% /set %identifier% device ramdisk=[%ducky%]%bootfile%,%Object% > nul
-    bcdedit /store %bcd% /set %identifier% osdevice ramdisk=[%ducky%]%bootfile%,%Object% > nul
+    bcdedit /store %bcd% /set %identifier% device ramdisk=[%ducky%]%bootfile%,%Object% >nul
+    bcdedit /store %bcd% /set %identifier% osdevice ramdisk=[%ducky%]%bootfile%,%Object% >nul
 exit /b 0
 
 :clean.bye
@@ -1692,21 +1692,21 @@ for /f "delims=" %%f in (hide.list) do (
 )
 cd /d "%tmp%\partassist"
     if "%processor_architecture%"=="x86" (
-        SetupGreen32 -u > nul
-        LoadDrv_Win32 -u > nul
+        SetupGreen32 -u >nul
+        LoadDrv_Win32 -u >nul
     ) else (
-        SetupGreen64 -u > nul
-        LoadDrv_x64 -u > nul
+        SetupGreen64 -u >nul
+        LoadDrv_x64 -u >nul
     )
 cd /d "%tmp%"
     rem >> clean up the trash and exit
     set "dlist=colortool curl driveprotect gdisk grub2 partassist rEFInd rEFInd_themes"
     for %%d in (%dlist%) do (
-        if exist "%%d" rmdir "%%d" /s /q > nul
+        if exist "%%d" rmdir "%%d" /s /q >nul
     )
-    set "flist=hide.vbs Output.log qemuboottester.exe SilentCMD.log wincdemu.exe wget.exe"
+    set "flist=hide.vbs Output.log qemuboottester.exe wincdemu.exe wget.exe"
     for %%f in (%flist%) do (
-        if exist "%%f" del "%%f" /s /q > nul
+        if exist "%%f" del "%%f" /s /q >nul
     )
     > thanks.vbs (
         echo Dim Message, Speak

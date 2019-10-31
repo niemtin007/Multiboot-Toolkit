@@ -62,3 +62,5 @@ cd /d "%tmp%"
         echo detach vdisk
     ) | diskpart
     del /s /q "Grub2.vhd" >nul
+
+cd /d "%bindir%"

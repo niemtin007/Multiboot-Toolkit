@@ -10,7 +10,7 @@ set "curpath=%~dp0Modules"
 if not exist "bin" (
     color 4f & echo.
     echo ^>^> Warning: Data Loss
-    timeout /t 15 > nul & exit
+    timeout /t 15 >nul & exit
 ) else (
     call :permissions
     call :multibootscan
@@ -20,16 +20,17 @@ if not exist "bin" (
 > "%tmp%\modules.vbs" (
     echo Dim Message, Speak
     echo Set Speak=CreateObject^("sapi.spvoice"^)
-    echo Speak.Speak "Please put all modules you need into the Modules folder. Then press any key to continue..."
+    echo Speak.Speak "Please put all modules you need into the Modules folder."
+    echo Speak.Speak "Then press any key to continue..."
 )
 rem begin move module to the source folder
 if exist "%bindir%\Special_ISO" (
     cd /d "%bindir%\Special_ISO"
-        if exist "*.iso" (move /y "*.iso" "%curpath%" > nul)
+        if exist "*.iso" (move /y "*.iso" "%curpath%" >nul)
 )
 if exist "%bindir%\ISO_Extract" (
     cd /d "%bindir%\ISO_Extract"
-        if exist "*.iso" (move /y "*.iso" "%curpath%" > nul)
+        if exist "*.iso" (move /y "*.iso" "%curpath%" >nul)
 )
 rem end move module to the source folder
 if not exist "%~dp0Modules" (mkdir "%~dp0Modules")
@@ -53,7 +54,7 @@ echo.
 echo %_lang0202_%
 cd /d "%tmp%"
     if exist "%systemroot%\SysWOW64\Speech\SpeechUX\sapi.cpl" start modules.vbs
-    echo %_lang0203_% & timeout /t 300 > nul
+    echo %_lang0203_% & timeout /t 300 >nul
     taskkill /f /im wscript.exe /t /fi "status eq running">nul
     del /s /q modules.vbs >nul
     call :check.empty
@@ -70,25 +71,27 @@ cd /d "%bindir%"
 
 rem >> create all modules namelist
 if not exist "%ducky%\BOOT\namelist\temp" mkdir "%ducky%\BOOT\namelist\temp"
-for /f "tokens=*" %%i in ('dir /a:-d /b "%curpath%"') do (>"%ducky%\BOOT\namelist\temp\%%~ni" (echo %%i))
-rem >> rename all modules namelist
+for /f "tokens=*" %%i in ('dir /a:-d /b "%curpath%"') do (
+    >"%ducky%\BOOT\namelist\temp\%%~ni" (echo %%i)
+)
+rem >> ren all modules namelist
 cd /d "%bindir%"
     for /f "delims=" %%f in (iso.list, iso_extract.list, specialiso.list, wim.list) do (
         cd /d "%ducky%\BOOT\namelist\temp"
-            if exist "*%%f*" (rename "*%%f*" "%%f" > nul)
+            if exist "*%%f*" (ren "*%%f*" "%%f" >nul)
         cd /d "%bindir%"
     )
 rem >> move all iso to temp folder
 cd /d "%bindir%"
     for /f "delims=" %%f in (iso_extract.list) do (
         cd /d "%curpath%"
-            if exist "*%%f*.iso" (move /y "*%%f*.iso" "%bindir%\ISO_Extract" > nul)
+            if exist "*%%f*.iso" (move /y "*%%f*.iso" "%bindir%\ISO_Extract" >nul)
         cd /d "%bindir%"
     )
 cd /d "%bindir%"
     for /f "delims=" %%f in (specialiso.list) do (
         cd /d "%curpath%"
-            if exist "*%%f*" (move /y "*%%f*" "%bindir%\Special_ISO" > nul)
+            if exist "*%%f*" (move /y "*%%f*" "%bindir%\Special_ISO" >nul)
         cd /d "%bindir%"
     )
 
@@ -155,9 +158,9 @@ call :check.letter %ducky% rem get disk number of Multiboot data partition
 if %size% LEQ %esp% (
     if exist "%bindir%\Special_ISO\*.iso" (
         cls & echo. & echo %_lang0204_%
-        timeout /t 2 > nul
+        timeout /t 2 >nul
         %partassist% /hd:%disk% /whide:%rpart% /src:%source% /dest:ISO
-        timeout /t 3 > nul
+        timeout /t 3 >nul
     )
 ) else (
     cls & color 4f & echo. & echo %_lang0205_%
@@ -166,7 +169,7 @@ if %size% LEQ %esp% (
     echo %_lang0207_%
     echo %_lang0208_%
     echo ----------------------------------------------------------------------
-    timeout /t 15 > nul
+    timeout /t 15 >nul
 )
 
 :populariso
@@ -210,38 +213,38 @@ for /f "delims=" %%f in (wim.list) do (
         )
     )
 )
-rem >> rename and move all *.wim to the destination
+rem >> ren and move all *.wim to the destination
 cd /d "%ducky%\WIM"
     if exist *w*8*1*.wim (
         move /y *w*8*1*.wim WIM
         cd /d "%ducky%\WIM"
-            rename *w*8*1*64* w8.1se64.wim
-            rename *w*8*1*32* w8.1se32.wim
-            rename *w*8*1*86* w8.1se32.wim
+            ren *w*8*1*64* w8.1se64.wim
+            ren *w*8*1*32* w8.1se32.wim
+            ren *w*8*1*86* w8.1se32.wim
         cd /d "%ducky%"
     )
-    rem rename winpe
-    if exist *w*10*64* (rename *w*10*64* w10pe64.wim)
-    if exist *w*10*32* (rename *w*10*32* w10pe32.wim)
-    if exist *w*10*86* (rename *w*10*86* w10pe32.wim)
-    if exist *w*8*64* (rename *w*8*64* w8pe64.wim)
-    if exist *w*8*32* (rename *w*8*32* w8pe32.wim)
-    if exist *w*8*86* (rename *w*8*86* w8pe32.wim)
-    if exist *w*7*32* (rename *w*7*32* w7pe32.wim)
-    if exist *xp* (rename *xp* XP.wim)
-    rem renameame apps & tools for winpe
-    if exist *dr*v*.wim (move /y *drv*.wim %ducky%\APPS > nul)
-    if exist *dr*v*.iso (move /y *drv*.iso %ducky%\APPS > nul)
-    if exist *app*.wim (move /y *app*.wim %ducky%\APPS > nul)
-    if exist *app*.iso (move /y *app*.iso %ducky%\APPS > nul)
-    if exist *tool*.wim (move /y *tool*.wim %ducky%\APPS > nul)
-    if exist *tool*.iso (move /y *tool*.iso %ducky%\APPS > nul)
+    rem ren winpe
+    if exist *w*10*64* ren *w*10*64* w10pe64.wim
+    if exist *w*10*32* ren *w*10*32* w10pe32.wim
+    if exist *w*10*86* ren *w*10*86* w10pe32.wim
+    if exist *w*8*64*  ren *w*8*64* w8pe64.wim
+    if exist *w*8*32*  ren *w*8*32* w8pe32.wim
+    if exist *w*8*86*  ren *w*8*86* w8pe32.wim
+    if exist *w*7*32*  ren *w*7*32* w7pe32.wim
+    if exist *xp*      ren *xp* XP.wim
+    rem rename apps & tools for winpe
+    if exist *dr*v*.wim move /y *drv*.wim %ducky%\APPS >nul
+    if exist *dr*v*.iso move /y *drv*.iso %ducky%\APPS >nul
+    if exist *app*.wim  move /y *app*.wim %ducky%\APPS >nul
+    if exist *app*.iso  move /y *app*.iso %ducky%\APPS >nul
+    if exist *tool*.wim move /y *tool*.wim %ducky%\APPS >nul
+    if exist *tool*.iso move /y *tool*.iso %ducky%\APPS >nul
 
 rem >> Install Wim Sources Module
 if not exist "%ducky%\WIM\bootx64.wim" if not exist "%ducky%\WIM\bootx86.wim" (
     if exist "%~dp0Modules\*Wim*Sources*Module*.7z" (
         cls & echo. & echo %_lang0213_%
-        "%bindir%\7za.exe" x "%~dp0Modules\*Wim*Sources*Module*.7z" -o"%ducky%\" -aoa -y > nul
+        "%bindir%\7za.exe" x "%~dp0Modules\*Wim*Sources*Module*.7z" -o"%ducky%\" -aoa -y >nul
     )
 )
 rem >> Windows install.wim module (wim method)
@@ -259,9 +262,9 @@ for %%i in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
                 echo ^   * Windows %%j ISO found in %%i:\ drive
                 echo %_lang0216_%
                 if not exist "%ducky%\Sources\install%%~nj8664.wim" (
-                    copy "%%i:\sources\install.wim" "%ducky%\Sources\" > nul
+                    copy "%%i:\sources\install.wim" "%ducky%\Sources\" >nul
                     cd /d "%ducky%\Sources\"
-                    rename install.wim install%%~nj8664.wim
+                    ren install.wim install%%~nj8664.wim
                     echo %_lang0217_%
                 ) else (
                     echo ^     ^>^> Your Windows %%j doesn't need to install again
@@ -295,15 +298,15 @@ rem >> copy all *.exe module on multiboot
 cd /d "%curpath%"
     if exist "*portable.*" (
         cls & echo. & echo %_lang0219_%
-        "%bindir%\7za.exe" x "*portable.*" -o"%ducky%\PortableApps\" -aoa -y > nul
+        "%bindir%\7za.exe" x "*portable.*" -o"%ducky%\PortableApps\" -aoa -y >nul
     )
 rem >> return iso file to modules folder
 cd /d "%bindir%"
-    if exist "ISO_Extract\*.iso" (move /y "ISO_Extract\*.iso" "%curpath%" > nul)
-    if exist "Special_ISO\*.iso" (move /y "Special_ISO\*.iso" "%curpath%" > nul)
+    if exist "ISO_Extract\*.iso" (move /y "ISO_Extract\*.iso" "%curpath%" >nul)
+    if exist "Special_ISO\*.iso" (move /y "Special_ISO\*.iso" "%curpath%" >nul)
 
 for /f "tokens=*" %%i in ('dir /s /a /b "%ducky%\BOOT\namelist\temp"') do set /a tsize+=%%~zi
-    if defined tsize (move /y "%ducky%\BOOT\namelist\temp\*.*" "%ducky%\BOOT\namelist\" > nul)
+    if defined tsize (move /y "%ducky%\BOOT\namelist\temp\*.*" "%ducky%\BOOT\namelist\" >nul)
     rd /s /q "%ducky%\BOOT\namelist\temp"
 
 rem >> update config for Grub2
@@ -317,8 +320,8 @@ if not exist "%ducky%\EFI\BOOT\usb.gpt" (
 )
 
 cd /d "%bindir%"
-    rd /s /q Special_ISO > nul
-    rd /s /q ISO_Extract > nul
+    rd /s /q Special_ISO >nul
+    rd /s /q ISO_Extract >nul
 
 rem >> unhide the Multiboot Partition
 call :check.partitiontable
@@ -348,7 +351,7 @@ rem >> begin functions
         set /a num=%random% %%105 +1
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
-        7za x "colortool.7z" -o"%tmp%" -aos -y > nul
+        7za x "colortool.7z" -o"%tmp%" -aos -y >nul
         rem get Multiboot Toolkit Version
         for /f "tokens=*" %%b in (version) do set /a "cur_version=%%b"
             set /a cur_a=%cur_version:~0,1%
@@ -381,9 +384,9 @@ exit /b 0
 :permissions
     call :colortool
     
-    ver | findstr /i "6\.1\." > nul
+    ver | findstr /i "6\.1\." >nul
         if %errorlevel% equ 0 set "windows=7"
-        if not "%windows%"=="7" chcp 65001 > nul
+        if not "%windows%"=="7" chcp 65001 >nul
     
     set randname=%random%%random%%random%%random%%random%
     md "%windir%\%randname%" 2>nul
@@ -448,16 +451,16 @@ exit /b 0
     echo.
     cd /d "%bindir%"
         echo ^>^> Loading, Please wait...
-        7za x "partassist.7z" -o"%tmp%" -aos -y > nul
+        7za x "partassist.7z" -o"%tmp%" -aos -y >nul
         set partassist="%tmp%\partassist\partassist.exe"
         set bootice="%bindir%\bootice.exe"
     cd /d "%tmp%\partassist"
         if "%processor_architecture%"=="x86" (
-            SetupGreen32 -i > nul
-            LoadDrv_Win32 -i > nul
+            SetupGreen32 -i >nul
+            LoadDrv_Win32 -i >nul
         ) else (
-            SetupGreen64 -i > nul
-            LoadDrv_x64 -i > nul
+            SetupGreen64 -i >nul
+            LoadDrv_x64 -i >nul
         )
         > cfg.ini (
             echo [Language]
@@ -500,7 +503,7 @@ exit /b 0
     (
         echo select volume %volume%
         echo assign letter=%letter%
-    ) | diskpart > nul
+    ) | diskpart >nul
     cd /d "%~dp0"
         call "[ 02 ] Install Modules.bat"
 exit /b 0
@@ -529,7 +532,7 @@ setlocal
         if "%module%"=="false" (
             cls & echo.
             echo %_lang0222_%
-            pause > nul
+            pause >nul
             goto :main
         )
 endlocal
@@ -553,7 +556,7 @@ cd /d "%tmp%"
     echo.
     cd /d "X:\"
         if "%modulename%"=="AOMEI-Backup" (
-            copy "sources\boot.wim" "%ducky%\WIM\aomeibackup.wim" /y > nul
+            copy "sources\boot.wim" "%ducky%\WIM\aomeibackup.wim" /y >nul
             mkdir "%ducky%\ISO_Extract\%modulename%\"
             >"%ducky%\ISO_Extract\%modulename%\Author.txt" (echo AOMEI)
             goto :iso.unmount
@@ -568,7 +571,7 @@ cd /d "%tmp%"
             goto :iso.unmount
         )
         if "%modulename%"=="Bob.Ombs.Win10PEx64" (
-            copy "sources\boot.wim" "%ducky%\WIM\BobW10PE.wim" /y > nul
+            copy "sources\boot.wim" "%ducky%\WIM\BobW10PE.wim" /y >nul
             xcopy "Programs" "%ducky%\Programs\" /e /g /h /r /y
             mkdir "%ducky%\ISO_Extract\%modulename%\"
             >"%ducky%\ISO_Extract\%modulename%\Author.txt" (echo Bob.Ombs)
@@ -582,7 +585,7 @@ cd /d "%tmp%"
             goto :iso.unmount
         )
         if "%modulename%"=="HirensBoot" (
-            copy "sources\boot.wim" "%ducky%\WIM\hbcdpe.wim" /y > nul
+            copy "sources\boot.wim" "%ducky%\WIM\hbcdpe.wim" /y >nul
             xcopy /s "Version.txt" "%ducky%\ISO_Extract\%modulename%\"
             goto :iso.unmount
         )
@@ -611,9 +614,9 @@ exit /b 0
         if errorlevel 2 set "portable=false"
         if "%portable%"=="true" (
             cd /d "%bindir%"
-                7za x "PortableApps.7z" -o"%ducky%\" -aoa -y > nul
+                7za x "PortableApps.7z" -o"%ducky%\" -aoa -y >nul
                 echo %_lang0012_%
-                timeout /t 2 > nul
+                timeout /t 2 >nul
         )
 exit /b 0
 
@@ -626,7 +629,7 @@ exit /b 0
 
 :scan.label
 for /f %%b in ('wmic volume get driveletter^, label ^| findstr /i "%~1"') do set "ducky=%%b"
-    if not defined ducky set "offline=true"
+    if not defined ducky (set offline=true) else (set offline=false)
 exit /b 0
 
 :clean.bye
@@ -638,21 +641,21 @@ for /f "delims=" %%f in (hide.list) do (
 )
 cd /d "%tmp%\partassist"
     if "%processor_architecture%"=="x86" (
-        SetupGreen32 -u > nul
-        LoadDrv_Win32 -u > nul
+        SetupGreen32 -u >nul
+        LoadDrv_Win32 -u >nul
     ) else (
-        SetupGreen64 -u > nul
-        LoadDrv_x64 -u > nul
+        SetupGreen64 -u >nul
+        LoadDrv_x64 -u >nul
     )
 cd /d "%tmp%"
     rem >> clean up the trash and exit
     set "dlist=colortool curl driveprotect gdisk grub2 partassist rEFInd rEFInd_themes"
     for %%d in (%dlist%) do (
-        if exist "%%d" rmdir "%%d" /s /q > nul
+        if exist "%%d" rmdir "%%d" /s /q >nul
     )
-    set "flist=hide.vbs Output.log qemuboottester.exe SilentCMD.log wincdemu.exe wget.exe"
+    set "flist=hide.vbs Output.log qemuboottester.exe wincdemu.exe wget.exe"
     for %%f in (%flist%) do (
-        if exist "%%f" del "%%f" /s /q > nul
+        if exist "%%f" del "%%f" /s /q >nul
     )
     > thanks.vbs (
         echo Dim Message, Speak
