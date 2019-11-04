@@ -1,8 +1,8 @@
 @echo off
 
-rem >> https://niemtin007.blogspot.com
-rem >> The batch file is written by niemtin007.
-rem >> Thank you for using Multiboot Toolkit.
+:: https://niemtin007.blogspot.com
+:: The batch file is written by niemtin007.
+:: Thank you for using Multiboot Toolkit.
 
 cd /d "%~dp0"
 set "bindir=%~dp0bin"
@@ -23,7 +23,7 @@ if not exist "bin" (
     echo Speak.Speak "Please put all modules you need into the Modules folder."
     echo Speak.Speak "Then press any key to continue..."
 )
-rem begin move module to the source folder
+:: move module to the source folder
 if exist "%bindir%\Special_ISO" (
     cd /d "%bindir%\Special_ISO"
         if exist "*.iso" (move /y "*.iso" "%curpath%" >nul)
@@ -32,7 +32,6 @@ if exist "%bindir%\ISO_Extract" (
     cd /d "%bindir%\ISO_Extract"
         if exist "*.iso" (move /y "*.iso" "%curpath%" >nul)
 )
-rem end move module to the source folder
 if not exist "%~dp0Modules" (mkdir "%~dp0Modules")
 
 call :check.letter X:
@@ -69,19 +68,19 @@ cd /d "%bindir%"
     if not exist Special_ISO (mkdir Special_ISO)
     if not exist ISO_Extract (mkdir ISO_Extract)
 
-rem >> create all modules namelist
+:: create all modules namelist
 if not exist "%ducky%\BOOT\namelist\temp" mkdir "%ducky%\BOOT\namelist\temp"
 for /f "tokens=*" %%i in ('dir /a:-d /b "%curpath%"') do (
     >"%ducky%\BOOT\namelist\temp\%%~ni" (echo %%i)
 )
-rem >> ren all modules namelist
+:: rename all modules namelist
 cd /d "%bindir%"
     for /f "delims=" %%f in (iso.list, iso_extract.list, specialiso.list, wim.list) do (
         cd /d "%ducky%\BOOT\namelist\temp"
             if exist "*%%f*" (ren "*%%f*" "%%f" >nul)
         cd /d "%bindir%"
     )
-rem >> move all iso to temp folder
+:: move all iso to temp folder
 cd /d "%bindir%"
     for /f "delims=" %%f in (iso_extract.list) do (
         cd /d "%curpath%"
@@ -95,7 +94,7 @@ cd /d "%bindir%"
         cd /d "%bindir%"
     )
 
-rem check iso extract type 
+:: check iso extract type 
 cd /d "%bindir%\ISO_Extract"
     for /f "delims=" %%f in (%bindir%\iso_extract.list) do (
             if exist "*%%f*.iso" goto :extract
@@ -131,9 +130,9 @@ cd /d "%tmp%"
     wincdemu /uninstall
 
 :specialiso
-rem disabled iso linux run on fat32 partition (hidden partition)
+:: disabled iso linux run on fat32 partition (hidden partition)
 if exist "%ducky%\EFI\BOOT\usb.gpt" goto :populariso
-rem check special iso type 
+:: check special iso type 
 cd /d "%bindir%\Special_ISO"
     for /f "delims=" %%f in (%bindir%\specialiso.list) do (
         if exist "*%%f*.iso" goto :specialiso-go
@@ -153,7 +152,7 @@ call :colortool
     set /a "size=%size%/1024/1024"
     set "source=%bindir%\Special_ISO"
 
-call :check.letter %ducky% rem get disk number of Multiboot data partition
+call :check.letter %ducky% :: get disk number of Multiboot data partition
 
 if %size% LEQ %esp% (
     if exist "%bindir%\Special_ISO\*.iso" (
@@ -163,7 +162,8 @@ if %size% LEQ %esp% (
         timeout /t 3 >nul
     )
 ) else (
-    cls & color 4f & echo. & echo %_lang0205_%
+    call :colortool
+    echo. & echo %_lang0205_%
     echo ----------------------------------------------------------------------
     echo %_lang0206_%
     echo %_lang0207_%
@@ -173,7 +173,7 @@ if %size% LEQ %esp% (
 )
 
 :populariso
-rem >> copy all ISO to multiboot
+:: copy all ISO to multiboot
 call :colortool
 echo.
 echo %_lang0209_%
@@ -185,18 +185,18 @@ for /f "delims=" %%f in (iso.list) do (
     )
 )
 
-rem >> copy Kaspersky Rescue Disk 18 to multiboot
+:: copy Kaspersky Rescue Disk 18 to multiboot
 call :colortool
 if exist "%curpath%\krd.iso" (
     if not exist "%ducky%\DATA\krd.iso" (
         echo.
-        echo ^> Kaspersky Rescue Disk 18 Module is being copied, please wait...
+        echo ^> Kaspersky Rescue Disk 18 %_lang0015_%
         robocopy "%curpath%" "%ducky%\DATA" krd.iso /njh /njs /nc /ns
     )
 )
 
 :wimmodules
-rem >> copy all *.wim module on multiboot
+:: copy all *.wim module on multiboot
 call :colortool
 echo.
 echo %_lang0210_%
@@ -213,7 +213,7 @@ for /f "delims=" %%f in (wim.list) do (
         )
     )
 )
-rem >> ren and move all *.wim to the destination
+:: rename and move all *.wim to the destination
 cd /d "%ducky%\WIM"
     if exist *w*8*1*.wim (
         move /y *w*8*1*.wim WIM
@@ -223,16 +223,16 @@ cd /d "%ducky%\WIM"
             ren *w*8*1*86* w8.1se32.wim
         cd /d "%ducky%"
     )
-    rem ren winpe
-    if exist *w*10*64* ren *w*10*64* w10pe64.wim
-    if exist *w*10*32* ren *w*10*32* w10pe32.wim
-    if exist *w*10*86* ren *w*10*86* w10pe32.wim
-    if exist *w*8*64*  ren *w*8*64* w8pe64.wim
-    if exist *w*8*32*  ren *w*8*32* w8pe32.wim
-    if exist *w*8*86*  ren *w*8*86* w8pe32.wim
-    if exist *w*7*32*  ren *w*7*32* w7pe32.wim
-    if exist *xp*      ren *xp* XP.wim
-    rem rename apps & tools for winpe
+    :: rename winpe
+    if exist *w*10*64*  ren *w*10*64* w10pe64.wim
+    if exist *w*10*32*  ren *w*10*32* w10pe32.wim
+    if exist *w*10*86*  ren *w*10*86* w10pe32.wim
+    if exist *w*8*64*   ren *w*8*64*  w8pe64.wim
+    if exist *w*8*32*   ren *w*8*32*  w8pe32.wim
+    if exist *w*8*86*   ren *w*8*86*  w8pe32.wim
+    if exist *w*7*32*   ren *w*7*32*  w7pe32.wim
+    if exist *xp*       ren *xp*      XP.wim
+    :: rename apps & tools for winpe
     if exist *dr*v*.wim move /y *drv*.wim %ducky%\APPS >nul
     if exist *dr*v*.iso move /y *drv*.iso %ducky%\APPS >nul
     if exist *app*.wim  move /y *app*.wim %ducky%\APPS >nul
@@ -240,14 +240,14 @@ cd /d "%ducky%\WIM"
     if exist *tool*.wim move /y *tool*.wim %ducky%\APPS >nul
     if exist *tool*.iso move /y *tool*.iso %ducky%\APPS >nul
 
-rem >> Install Wim Sources Module
+:: Install Wim Sources Module
 if not exist "%ducky%\WIM\bootx64.wim" if not exist "%ducky%\WIM\bootx86.wim" (
     if exist "%~dp0Modules\*Wim*Sources*Module*.7z" (
         cls & echo. & echo %_lang0213_%
         "%bindir%\7za.exe" x "%~dp0Modules\*Wim*Sources*Module*.7z" -o"%ducky%\" -aoa -y >nul
     )
 )
-rem >> Windows install.wim module (wim method)
+:: Windows install.wim module (wim method)
 call :colortool
 echo.
 echo %_lang0214_%
@@ -275,7 +275,7 @@ for %%i in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
 )
 endlocal & cls
 
-rem >> Windows Install ISO Module (ISO method)
+:: Windows Install ISO Module (ISO method)
 cd /d "%ducky%\WIM"
     if not exist "bootisox64.wim" if not exist "bootisox86.wim" (
     cd /d "%curpath%"
@@ -285,7 +285,7 @@ cd /d "%ducky%\WIM"
         )
     )
 
-rem >> Install Grub2 File Manager
+:: Install Grub2 File Manager
 call :colortool
     set "list=grubfmia32.efi grubfmx64.efi"
     if exist "%curpath%\grubfm-*.7z" (
@@ -294,13 +294,13 @@ call :colortool
     )
 )
 
-rem >> copy all *.exe module on multiboot
+:: copy all *.exe module on multiboot
 cd /d "%curpath%"
     if exist "*portable.*" (
         cls & echo. & echo %_lang0219_%
         "%bindir%\7za.exe" x "*portable.*" -o"%ducky%\PortableApps\" -aoa -y >nul
     )
-rem >> return iso file to modules folder
+:: return iso file to modules folder
 cd /d "%bindir%"
     if exist "ISO_Extract\*.iso" (move /y "ISO_Extract\*.iso" "%curpath%" >nul)
     if exist "Special_ISO\*.iso" (move /y "Special_ISO\*.iso" "%curpath%" >nul)
@@ -309,7 +309,7 @@ for /f "tokens=*" %%i in ('dir /s /a /b "%ducky%\BOOT\namelist\temp"') do set /a
     if defined tsize (move /y "%ducky%\BOOT\namelist\temp\*.*" "%ducky%\BOOT\namelist\" >nul)
     rd /s /q "%ducky%\BOOT\namelist\temp"
 
-rem >> update config for Grub2
+:: update config for Grub2
 if not exist "%ducky%\EFI\BOOT\usb.gpt" (
     cd /d "%ducky%\BOOT"
         for /f "tokens=*" %%b in (lang) do set "lang=%%b"
@@ -323,7 +323,7 @@ cd /d "%bindir%"
     rd /s /q Special_ISO >nul
     rd /s /q ISO_Extract >nul
 
-rem >> unhide the Multiboot Partition
+:: unhide the Multiboot Partition
 call :check.partitiontable
     if not "%GPT%"=="true" (
         if "%secureboot%"=="n" (set /a "partition=1") else (set /a "partition=2")
@@ -331,7 +331,7 @@ call :check.partitiontable
         if "%secureboot%"=="n" (set /a "partition=2") else (set /a "partition=3")
     )
 call :scan.label MULTIBOOT
-    if "%offline%"=="true" (
+    if "%online%"=="false" (
         %partassist% /hd:%disk% /unhide:%partition%
         %partassist% /hd:%disk% /setletter:%partition% /letter:auto
     )
@@ -342,7 +342,7 @@ call :clean.bye
 
 
 
-rem >> begin functions
+:: begin functions
 
 :colortool
     cls
@@ -352,12 +352,12 @@ rem >> begin functions
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
         7za x "colortool.7z" -o"%tmp%" -aos -y >nul
-        rem get Multiboot Toolkit Version
+        :: get Multiboot Toolkit Version
         for /f "tokens=*" %%b in (version) do set /a "cur_version=%%b"
             set /a cur_a=%cur_version:~0,1%
             set /a cur_b=%cur_version:~1,1%
             set /a cur_c=%cur_version:~2,1%
-    rem Check for DotNet 4.0 Install
+    :: Check for DotNet 4.0 Install
     cd /d "%tmp%\colortool"
         set "checkdotnet=%temp%\Output.log"
         reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP" /s | find "v4" > %checkdotnet%
@@ -405,45 +405,35 @@ exit /b 0
 exit /b 0
 
 :multibootscan
-    > "%tmp%\identify.vbs" (
-        echo Dim Message, Speak
-        echo Set Speak=CreateObject^("sapi.spvoice"^)
-        echo Speak.Speak "Multiboot Drive Found"
-    )
-    :while.scan
-    for /f %%b in ('wmic volume get driveletter^, label ^| findstr /i "MULTIBOOT"') do set "ducky=%%b"
-        if not exist "%ducky%\EFI\BOOT\mark" goto :progress.scan
-        for /f "tokens=*" %%b in (%ducky%\EFI\BOOT\mark) do set "author=%%b"
-        if not defined author (
-            set "offline=0"
-            goto :progress.scan
-        ) else (
-            cd /d "%tmp%"
-            if exist "%systemroot%\SysWOW64\Speech\SpeechUX\sapi.cpl" start identify.vbs
-            cls & echo. & echo ^>^> Multiboot Drive Found ^^^^ & timeout /t 2 >nul
+    call :scan.label MULTIBOOT
+    call :check.author %ducky%
+        if "%installed%"=="true" (
+            set /a disk=%diskscan%
             goto :break.scan
+        ) else (
+            goto :progress.scan
         )
-        :progress.scan
-            if "%skipscan%"=="true" set "offline=1" & goto :EOF
-            cls & echo ^> Connecting   & timeout /t 1 >nul
-            cls & echo ^> Connecting.  & timeout /t 1 >nul
-            cls & echo ^> Connecting.. & timeout /t 1 >nul
-            cls & echo ^> Connecting...& timeout /t 1 >nul
-        goto :while.scan
+    :progress.scan
+        cls & echo ^> Connecting    & timeout /t 1 >nul
+        cls & echo ^> Connecting.   & timeout /t 1 >nul
+        cls & echo ^> Connecting..  & timeout /t 1 >nul
+        cls & echo ^> Connecting... & timeout /t 1 >nul
+        goto :multibootscan
     :break.scan
-    if not "%author%"=="niemtin007" (
-        cls & color 4f & echo.
-        echo ^>^> Run [ 01 ] Install Multiboot.bat to reinstall & timeout /t 15 >nul & exit
-    )
-    for /f "tokens=2 delims= " %%b in ('wmic path win32_logicaldisktopartition get antecedent^, dependent ^| find "%ducky%"') do set "disk=%%b"
-        set "disk=%disk:~1,1%"
-        set /a disk=%disk%+0
-    for /f "tokens=3 delims=#" %%b in ('wmic partition get name ^| findstr /i "#%disk%,"') do set "partition=%%b"
-        set /a partition=%partition%+0
+    cd /d "%tmp%"
+        > identify.vbs (
+            echo Dim Message, Speak
+            echo Set Speak=CreateObject^("sapi.spvoice"^)
+            echo Speak.Speak "Multiboot Drive Found"
+        )
+        if exist "%systemroot%\SysWOW64\Speech\SpeechUX\sapi.cpl" start identify.vbs
+    call :colortool
+        echo. & echo ^>^> Multiboot Drive Found ^^^^
+        timeout /t 2 >nul
         del /s /q "%tmp%\identify.vbs" >nul
-        call :colortool
-        call language.bat
-        call :partassist.init
+    call :colortool
+    call language.bat
+    call :partassist.init
 exit /b 0
 
 :partassist.init
@@ -485,31 +475,46 @@ exit /b 0
 exit /b 0
 
 :check.letter
-for /f "tokens=2 delims= " %%b in ('wmic path win32_logicaldisktopartition get antecedent^, dependent ^| find /i "%~1"') do set "disk=%%b"
+for /f "tokens=2 delims= " %%b in (
+    'wmic path win32_logicaldisktopartition get antecedent^, dependent ^| find /i "%~1"'
+    ) do set "disk=%%b"
     if not defined disk set "match=false"
     set "disk=%disk:~1,1%"
     set /a disk=%disk%+0
-    if exist "X:\" call :assignletter.diskpart
+wmic diskdrive get name, mediatype | find /i "\\.\physicaldrive%disk%" | find /i "Fixed hard disk media" >nul
+    if "%errorlevel%"=="0" (
+        if exist "X:\" (
+            setlocal
+                set "skip=false"
+                call :assignletter.diskpart
+            endlocal
+        )
+    )
+    set "skip=true"
 exit /b 0
 
 :assignletter.diskpart
-    call :colortool
     echo.
     echo %_lang0123_%
-    for %%p in (z y x w v u t s r q p o n m l k j i h g f e d) do (
-        if not exist %%p:\nul set letter=%%p
+    :: http://wiki.uniformserver.com/index.php/Batch_files:_First_Free_Drive#Final_Solution
+    for %%a in (z y x w v u t s r q p o n m l k j i h g f e d c) do (
+        cd %%a: 1>>nul 2>&1 & if errorlevel 1 set freedrive=%%a
     )
-    for /f "tokens=2 delims= " %%b in ('echo list volume ^| diskpart ^| find /i "    X  "') do set "volume=%%b"
+    :: get volume number instead of specifying a drive letter for missing drive letter case
+    for /f "tokens=2" %%b in (
+        'echo list volume ^| diskpart ^| find /i "MULTIBOOT"'
+        ) do set "volume=%%b"
+    :: assign drive letter
     (
         echo select volume %volume%
-        echo assign letter=%letter%
+        echo assign letter=%freedrive%
     ) | diskpart >nul
     cd /d "%~dp0"
         call "[ 02 ] Install Modules.bat"
 exit /b 0
 
 :check.empty
-setlocal
+    setlocal
     set _tmp=
     for /f "delims=" %%b in ('dir /b "%curpath%"') do set _tmp="%%b"
     if {%_tmp%}=={} (
@@ -535,7 +540,7 @@ setlocal
             pause >nul
             goto :main
         )
-endlocal
+    endlocal
 exit /b 0
 
 :iso.extract
@@ -562,9 +567,9 @@ cd /d "%tmp%"
             goto :iso.unmount
         )
         if "%modulename%"=="anhdvPE" (
-            rem xcopy "APPS" "%ducky%\APPS\" /e /g /h /r /y
+            :: xcopy "APPS" "%ducky%\APPS\" /e /g /h /r /y
             robocopy "X:\APPS" "%ducky%\APPS" /njh /njs /nc /ns
-            rem xcopy "WIM" "%ducky%\WIM\" /e /g /h /r /y
+            :: xcopy "WIM" "%ducky%\WIM\" /e /g /h /r /y
             robocopy "X:\WIM" "%ducky%\WIM" /njh /njs /nc /ns
             mkdir "%ducky%\ISO_Extract\%modulename%\"
             >"%ducky%\ISO_Extract\%modulename%\Author.txt" (echo Dang Van Anh)
@@ -602,9 +607,9 @@ cd /d "%tmp%"
             )
         )
 :iso.unmount
-cd /d "%tmp%"
-    wincdemu /unmount X:
-    cls
+    cd /d "%tmp%"
+        wincdemu /unmount X:
+        cls
 exit /b 0
 
 :PortableAppsPlatform
@@ -622,14 +627,49 @@ exit /b 0
 
 :check.partitiontable
     set GPT=false
-    for /f "tokens=8" %%b in ('echo list disk ^| diskpart ^| find /i "Disk %disk%"') do (
-        if /i "%%b"=="*" set GPT=true
-    )
+    for /f "tokens=8" %%b in (
+        'echo list disk ^| diskpart ^| find /i "Disk %disk%"'
+        ) do (
+            if /i "%%b"=="*" set GPT=true
+        )
 exit /b 0
 
 :scan.label
-for /f %%b in ('wmic volume get driveletter^, label ^| findstr /i "%~1"') do set "ducky=%%b"
-    if not defined ducky (set offline=true) else (set offline=false)
+    set online=false
+    :: get drive letter from label
+    for /f %%b in (
+        'wmic volume get driveletter^, label ^| findstr /i "%~1"'
+        ) do set "ducky=%%b"
+        :: in case drive letter missing the ducky is the %~1 argument
+        if defined ducky set online=true
+        :: get disk number from drive letter
+        for /f "tokens=2 delims= " %%b in (
+            'wmic path win32_logicaldisktopartition get antecedent^, dependent ^| find "%ducky%"'
+            ) do set "diskscan=%%b"
+            if defined diskscan set /a "diskscan=%diskscan:~1,1%"
+exit /b 0
+
+:check.author
+    set label=false
+    set author=whoiam
+    set installed=false
+    :: check disk unavailable
+    vol %~1 >nul 2>&1
+    if errorlevel 1 set label=BBP
+    for /f "tokens=1-5*" %%1 in ('vol %~1') do (
+        set label=%%6 & goto :break.label
+    )
+    :break.label
+    if exist "%~1\EFI\BOOT\mark" (
+        for /f "tokens=*" %%b in (%~1\EFI\BOOT\mark) do set "author=%%b"
+    )
+    if "%author%"=="niemtin007" (
+        if "%label%"=="M-ESP "     set installed=true
+        if "%label%"=="rEFInd "    set installed=true
+        if "%label%"=="MULTIBOOT " set installed=true
+    ) else (
+        if "%label%"=="BBP"        set installed=true
+    )
 exit /b 0
 
 :clean.bye
@@ -648,7 +688,7 @@ cd /d "%tmp%\partassist"
         LoadDrv_x64 -u >nul
     )
 cd /d "%tmp%"
-    rem >> clean up the trash and exit
+    :: clean up the trash and exit
     set "dlist=colortool curl driveprotect gdisk grub2 partassist rEFInd rEFInd_themes"
     for %%d in (%dlist%) do (
         if exist "%%d" rmdir "%%d" /s /q >nul
@@ -672,4 +712,4 @@ cd /d "%tmp%"
     exit
 exit /b 0
 
-rem >> end function
+:: end function
