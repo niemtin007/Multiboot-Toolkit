@@ -15,6 +15,7 @@ if not exist "bin" (
 ) else (
     call :permissions
     call :multibootscan
+    call :gather.info
 )
 
 :main
@@ -119,7 +120,7 @@ exit /b 0
             goto :progress.scan
         )
     :progress.scan
-        if "%skipscan%"=="true"   goto :offline.scan
+        if "%skipscan%"=="true"     goto :offline.scan
         cls & echo ^> Connecting    & timeout /t 1 >nul
         cls & echo ^> Connecting.   & timeout /t 1 >nul
         cls & echo ^> Connecting..  & timeout /t 1 >nul
@@ -184,7 +185,6 @@ exit /b 0
 
 :colortool
     cls
-    mode con lines=18 cols=70
     cd /d "%bindir%"
         set /a num=%random% %%105 +1
         set "itermcolors=%num%.itermcolors"
@@ -230,6 +230,45 @@ exit /b 0
         )
 exit /b 0
 
+:gather.info
+    cd /d "%ducky%\BOOT"
+        if exist lang (
+            for /f "tokens=*" %%b in (lang) do set "lang=%%b"
+        )
+        if exist rEFInd (
+            for /f "tokens=*" %%b in (rEFInd) do set "rtheme=%%b"
+        )
+        if exist secureboot (
+            for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
+        )
+    cd /d "%ducky%\BOOT\GRUB\themes\"
+        if exist theme (
+            for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
+        )
+    cd /d "%bindir%"
+exit /b 0
+
+:check.letter
+    echo.
+    echo %_lang0123_%
+    :: http://wiki.uniformserver.com/index.php/Batch_files:_First_Free_Drive#Final_Solution
+    for %%a in (z y x w v u t s r q p o n m l k j i h g f e d c) do (
+        cd %%a: 1>>nul 2>&1 & if errorlevel 1 set freedrive=%%a
+    )
+    :: get volume number instead of specifying a drive letter for missing drive letter case
+    for /f "tokens=2" %%b in (
+        'echo list volume ^| diskpart ^| find /i "MULTIBOOT"'
+        ) do set "volume=%%b"
+    vol %~1 >nul 2>&1
+        if errorlevel 0 if exist "%~1" set "volume=%~1"
+    :: assign drive letter
+    (
+        echo select volume %volume%
+        echo assign letter=%freedrive%
+    ) | diskpart >nul
+    if "%~2"=="return" call "[ 01 ] Install Multiboot.bat"
+exit /b 0
+
 :scan.label
     set online=false
     :: get drive letter from label
@@ -237,7 +276,13 @@ exit /b 0
         'wmic volume get driveletter^, label ^| findstr /i "%~1"'
         ) do set "ducky=%%b"
         :: in case drive letter missing the ducky is the %~1 argument
-        if defined ducky set online=true
+        vol %ducky% >nul 2>&1
+            if errorlevel 1 (
+                call :check.letter
+                call :scan.label %~1
+            ) else (
+                if exist "%ducky%\EFI\BOOT\mark" set online=true
+            )
         :: get disk number from drive letter
         for /f "tokens=2 delims= " %%b in (
             'wmic path win32_logicaldisktopartition get antecedent^, dependent ^| find "%ducky%"'
@@ -268,6 +313,30 @@ exit /b 0
     )
 exit /b 0
 
+:checkdisktype
+    :: reset all disk variable
+    set "virtualdisk=false"
+    set "harddisk=false"
+    set "usb=false"
+    set "externaldisk=false"
+    :: check.virtualdisk
+    wmic diskdrive get name, model | find /i "Msft Virtual Disk SCSI Disk Device" | find /i "\\.\physicaldrive%disk%" >nul
+        if not errorlevel 1 set "virtualdisk=true"
+    wmic diskdrive get name, model | find /i "Microsoft Virtual Disk" | find /i "\\.\physicaldrive%disk%" >nul
+        if not errorlevel 1 set "virtualdisk=true"
+    wmic diskdrive get name, model | find /i "Microsoft Sanal Diski" | find /i "\\.\physicaldrive%disk%" >nul
+        if not errorlevel 1 set "virtualdisk=true"
+    :: check.harddisk
+    wmic diskdrive get name, mediatype | find /i "Fixed hard disk media" | find /i "\\.\physicaldrive%disk%" >nul
+        if not errorlevel 1 set "harddisk=true"
+    :: check.usbdisk
+    wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" >nul
+        if not errorlevel 1 set "usb=true"
+    :: check.externaldisk
+    wmic diskdrive get name, mediatype | find /i "External hard disk media" | find /i "\\.\physicaldrive%disk%" >nul
+        if not errorlevel 1 set "externaldisk=true"
+exit /b 0
+
 :silentcmd
     > "%tmp%\hide.vbs" (
         echo.
@@ -284,10 +353,8 @@ exit /b 0
 
 :changelanguage
     call :colortool
-    cd /d "%ducky%\BOOT"
-        for /f "tokens=*" %%b in (lang) do set current=%%b
     echo.
-    echo ^> Current Language is %current%
+    echo ^> Current Language is %lang%
     echo ======================================================================
     echo        [ 1 ] = English                [ 2 ] = Vietnam                 
     echo        [ 3 ] = Turkish                [ 4 ] = Simplified Chinese      
@@ -308,8 +375,6 @@ exit /b 0
         7za.exe x "config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
         >"%ducky%\BOOT\lang" (echo %lang%)
         call language.bat
-    cd /d "%ducky%\BOOT\GRUB\themes\"
-        for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
     cd /d "%bindir%\config"
         call "main.bat"
     :: setting language for grub2 file manager
@@ -344,9 +409,6 @@ exit /b 0
     cd /d "%ducky%\BOOT\grub"
         >"menu.list" (echo %list%)
     
-    cd /d "%ducky%\BOOT\GRUB\themes\"
-        for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
-    
     cd /d "%bindir%\config"
         call "main.bat"
         call :clean.bye
@@ -354,11 +416,7 @@ exit /b 0
 
 :grub2theme
     call :colortool
-    cd /d "%ducky%\BOOT\"
-        for /f "tokens=*" %%b in (lang) do set "lang=%%b"
-    cd /d "%ducky%\BOOT\grub\themes"
-        for /f "tokens=*" %%b in (theme) do set "curtheme=%%b"
-    
+    set "curtheme=%gtheme%"
     echo.
     echo %_lang0300_% %curtheme%
     echo =====================================================================
@@ -432,11 +490,6 @@ exit /b 0
 :rEFIndtheme
     call :colortool
     echo.
-    cd /d "%ducky%\BOOT\"
-        for /f "tokens=*" %%b in (rEFInd) do set "rtheme=%%b"
-        if exist secureboot (
-            for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
-        )
     echo %_lang0400_% %rtheme%
     echo =====================================================================
     echo 01 = Apocalypse   12 = CloverBootcam 23 = Glassy     34 = Oceanix    
@@ -537,7 +590,7 @@ exit /b 0
         set securepart=0
         goto :install.rtheme
     )
-    pause
+
     :install.rtheme
     :: Install rEFind theme
     set "source=%tmp%\rEFInd_themes\%rtheme%"
@@ -639,10 +692,6 @@ exit /b 0
 
 :editWinPEbootmanager
     call :colortool
-    cd /d "%ducky%\BOOT"
-        if exist "secureboot" (
-            for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
-        )
     echo.
     echo            ^	^>^> MINI WINDOWS BOOT MANAGER EDITOR ^<^<
     echo                 --------------------------------------
@@ -662,15 +711,15 @@ exit /b 0
     set "source=%ducky%\BOOT\bootmgr\B84"
     echo.
     echo ^*               Source^: %source%
-    "%bindir%\bootice.exe" /edit_bcd /easymode /file=%source%
+    %bootice% /edit_bcd /easymode /file=%source%
     call :colortool
     call :clean.bye
     
     :uefi3264bit
     call :checkdisktype
-        if "%virtualdisk%"=="true" goto :external.pe
-        if "%harddisk%"=="true" goto :external.pe
-        if "%usb%"=="true" goto :removable.pe
+        if "%virtualdisk%"=="true"  goto :external.pe
+        if "%harddisk%"=="true"     goto :external.pe
+        if "%usb%"=="true"          goto :removable.pe
         if "%externaldisk%"=="true" goto :external.pe
     
     :removable.pe
@@ -840,11 +889,11 @@ exit /b 0
     color 0e & echo. & echo ^>^>  Invalid Input. & timeout /t 15 >nul & goto :option.winsetup
     
     :legacy.winsetup
-    "%bindir%\bootice.exe" /edit_bcd /easymode /file=%ducky%\BOOT\bcd
+    %bootice% /edit_bcd /easymode /file=%ducky%\BOOT\bcd
     call :clean.bye
     
     :uefi.winsetup
-    "%bindir%\bootice.exe" /edit_bcd /easymode /file=%ducky%\EFI\MICROSOFT\Boot\bcd
+    %bootice% /edit_bcd /easymode /file=%ducky%\EFI\MICROSOFT\Boot\bcd
     call :clean.bye
 exit /b 0
 
@@ -860,18 +909,14 @@ exit /b 0
     echo.
     echo                  ------------------------------------
     echo.
-    cd /d "%ducky%\BOOT"
-        if exist "secureboot" (
-            for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
-        )
     cd /d "%ducky%"
-        if exist boot (ren boot BOOT >nul)
+        if exist boot ren boot BOOT >nul
     cd /d "%ducky%\boot"
-        if exist grub_old (ren grub_old grub)
-        if exist efi (ren efi EFI >nul)
+        if exist grub_old ren grub_old grub
+        if exist efi ren efi EFI >nul
     cd /d "%ducky%\EFI"
-        if exist boot (ren boot BOOT >nul)
-        if exist microsoft (ren microsoft MICROSOFT >nul)
+        if exist boot ren boot BOOT >nul
+        if exist microsoft ren microsoft MICROSOFT >nul
     if exist "%ducky%\WINSETUP" (
         goto :winsetup.fix
     ) else (
@@ -923,10 +968,6 @@ exit /b 0
         )
     
     :config.fix
-    cd /d "%ducky%\BOOT\"
-        for /f "tokens=*" %%b in (lang) do set "lang=%%b"
-    cd /d "%ducky%\BOOT\grub\themes"
-        for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
     cd /d "%bindir%\config\"
         call "main.bat"
     cd /d "%ducky%\EFI\Microsoft\Boot"
@@ -1006,7 +1047,7 @@ exit /b 0
     :: store grub2-filemanager to archive
     cd /d "%bindir%\extra-modules"
         "%bindir%\7za.exe" a grub2-filemanager.7z .\grub2-filemanager\* >nul
-        if exist "grub2-filemanager" (rd /s /q "grub2-filemanager" >nul)
+        if exist "grub2-filemanager" rd /s /q "grub2-filemanager" >nul
         if "%installed%"=="false" call :clean.bye
         echo.
         echo ^> Updating grub2-filemanager to MultibootUSB...
@@ -1019,7 +1060,6 @@ exit /b 0
     call :colortool
     cd /d "%ducky%\BOOT"
         if not exist "secureboot" goto :option.default
-        for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
         set "Grub2=%bindir%\secureboot\EFI\Boot\backup\Grub2"
         set "rEFInd=%bindir%\secureboot\EFI\Boot\backup\rEFInd"
         set "WinPE=%bindir%\secureboot\EFI\Boot\backup\WinPE"
@@ -1043,9 +1083,9 @@ exit /b 0
     
     :checkdisk.default
     call :checkdisktype
-        if "%virtualdisk%"=="true" goto :external.default
-        if "%harddisk%"=="true" goto :option.default
-        if "%usb%"=="true" goto :removable.default
+        if "%virtualdisk%"=="true"  goto :external.default
+        if "%harddisk%"=="true"     goto :option.default
+        if "%usb%"=="true"          goto :removable.default
         if "%externaldisk%"=="true" goto :external.default
     
     :removable.default
@@ -1085,8 +1125,8 @@ exit /b 0
         %partassist% /hd:%disk% /whide:%securepart% /src:%WinPE% /dest:\EFI\BOOT
         %partassist% /hd:%disk% /whide:%refindpart% /src:%rEFInd% /dest:\EFI\BOOT
         cd /d "%ducky%\EFI\BOOT\"
-            if exist bootx64.efi  (del bootx64.efi /s /f /q >nul)
-            if exist bootia32.efi (del bootia32.efi /s /f /q >nul)
+            if exist bootx64.efi  del bootx64.efi  /s /f /q >nul
+            if exist bootia32.efi del bootia32.efi /s /f /q >nul
     )
     if "%option%"=="Secure_Grub2" (
         %partassist% /hd:%disk% /whide:%securepart% /src:%WinPE% /dest:\EFI\BOOT
@@ -1096,10 +1136,10 @@ exit /b 0
         %partassist% /hd:%disk% /unhide:%securepart%
         %partassist% /hd:%disk% /setletter:%securepart% /letter:X
         cd /d "X:\EFI\BOOT\"
-            if exist bootx64.efi   (del bootx64.efi /s /f /q >nul)
-            if exist bootia32.efi  (del bootia32.efi /s /f /q >nul)
-            if exist winpeia32.efi (del winpeia32.efi /s /f /q >nul)
-            if exist winpex64.efi  (del winpex64.efi /s /f /q >nul)
+            if exist bootx64.efi   del bootx64.efi   /s /f /q >nul
+            if exist bootia32.efi  del bootia32.efi  /s /f /q >nul
+            if exist winpeia32.efi del winpeia32.efi /s /f /q >nul
+            if exist winpex64.efi  del winpex64.efi  /s /f /q >nul
         %partassist% /hd:%disk% /hide:%securepart%
         %partassist% /hd:%disk% /whide:%refindpart% /src:%rEFInd% /dest:\EFI\BOOT
         cd /d "%bindir%"
@@ -1117,26 +1157,17 @@ exit /b 0
 :updatemultiboot
     :: Preparing files...
     call :colortool
-    cd /d "%ducky%\BOOT"
-        for /f "tokens=*" %%b in (lang) do set "lang=%%b"
         echo. & echo ^>^>  Current language: %lang%
-        for /f "tokens=*" %%b in (rEFInd) do set "rtheme=%%b"
-            if not defined rtheme (
-                set rtheme=Universe
-            ) else (
-                echo. & echo %_lang0400_% %rtheme%
-            )
-        if exist secureboot (
-            for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
+        if not defined rtheme (
+            set rtheme=Universe
+        ) else (
+            echo. & echo %_lang0400_% %rtheme%
         )
-    
-    cd /d "%ducky%\BOOT\grub\themes"
-        for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
-            if not defined gtheme (
-                set gtheme=Breeze-5
-            ) else (
-                echo. & echo ^>^>  %_lang0300_% %gtheme%
-            )
+        if not defined gtheme (
+            set gtheme=Breeze-5
+        ) else (
+            echo. & echo ^>^>  %_lang0300_% %gtheme%
+        )
     
     cd /d "%bindir%"
         7za x "grub2.7z" -o"%tmp%" -aos -y >nul
@@ -1279,8 +1310,7 @@ exit /b 0
         set gdisk=gdisk64.exe
     )
     for /f "tokens=4 delims=\" %%b in ('wmic os get name') do set "harddisk=%%b"
-        set "harddisk=%harddisk:~8,1%"
-        set /a "harddisk=%harddisk%+0"
+        if defined harddisk set /a "harddisk=%harddisk:~8,1%"
     for /f "tokens=2" %%b in (
         'wmic path Win32_diskpartition get type ^, diskindex ^| find /i "%harddisk%"'
         ) do set "GPT=%%b"
@@ -1315,6 +1345,7 @@ exit /b 0
         cls
         call :cloverinterface
         echo ^>^> downloading %name%...
+        echo.
         set "sourcelink=https://sourceforge.net/projects/cloverefiboot/files/Bootable_ISO/%name%/download"
         wget -q --show-progress -O "%name%" %sourcelink%
         del "clover.log" /s /q /f >nul
@@ -1418,8 +1449,6 @@ exit /b 0
     call :colortool
     echo.
     echo %_lang0712_%
-    cd /d "%ducky%\BOOT\"
-        for /f "tokens=*" %%b in (rEFInd) do set "rtheme=%%b"
     cd /d "%tmp%"
         if not exist rEFInd_themes (mkdir rEFInd_themes)
     cd /d "%bindir%"
@@ -1482,8 +1511,7 @@ exit /b 0
 :rEFIndinstaller
     call :colortool
     for /f "tokens=4 delims=\" %%b in ('wmic os get name') do set "harddisk=%%b"
-        set "harddisk=%harddisk:~8,1%"
-        set /a "harddisk=%harddisk%+0"
+        if defined harddisk set /a "harddisk=%harddisk:~8,1%"
     for /f "tokens=2" %%b in (
         'wmic path Win32_diskpartition get type ^, diskindex ^| find /i "%harddisk%"'
         ) do set "GPT=%%b"
@@ -1493,9 +1521,6 @@ exit /b 0
             set "structure=MBR"
             timeout /t 15 >nul
         )
-    
-    cd /d "%ducky%\BOOT\"
-        for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
     
     :refind
     call :rEFIndinterface
@@ -1508,6 +1533,7 @@ exit /b 0
         if not exist rEFInd mkdir rEFInd
         7za x "wget.7z" -o"%tmp%" -aoa -y >nul
     cd /d "%tmp%"
+        echo.
         :: download the last rEFInd
         set "sourcelink=https://sourceforge.net/projects/refind/files/latest/download"
         wget -q --show-progress -O refind-bin.zip %sourcelink%
@@ -1530,25 +1556,25 @@ exit /b 0
         )
     
     cd /d "%tmp%\refind-bin\refind"
-        rename "refind_ia32.efi" "bootia32.efi"
-        rename "refind_x64.efi" "bootx64.efi"
+        rename refind_ia32.efi bootia32.efi
+        rename refind_x64.efi  bootx64.efi
     
     cd /d "%tmp%\refind-bin"
         xcopy "refind" "%bindir%\rEFInd\" /s /z /y /q >nul
         call "%bindir%\config\refind.conf.bat"
     
     cd /d "%tmp%"
-        if exist "refind-bin" (rd /S /Q "refind-bin" >nul)
+        if exist "refind-bin" rd /S /Q "refind-bin" >nul
     
     :: store refind to archive
     cd /d "%bindir%"
         7za a refind.7z rEFInd\ -sdel >nul
-        if exist "rEFInd" (rd /s /q "rEFInd" >nul)
+        if exist "rEFInd" rd /s /q "rEFInd" >nul
     
     :option.rEFInd
     set "rtheme=Universe"
     :: preparing file...
-    if not exist rEFInd_themes (mkdir rEFInd_themes)
+    if not exist rEFInd_themes mkdir rEFInd_themes
     cd /d "%tmp%"
         "%bindir%\7za.exe" x "%bindir%\refind.7z" -o"%tmp%" -aoa -y >nul
         "%bindir%\7za.exe" x "%bindir%\rEFInd_themes\%rtheme%.7z" -o"rEFInd_themes" -aoa -y >nul
@@ -1635,30 +1661,6 @@ exit /b 0
     echo.
 exit /b 0
 
-:checkdisktype
-    :: reset all disk variable
-    set "virtualdisk=false"
-    set "harddisk=false"
-    set "usb=false"
-    set "externaldisk=false"
-    :: check.virtualdisk
-    wmic diskdrive get name, model | find /i "Msft Virtual Disk SCSI Disk Device" | find /i "\\.\physicaldrive%disk%" >nul
-        if not errorlevel 1 set "virtualdisk=true"
-    wmic diskdrive get name, model | find /i "Microsoft Virtual Disk" | find /i "\\.\physicaldrive%disk%" >nul
-        if not errorlevel 1 set "virtualdisk=true"
-    wmic diskdrive get name, model | find /i "Microsoft Sanal Diski" | find /i "\\.\physicaldrive%disk%" >nul
-        if not errorlevel 1 set "virtualdisk=true"
-    :: check.harddisk
-    wmic diskdrive get name, mediatype | find /i "Fixed hard disk media" | find /i "\\.\physicaldrive%disk%" >nul
-        if not errorlevel 1 set "harddisk=true"
-    :: check.usbdisk
-    wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" >nul
-        if not errorlevel 1 set "usb=true"
-    :: check.externaldisk
-    wmic diskdrive get name, mediatype | find /i "External hard disk media" | find /i "\\.\physicaldrive%disk%" >nul
-        if not errorlevel 1 set "externaldisk=true"
-exit /b 0
-
 :bcdautoset
     echo.
     echo %_lang0004_%
@@ -1724,9 +1726,10 @@ exit /b 0
 :grub2installer
     cd /d "%bindir%"
         7za x "grub2.7z" -o"%tmp%" -aos -y >nul
+        if exist "V:\" call :check.letter V:
     :: create vhd disk
     cd /d "%tmp%"
-        if exist "Grub2.vhd" (del /s /q "Grub2.vhd" >nul)
+        if exist "Grub2.vhd" del /s /q "Grub2.vhd" >nul
         (
             echo create vdisk file="%tmp%\Grub2.vhd" maximum=50 type=expandable
             echo attach vdisk

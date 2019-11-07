@@ -26,15 +26,15 @@ if not exist "bin" (
 :: move module to the source folder
 if exist "%bindir%\Special_ISO" (
     cd /d "%bindir%\Special_ISO"
-        if exist "*.iso" (move /y "*.iso" "%curpath%" >nul)
+        if exist "*.iso" move /y "*.iso" "%curpath%" >nul
 )
 if exist "%bindir%\ISO_Extract" (
     cd /d "%bindir%\ISO_Extract"
-        if exist "*.iso" (move /y "*.iso" "%curpath%" >nul)
+        if exist "*.iso" move /y "*.iso" "%curpath%" >nul
 )
-if not exist "%~dp0Modules" (mkdir "%~dp0Modules")
+if not exist "%~dp0Modules" mkdir "%~dp0Modules"
 
-call :check.letter X:
+if exist "X:\" call :check.letter X:
 
 if "%installmodules%"=="y" (
     call :check.empty
@@ -65,8 +65,8 @@ cd /d "%ducky%\BOOT"
 
 :progress
 cd /d "%bindir%"
-    if not exist Special_ISO (mkdir Special_ISO)
-    if not exist ISO_Extract (mkdir ISO_Extract)
+    if not exist Special_ISO mkdir Special_ISO
+    if not exist ISO_Extract mkdir ISO_Extract
 
 :: create all modules namelist
 if not exist "%ducky%\BOOT\namelist\temp" mkdir "%ducky%\BOOT\namelist\temp"
@@ -77,20 +77,20 @@ for /f "tokens=*" %%i in ('dir /a:-d /b "%curpath%"') do (
 cd /d "%bindir%"
     for /f "delims=" %%f in (iso.list, iso_extract.list, specialiso.list, wim.list) do (
         cd /d "%ducky%\BOOT\namelist\temp"
-            if exist "*%%f*" (ren "*%%f*" "%%f" >nul)
+            if exist "*%%f*" ren "*%%f*" "%%f" >nul
         cd /d "%bindir%"
     )
 :: move all iso to temp folder
 cd /d "%bindir%"
     for /f "delims=" %%f in (iso_extract.list) do (
         cd /d "%curpath%"
-            if exist "*%%f*.iso" (move /y "*%%f*.iso" "%bindir%\ISO_Extract" >nul)
+            if exist "*%%f*.iso" move /y "*%%f*.iso" "%bindir%\ISO_Extract" >nul
         cd /d "%bindir%"
     )
 cd /d "%bindir%"
     for /f "delims=" %%f in (specialiso.list) do (
         cd /d "%curpath%"
-            if exist "*%%f*" (move /y "*%%f*" "%bindir%\Special_ISO" >nul)
+            if exist "*%%f*" move /y "*%%f*" "%bindir%\Special_ISO" >nul
         cd /d "%bindir%"
     )
 
@@ -151,8 +151,6 @@ call :colortool
     for /f "tokens=*" %%x in ('dir /s /a /b "Special_ISO"') do set /a "size+=%%~zx"
     set /a "size=%size%/1024/1024"
     set "source=%bindir%\Special_ISO"
-
-call :check.letter %ducky% :: get disk number of Multiboot data partition
 
 if %size% LEQ %esp% (
     if exist "%bindir%\Special_ISO\*.iso" (
@@ -233,10 +231,10 @@ cd /d "%ducky%\WIM"
     if exist *w*7*32*   ren *w*7*32*  w7pe32.wim
     if exist *xp*       ren *xp*      XP.wim
     :: rename apps & tools for winpe
-    if exist *dr*v*.wim move /y *drv*.wim %ducky%\APPS >nul
-    if exist *dr*v*.iso move /y *drv*.iso %ducky%\APPS >nul
-    if exist *app*.wim  move /y *app*.wim %ducky%\APPS >nul
-    if exist *app*.iso  move /y *app*.iso %ducky%\APPS >nul
+    if exist *dr*v*.wim move /y *drv*.wim  %ducky%\APPS >nul
+    if exist *dr*v*.iso move /y *drv*.iso  %ducky%\APPS >nul
+    if exist *app*.wim  move /y *app*.wim  %ducky%\APPS >nul
+    if exist *app*.iso  move /y *app*.iso  %ducky%\APPS >nul
     if exist *tool*.wim move /y *tool*.wim %ducky%\APPS >nul
     if exist *tool*.iso move /y *tool*.iso %ducky%\APPS >nul
 
@@ -323,19 +321,6 @@ cd /d "%bindir%"
     rd /s /q Special_ISO >nul
     rd /s /q ISO_Extract >nul
 
-:: unhide the Multiboot Partition
-call :check.partitiontable
-    if not "%GPT%"=="true" (
-        if "%secureboot%"=="n" (set /a "partition=1") else (set /a "partition=2")
-    ) else (
-        if "%secureboot%"=="n" (set /a "partition=2") else (set /a "partition=3")
-    )
-call :scan.label MULTIBOOT
-    if "%online%"=="false" (
-        %partassist% /hd:%disk% /unhide:%partition%
-        %partassist% /hd:%disk% /setletter:%partition% /letter:auto
-    )
-
 call :clean.bye
 
 
@@ -346,7 +331,6 @@ call :clean.bye
 
 :colortool
     cls
-    mode con lines=18 cols=70
     cd /d "%bindir%"
         set /a num=%random% %%105 +1
         set "itermcolors=%num%.itermcolors"
@@ -474,45 +458,6 @@ exit /b 0
     cls
 exit /b 0
 
-:check.letter
-for /f "tokens=2 delims= " %%b in (
-    'wmic path win32_logicaldisktopartition get antecedent^, dependent ^| find /i "%~1"'
-    ) do set "disk=%%b"
-    if not defined disk set "match=false"
-    set "disk=%disk:~1,1%"
-    set /a disk=%disk%+0
-wmic diskdrive get name, mediatype | find /i "\\.\physicaldrive%disk%" | find /i "Fixed hard disk media" >nul
-    if "%errorlevel%"=="0" (
-        if exist "X:\" (
-            setlocal
-                set "skip=false"
-                call :assignletter.diskpart
-            endlocal
-        )
-    )
-    set "skip=true"
-exit /b 0
-
-:assignletter.diskpart
-    echo.
-    echo %_lang0123_%
-    :: http://wiki.uniformserver.com/index.php/Batch_files:_First_Free_Drive#Final_Solution
-    for %%a in (z y x w v u t s r q p o n m l k j i h g f e d c) do (
-        cd %%a: 1>>nul 2>&1 & if errorlevel 1 set freedrive=%%a
-    )
-    :: get volume number instead of specifying a drive letter for missing drive letter case
-    for /f "tokens=2" %%b in (
-        'echo list volume ^| diskpart ^| find /i "MULTIBOOT"'
-        ) do set "volume=%%b"
-    :: assign drive letter
-    (
-        echo select volume %volume%
-        echo assign letter=%freedrive%
-    ) | diskpart >nul
-    cd /d "%~dp0"
-        call "[ 02 ] Install Modules.bat"
-exit /b 0
-
 :check.empty
     setlocal
     set _tmp=
@@ -625,13 +570,25 @@ exit /b 0
         )
 exit /b 0
 
-:check.partitiontable
-    set GPT=false
-    for /f "tokens=8" %%b in (
-        'echo list disk ^| diskpart ^| find /i "Disk %disk%"'
-        ) do (
-            if /i "%%b"=="*" set GPT=true
-        )
+:check.letter
+    echo.
+    echo %_lang0123_%
+    :: http://wiki.uniformserver.com/index.php/Batch_files:_First_Free_Drive#Final_Solution
+    for %%a in (z y x w v u t s r q p o n m l k j i h g f e d c) do (
+        cd %%a: 1>>nul 2>&1 & if errorlevel 1 set freedrive=%%a
+    )
+    :: get volume number instead of specifying a drive letter for missing drive letter case
+    for /f "tokens=2" %%b in (
+        'echo list volume ^| diskpart ^| find /i "MULTIBOOT"'
+        ) do set "volume=%%b"
+    vol %~1 >nul 2>&1
+        if errorlevel 0 if exist "%~1" set "volume=%~1"
+    :: assign drive letter
+    (
+        echo select volume %volume%
+        echo assign letter=%freedrive%
+    ) | diskpart >nul
+    if "%~2"=="return" call "[ 01 ] Install Multiboot.bat"
 exit /b 0
 
 :scan.label
@@ -641,7 +598,13 @@ exit /b 0
         'wmic volume get driveletter^, label ^| findstr /i "%~1"'
         ) do set "ducky=%%b"
         :: in case drive letter missing the ducky is the %~1 argument
-        if defined ducky set online=true
+        vol %ducky% >nul 2>&1
+            if errorlevel 1 (
+                call :check.letter
+                call :scan.label %~1
+            ) else (
+                if exist "%ducky%\EFI\BOOT\mark" set online=true
+            )
         :: get disk number from drive letter
         for /f "tokens=2 delims= " %%b in (
             'wmic path win32_logicaldisktopartition get antecedent^, dependent ^| find "%ducky%"'

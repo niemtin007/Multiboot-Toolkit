@@ -65,11 +65,12 @@ call :count.partition
     if not "%errorlevel%"=="0" goto :External
     :: sum size of the esp partition
     set /a MB=(%GB%*1024+%esp%)
-    if "%GB%"=="0" if "%online%"=="true" (
+    :: check the installed status and give instruction
+    if "%online%"=="true" if "%disk%"=="%diskscan%" (
         echo. & echo %_lang0107_% & timeout /t 300 >nul
         goto :delete
     )
-    if "%GB%"=="0" if "%online%"=="false" (
+    if "%online%"=="false" if "%GB%"=="0" (
         call :colortool
         echo. & echo %_lang0108_% & timeout /t 15 >nul
         goto :External
@@ -94,7 +95,7 @@ if "%installed%"=="true" (
 :continue
 if exist X:\ chkdsk X: /f
 %partassist% /hd:%disk% /setletter:0 /letter:auto
-if "%online%"=="false" (
+if "%online%"=="false" if "%disk%"=="%diskscan%" (
     :: no need to prepare partition when reinstalling multiboot
     %partassist% /hd:%disk% /resize:0 /reduce-left:%MB% /align
 )
@@ -199,17 +200,17 @@ cd /d "%bindir%\secureboot\EFI\Microsoft\Boot"
 set "source=%bindir%\secureboot"
 if "%secureboot%"=="n" (
     call :pushdata.secure
-    call :assignletter.diskpart
+    call :check.letter %ducky%
 )
 :: push secure boot files for USB
 if "%secureboot%"=="y" if "%usb%"=="true" (
     %partassist% /hd:%disk% /whide:1 /src:%source%
-    call :assignletter.diskpart >nul
+    call :check.letter %ducky% >nul
 )
 :: push secure boot files for HDD/SSD
 if "%secureboot%"=="y" if "%usb%"=="false" (
     %partassist% /hd:%disk% /whide:0 /src:%source%
-    call :assignletter.diskpart >nul
+    call :check.letter %ducky% >nul
 )
 :: start modules installer
 if "%installmodules%"=="y" (
@@ -230,7 +231,9 @@ call :clean.bye
         call :permissions
         call :colortool
         call language.bat
-        call :check.letter X:
+        if exist "X:\" (
+            call :check.letter X: return
+        )
         call :license
     )
 exit /b 0
@@ -346,7 +349,6 @@ exit /b 0
 
 :colortool
     cls
-    mode con lines=18 cols=70
     cd /d "%bindir%"
         set /a num=%random% %%105 +1
         set "itermcolors=%num%.itermcolors"
@@ -381,6 +383,27 @@ exit /b 0
     title Multiboot Toolkit %cur_a%.%cur_b%.%cur_c% - Bootable Creator
 exit /b 0
 
+:check.letter
+    echo.
+    echo %_lang0123_%
+    :: http://wiki.uniformserver.com/index.php/Batch_files:_First_Free_Drive#Final_Solution
+    for %%a in (z y x w v u t s r q p o n m l k j i h g f e d c) do (
+        cd %%a: 1>>nul 2>&1 & if errorlevel 1 set freedrive=%%a
+    )
+    :: get volume number instead of specifying a drive letter for missing drive letter case
+    for /f "tokens=2" %%b in (
+        'echo list volume ^| diskpart ^| find /i "MULTIBOOT"'
+        ) do set "volume=%%b"
+    vol %~1 >nul 2>&1
+        if errorlevel 0 if exist "%~1" set "volume=%~1"
+    :: assign drive letter
+    (
+        echo select volume %volume%
+        echo assign letter=%freedrive%
+    ) | diskpart >nul
+    if "%~2"=="return" call "[ 01 ] Install Multiboot.bat"
+exit /b 0
+
 :scan.label
     set online=false
     :: get drive letter from label
@@ -388,7 +411,13 @@ exit /b 0
         'wmic volume get driveletter^, label ^| findstr /i "%~1"'
         ) do set "ducky=%%b"
         :: in case drive letter missing the ducky is the %~1 argument
-        if defined ducky set online=true
+        vol %ducky% >nul 2>&1
+            if errorlevel 1 (
+                call :check.letter
+                call :scan.label %~1
+            ) else (
+                if exist "%ducky%\EFI\BOOT\mark" set online=true
+            )
         :: get disk number from drive letter
         for /f "tokens=2 delims= " %%b in (
             'wmic path win32_logicaldisktopartition get antecedent^, dependent ^| find "%ducky%"'
@@ -402,7 +431,7 @@ exit /b 0
     set installed=false
     :: check disk unavailable
     vol %~1 >nul 2>&1
-    if errorlevel 1 set label=BBP
+        if errorlevel 1 set label=BBP
     for /f "tokens=1-5*" %%1 in ('vol %~1') do (
         set label=%%6 & goto :break.label
     )
@@ -498,25 +527,6 @@ exit /b 0
     color 0e & echo %_lang0103_% & timeout /t 15 >nul & cls
 exit /b 0
 
-:check.letter
-for /f "tokens=2 delims= " %%b in (
-    'wmic path win32_logicaldisktopartition get antecedent^, dependent ^| find /i "%~1"'
-    ) do set "disk=%%b"
-    if not defined disk set "match=false"
-    set "disk=%disk:~1,1%"
-    set /a disk=%disk%+0
-wmic diskdrive get name, mediatype | find /i "\\.\physicaldrive%disk%" | find /i "Fixed hard disk media" >nul
-    if "%errorlevel%"=="0" (
-        if exist "X:\" (
-            setlocal
-                set "skip=false"
-                call :assignletter.diskpart
-            endlocal
-        )
-    )
-    set "skip=true"
-exit /b 0
-
 :pushdata.ESP
     cd /d "X:\"
         mkdir "X:\EFI\BOOT\"
@@ -536,12 +546,21 @@ exit /b 0
         xcopy "%rtheme%" "X:\EFI\BOOT\themes\" /e /g /h /r /y /q >nul
 exit /b 0
 
+:pushdata.secure
+    >"X:\BOOT\secureboot" (echo n)
+    cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
+        xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q >nul
+    cd /d "%bindir%"
+        xcopy "secureboot" "X:\" /e /g /h /r /y /q >nul
+exit /b 0
+
 :grub2installer
     cd /d "%bindir%"
         7za x "grub2.7z" -o"%tmp%" -aos -y >nul
+        if exist "V:\" call :check.letter V:
     :: create vhd disk
     cd /d "%tmp%"
-        if exist "Grub2.vhd" (del /s /q "Grub2.vhd" >nul)
+        if exist "Grub2.vhd" del /s /q "Grub2.vhd" >nul
         (
             echo create vdisk file="%tmp%\Grub2.vhd" maximum=50 type=expandable
             echo attach vdisk
@@ -580,34 +599,6 @@ exit /b 0
         ) | diskpart
         del /s /q "Grub2.vhd" >nul
     cd /d "%bindir%"
-exit /b 0
-
-:pushdata.secure
-    >"X:\BOOT\secureboot" (echo n)
-    cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-        xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q >nul
-    cd /d "%bindir%"
-        xcopy "secureboot" "X:\" /e /g /h /r /y /q >nul
-exit /b 0
-
-:assignletter.diskpart
-    echo.
-    echo %_lang0123_%
-    :: http://wiki.uniformserver.com/index.php/Batch_files:_First_Free_Drive#Final_Solution
-    for %%a in (z y x w v u t s r q p o n m l k j i h g f e d c) do (
-        cd %%a: 1>>nul 2>&1 & if errorlevel 1 set freedrive=%%a
-    )
-    :: get volume number instead of specifying a drive letter for missing drive letter case
-    for /f "tokens=2" %%b in (
-        'echo list volume ^| diskpart ^| find /i "MULTIBOOT"'
-        ) do set "volume=%%b"
-    :: assign drive letter
-    (
-        echo select volume %volume%
-        echo assign letter=%freedrive%
-    ) | diskpart >nul
-    cd /d "%~dp0"
-        if "%skip%"=="false" call "[ 01 ] Install Multiboot.bat"
 exit /b 0
 
 :gdisk
@@ -854,7 +845,7 @@ exit /b 0
         :: install icons for rEFInd Boot Manager
         call :rEFInd.icons X:
         :: normalize drive letter
-        call :assignletter.diskpart
+        call :check.letter
     :: specifies that the ESP does not receive a drive letter by default
     (
         echo select disk %disk%
