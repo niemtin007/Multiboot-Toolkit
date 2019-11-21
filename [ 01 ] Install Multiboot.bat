@@ -25,9 +25,7 @@ call :checkdisktype
 :removable
 :: prepare partitions space for removable Media
 call :colortool
-:: need to use bootice to rebuild MBR disk partition. It's important for flash drive.
-%bootice% /device=%disk% /partitions /repartition /usb-hdd /fstype=fat32 /quiet
-%partassist% /hd:%disk% /del:all
+call :clean.disk
 :: create rEFInd partition
 call :colortool
 %partassist% /hd:%disk% /cre /pri /size:%esp% /end /fs:fat32 /align /label:rEFInd /letter:X
@@ -78,6 +76,8 @@ call :count.partition
     goto :continue
 :delete
 call :colortool
+call :count.partition
+    if not defined partcount goto :Setup
 :: delete all multiboot partition without data loss
 %partassist% /hd:%disk% /unhide:0
 %partassist% /hd:%disk% /setletter:0 /letter:X
@@ -86,16 +86,14 @@ call :check.author X:
 :: {case-1} if a partition file system isn't windows type may be deleted
 :: {case-2} data will lose if the user copied the EFI folder into a 
 ::          data partition with the same Multiboot's drive label
-if "%installed%"=="true" (
+if "%installed%"=="true" if "%disk%"=="%diskscan%" (
     %partassist% /hd:%disk% /del:0
     goto :delete
-) else (
-    goto :continue
 )
 :continue
 if exist X:\ chkdsk X: /f
 %partassist% /hd:%disk% /setletter:0 /letter:auto
-if "%online%"=="false" if "%disk%"=="%diskscan%" (
+if "%online%"=="false" (
     :: no need to prepare partition when reinstalling multiboot
     %partassist% /hd:%disk% /resize:0 /reduce-left:%MB% /align
 )
@@ -301,6 +299,9 @@ cd /d "%tmp%"
     taskkill /f /im wscript.exe /t /fi "status eq running">nul
     del /s /q welcome.vbs >nul
     call :partassist.init
+    :: change language
+    call :colortool
+    call language.bat
 exit /b 0
 
 :partassist.init
@@ -313,7 +314,7 @@ exit /b 0
         set bootice="%bindir%\bootice.exe"
     :: begin preparing file
     cd /d "%tmp%"
-        if not exist rEFInd_themes (mkdir rEFInd_themes)
+        if not exist rEFInd_themes mkdir rEFInd_themes
     call :colortool
         7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
         7za x "refind.7z" -o"%tmp%" -aoa -y >nul
@@ -449,6 +450,7 @@ exit /b 0
 exit /b 0
 
 :count.partition
+    set "partcount="
     :: count the total number of partition in a disk
     for /f "tokens=3 delims=#" %%b in (
         'wmic partition get name ^| findstr /i "#%disk%,"'
@@ -482,6 +484,15 @@ exit /b 0
         if "%diskunit%"=="MB" echo   %disk%     ^| %disksize% %diskunit%       ^| %model% GPT
     )
     endlocal
+exit /b 0
+
+:clean.disk
+    (
+        echo select disk %disk%
+        echo clean
+        echo convert mbr
+        echo exit
+    ) | diskpart >nul
 exit /b 0
 
 :checkdisktype
@@ -630,10 +641,10 @@ exit /b 0
     if "%usb%"=="false" goto :rEFInd.ask
     color 0e
     echo.
-    echo --------------------------------------------------------------------
+    echo -------------------------------------------------------------------
     echo %_lang0118_%
     echo %_lang0119_%
-    echo --------------------------------------------------------------------
+    echo -------------------------------------------------------------------
     echo.
     choice /c yn /cs /n /m "%_lang0120_%"
         if errorlevel 1 set "usbgpt=true"
@@ -786,10 +797,10 @@ exit /b 0
     if "%usblegacy%"=="true" (
         call :gdisk
         :: a guide of the disk format waning messenger
-        echo --------------------------------------------------------------------
+        echo -------------------------------------------------------------------
         echo %_lang0126_%
         echo %_lang0127_%
-        echo --------------------------------------------------------------------
+        echo -------------------------------------------------------------------
         :: delete drive letter for BIOS Boot Partition
         %bootice% /device=%disk%:2 /partitions /delete_letter /quiet
     )

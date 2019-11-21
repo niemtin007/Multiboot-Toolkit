@@ -296,7 +296,7 @@ exit /b 0
     set installed=false
     :: check disk unavailable
     vol %~1 >nul 2>&1
-    if errorlevel 1 set label=BBP
+        if errorlevel 1 set label=BBP
     for /f "tokens=1-5*" %%1 in ('vol %~1') do (
         set label=%%6 & goto :break.label
     )
@@ -554,7 +554,7 @@ exit /b 0
 
     :continue.rtheme
     cd /d "%tmp%"
-        if not exist rEFInd_themes (mkdir rEFInd_themes)
+        if not exist rEFInd_themes mkdir rEFInd_themes
     cd /d "%bindir%"
         call :colortool
         7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
