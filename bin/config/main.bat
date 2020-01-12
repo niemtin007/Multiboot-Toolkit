@@ -51,6 +51,9 @@ cd /d "%ducky%\BOOT\grub"
         echo search.fs_label MULTIBOOT mdir
         echo export edir rdir mdir
         echo.
+        echo probe -u $mdir --set=dev_uuid
+        echo export dev_uuid
+        echo.
         echo # Menu Themes
         echo set theme=$prefix/themes/%gtheme%/theme.txt
         echo set icondir=$prefix/themes/icons
@@ -75,18 +78,11 @@ cd /d "%ducky%\BOOT\grub"
         echo                 newc:bcd:/BOOT/wimboot/bcd \
         echo                 newc:boot.sdi:/BOOT/boot.sdi \
         echo                 newc:boot.wim:"$1"
-        echo     fi
-        echo     if [ "${grub_cpu}" == "i386" ]; then
+        echo     else
         echo         wimboot @:bootmgfw.efi:/BOOT/wimboot/bootmgfw.efi \
         echo                 @:bcd:/BOOT/wimboot/bcd \
         echo                 @:boot.sdi:/BOOT/boot.sdi \
-        echo                 @:boot.wim:"$1";
-        echo     fi
-        echo     if [ "${grub_platform}" == "efi" ]; then
-        echo         wimboot @:bootmgfw.efi:/BOOT/wimboot/bootmgfw.efi \
-        echo                 @:bcd:/BOOT/wimboot/bcd \
-        echo                 @:boot.sdi:/BOOT/boot.sdi \
-        echo                 @:boot.wim:"$1";
+        echo                 @:boot.wim:"$1"
         echo     fi
         echo }
         echo.
@@ -248,7 +244,7 @@ cd /d "%ducky%\BOOT\grub"
         echo     }
         echo fi
         echo.
-        echo menuentry "%_config0000_%" --class arrow_left {
+        echo menuentry "%_config0000_%" --class arrow-left {
         echo     echo "%_config0000_%"
         echo     configfile "${prefix}/main.cfg"
         echo }
@@ -259,10 +255,24 @@ goto :eof
 :a
 :: Grub2 File Manager Menu
 >>"main.cfg" (
-    echo menuentry "%_config0115_%" --class refind {
-    echo     echo "%_config0126_%"
-    echo     configfile ${prefix}/init.sh
-    echo }
+
+    echo.
+    echo if [ -e "/EFI/BOOT/grubfmx64.efi" ]; then
+    echo    menuentry "%_config0115_% - official build" --class refind {
+    echo        echo "%_config0126_%"
+    echo        if [ "${grub_platform}" == "pc" ]; then
+    echo           linux /EFI/BOOT/loadfm
+    echo           initrd /EFI/BOOT/grubfm.iso
+    echo        else
+    echo           chainloader /EFI/BOOT/grubfmx64.efi
+    echo        fi
+    echo    }
+    echo else
+    echo    menuentry "%_config0115_% - source script" --class refind {
+    echo        echo "%_config0126_%"
+    echo        configfile ${prefix}/init.sh
+    echo    }
+    echo fi
     echo.
 )
 exit /b 0
@@ -271,10 +281,10 @@ exit /b 0
 :: Pentesting ISO Images Menu
 >>"main.cfg" (
     echo if [ -e "${prefix}/hackeros.cfg" ]; then
-    echo menuentry "%_config0109_%" --class SecurityOS {
-    echo     echo "%_config0003_%"
-    echo     configfile "${prefix}/hackeros.cfg"
-    echo }
+    echo    menuentry "%_config0109_%" --class SecurityOS {
+    echo        echo "%_config0003_%"
+    echo        configfile "${prefix}/hackeros.cfg"
+    echo    }
     echo fi
     echo.
 )
@@ -284,10 +294,10 @@ exit /b 0
 :: Linux ISO Images Menu
 >>"main.cfg" (
     echo if [ -e "${prefix}/linux.cfg" ]; then
-    echo menuentry "%_config0110_%" --class icon-linux {
-    echo     echo "%_config0003_%"
-    echo     configfile "${prefix}/linux.cfg"
-    echo }
+    echo    menuentry "%_config0110_%" --class icon-linux {
+    echo        echo "%_config0003_%"
+    echo        configfile "${prefix}/linux.cfg"
+    echo    }
     echo fi
     echo.
 )
@@ -297,10 +307,10 @@ exit /b 0
 :: Antivirus ISO Images Menu
 >>"main.cfg" (
     echo if [ -e "${prefix}/antivirus.cfg" ]; then
-    echo menuentry "%_config0111_%" --class eset {
-    echo     echo "%_config0003_%"
-    echo     configfile "${prefix}/antivirus.cfg"
-    echo }
+    echo    menuentry "%_config0111_%" --class eset {
+    echo        echo "%_config0003_%"
+    echo        configfile "${prefix}/antivirus.cfg"
+    echo    }
     echo fi
     echo.
 )
@@ -313,30 +323,22 @@ exit /b 0
     echo    if [ -e "($edir)/EFI/BOOT/winpex64.efi" ]; then
     echo        if [ "${grub_cpu}" == "x86_64" ]; then
     echo           menuentry "%_config0100_%" --class win8 {
-    echo               insmod part_%type%
-    echo               insmod chain
     echo               chainloader "($edir)/EFI/BOOT/winpex64.efi"
     echo           }
     echo        fi
     echo        if [ "${grub_cpu}" == "i386" ]; then
     echo           menuentry "%_config0100_%" --class win8 { 
-    echo               insmod part_%type%
-    echo               insmod chain
     echo               chainloader "($edir)/EFI/BOOT/winpeia32.efi"
     echo           }
     echo        fi
     echo    fi
     echo    if [ "${grub_cpu}" == "x86_64" ]; then
     echo       menuentry "%_config0100_%" --class win8 {
-    echo           insmod part_%type%
-    echo           insmod chain
     echo           chainloader /EFI/BOOT/bootx64.efi
     echo       }
     echo    fi
     echo    if [ "${grub_cpu}" == "i386" ]; then
     echo        menuentry "%_config0100_%" --class win8 { 
-    echo            insmod part_%type%
-    echo            insmod chain
     echo            chainloader /EFI/BOOT/bootia32.efi
     echo        }
     echo    fi
@@ -359,18 +361,24 @@ exit /b 0
 >>"main.cfg" (
     echo if [ "${grub_platform}" == "efi" ]; then
     echo    if [ "${grub_cpu}" == "x86_64" ]; then
-    echo       menuentry "%_config0129_%" --class iso {
-    echo           insmod part_%type%
-    echo           insmod chain
-    echo           chainloader /EFI/BOOT/winsetupx64.efi
+    echo       menuentry "%_config0133_%" --class iso {
+    echo           chainloader /EFI/BOOT/winsetupfmx64.efi
     echo       }
+    echo        if [ -e "/BOOT/bootmgr/winsetupx64.efi" ]; then
+    echo           menuentry "%_config0129_%" --class strelec {
+    echo               chainloader /EFI/BOOT/winsetupx64.efi
+    echo           }
+    echo        fi
     echo    fi
     echo    if [ "${grub_cpu}" == "i386" ]; then
-    echo       menuentry "%_config0129_%" --class iso { 
-    echo           insmod part_%type%
-    echo           insmod chain
-    echo           chainloader /EFI/BOOT/winsetupia32.efi
+    echo       menuentry "%_config0133_%" --class iso {
+    echo           chainloader /EFI/BOOT/winsetupfmia32.efi
     echo       }
+    echo        if [ -e "/BOOT/bootmgr/winsetupia32.efi" ]; then
+    echo            menuentry "%_config0129_%" --class strelec { 
+    echo                chainloader /EFI/BOOT/winsetupia32.efi
+    echo            }
+    echo        fi
     echo    fi
     echo fi
     echo.
@@ -383,11 +391,17 @@ exit /b 0
     echo               ntldr /bootmgr
     echo           }
     echo        fi
-    echo           menuentry "%_config0129_%" --class iso {
+    echo           menuentry "%_config0133_%" --class iso {
+    echo               linux /EFI/BOOT/loadfm
+    echo               initrd /EFI/BOOT/winsetupfm.iso
+    echo           }
+    echo        if [ -e "/BOOT/bootmgr/bootisowim" ]; then
+    echo           menuentry "%_config0129_%" --class strelec {
     echo               search --file /BOOT/bootmgr/bootisowim --set=root
     echo               insmod ntldr
     echo               ntldr /BOOT/bootmgr/bootisowim
     echo           }
+    echo        fi
     echo        if [ -e "/BOOT/grub/winsetup.lst" ]; then
     echo           menuentry "%_config0130_%" --class icon-xp {
     echo               set opts='find --set-root --ignore-floppies --ignore-cd /BOOT/grub/winsetup.lst;
@@ -435,10 +449,10 @@ exit /b 0
 :: Acronis ISO Images Menu
 >>"main.cfg" (
     echo if [ -e "${prefix}/acronis.cfg" ]; then
-    echo menuentry "%_config0112_%" --class icon-tool {
-    echo     echo "%_config0003_%"
-    echo     configfile "${prefix}/acronis.cfg"
-    echo }
+    echo    menuentry "%_config0112_%" --class icon-tool {
+    echo        echo "%_config0003_%"
+    echo        configfile "${prefix}/acronis.cfg"
+    echo    }
     echo fi
     echo.
 )
@@ -448,10 +462,10 @@ exit /b 0
 :: System Tools Menu
 >>"main.cfg" (
     echo if [ -e "${prefix}/partition.cfg" ]; then
-    echo menuentry "%_config0113_%" --class utility {
-    echo     echo "%_config0003_%"
-    echo     configfile "${prefix}/partition.cfg"
-    echo }
+    echo    menuentry "%_config0113_%" --class utility {
+    echo        echo "%_config0003_%"
+    echo        configfile "${prefix}/partition.cfg"
+    echo    }
     echo fi
     echo.
 )
@@ -503,7 +517,7 @@ exit /b 0
 :n
 :: Restart System Menu
 >>"main.cfg" (
-    echo menuentry "%_config0124_%" --class icon-reboot {
+    echo menuentry "%_config0124_%" --class system-reboot {
     echo     echo "%_config0003_%"
     echo     reboot
     echo }
@@ -514,7 +528,7 @@ exit /b 0
 :o
 :: Shutdown System Menu
 >>"main.cfg" (
-    echo menuentry "%_config0125_%" --class icon-shutdown {
+    echo menuentry "%_config0125_%" --class system-shutdown {
     echo     echo "%_config0003_%"
     echo     halt --no-apm
     echo }

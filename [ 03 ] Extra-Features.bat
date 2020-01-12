@@ -111,6 +111,8 @@ color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :main
 exit /b 0
 
 :multibootscan
+    call :colortool
+    call language.bat
     call :scan.label MULTIBOOT
     call :check.author %ducky%
         if "%installed%"=="true" (
@@ -140,8 +142,6 @@ exit /b 0
     :: get disk number from drive label
         del /s /q "%tmp%\identify.vbs" >nul
     :offline.scan
-    call :colortool
-    call language.bat
     call :partassist.init
 exit /b 0
 
@@ -480,6 +480,7 @@ exit /b 0
         if exist "%curtheme%" rmdir /s /q "%curtheme%" >nul
         if not exist "%gtheme%" (
             "%bindir%\7za.exe" x "%bindir%\grub2_themes\%gtheme%.7z" -aoa -y >nul
+            "%bindir%\7za.exe" x "%bindir%\grub2_themes\icons.7z" -aoa -y >nul
             "%bindir%\7za.exe" x "%bindir%\grub2font.7z" -o"%gtheme%" -aoa -y >nul
         )
         >"%ducky%\BOOT\grub\themes\theme" (echo %gtheme%)
@@ -609,6 +610,8 @@ exit /b 0
     copy "os_linux.icns" "%~1\EFI\BOOT\OneFileLinux.png" >nul
     copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupx64.png" >nul
     copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupia32.png" >nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupfmx64.png" >nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupfmia32.png" >nul
     copy "xorbootx64.png" "%~1\EFI\BOOT\xorbootx64.png" >nul
     xcopy "others" "%~1\EFI\BOOT\" /e /g /h /r /y /q >nul
 exit /b 0
@@ -1218,6 +1221,7 @@ exit /b 0
         xcopy "others" "%ducky%\EFI\BOOT\" /e /g /h /r /y /q >nul
     cd /d "%bindir%"
         7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y >nul
+        7za x "%bindir%\grub2_themes\icons.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
     cd /d "%ducky%\EFI\Microsoft\Boot"
         call :bcdautoset bcd
     

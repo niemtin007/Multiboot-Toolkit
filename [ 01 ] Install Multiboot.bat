@@ -93,8 +93,11 @@ if "%installed%"=="true" if "%disk%"=="%diskscan%" (
 :continue
 if exist X:\ chkdsk X: /f
 %partassist% /hd:%disk% /setletter:0 /letter:auto
+:: only resize partition for new size setting or new installing
+if "%online%"=="true" if not "%GB%"=="0" (
+    %partassist% /hd:%disk% /resize:0 /reduce-left:%MB% /align
+)
 if "%online%"=="false" (
-    :: no need to prepare partition when reinstalling multiboot
     %partassist% /hd:%disk% /resize:0 /reduce-left:%MB% /align
 )
 
@@ -191,6 +194,7 @@ cd /d "%bindir%"
     echo.
     echo %_lang0113_% %gtheme%
     7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
+    7za x "%bindir%\grub2_themes\icons.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
     call "%bindir%\config\main.bat"
 cd /d "%bindir%\secureboot\EFI\Microsoft\Boot"
     call :bcdautoset bcd
@@ -697,6 +701,8 @@ exit /b 0
     copy "os_linux.icns" "%~1\EFI\BOOT\OneFileLinux.png" >nul
     copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupx64.png" >nul
     copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupia32.png" >nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupfmx64.png" >nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupfmia32.png" >nul
     copy "xorbootx64.png" "%~1\EFI\BOOT\xorbootx64.png" >nul
     xcopy "others" "%~1\EFI\BOOT\" /e /g /h /r /y /q >nul
 exit /b 0
@@ -847,6 +853,7 @@ exit /b 0
         echo.
         echo %_lang0113_% %gtheme%
         7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
+        7za x "%bindir%\grub2_themes\icons.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
         :: make grub2 config
         call "%bindir%\config\main.bat"
     cd /d "X:\EFI\Microsoft\Boot"

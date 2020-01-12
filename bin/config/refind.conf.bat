@@ -6,7 +6,7 @@ cd /d "%bindir%\rEFInd"
     echo timeout 30
     echo hideui hints
     echo icons_dir themes/icons
-    echo banner themes/background.jpg
+    echo banner themes/background.png
     echo banner_scale fillscreen
     echo selection_big   themes/selection_big.png
     echo selection_small themes/selection_small.png

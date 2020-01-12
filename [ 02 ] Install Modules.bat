@@ -244,6 +244,11 @@ if not exist "%ducky%\WIM\bootx64.wim" if not exist "%ducky%\WIM\bootx86.wim" (
         cls & echo. & echo %_lang0213_%
         "%bindir%\7za.exe" x "%~dp0Modules\*Wim*Sources*Module*.7z" -o"%ducky%\" -aoa -y >nul
     )
+    cd /d "%bindir%\secureboot\EFI\Boot\backup\WinSetupISOWIM"
+        if exist winsetupia32.efi copy winsetupia32.efi "%ducky%\EFI\BOOT" /y >nul
+        if exist winsetupx64.efi  copy winsetupx64.efi "%ducky%\EFI\BOOT" /y >nul
+    cd /d "%bindir%\config"
+        if exist bootisowim copy bootisowim "%ducky%\BOOT\bootmgr" /y >nul
 )
 :: Windows install.wim module (wim method)
 call :colortool
@@ -285,7 +290,7 @@ cd /d "%ducky%\WIM"
 
 :: Install Grub2 File Manager
 call :colortool
-    set "list=grubfmia32.efi grubfmx64.efi"
+    set "list=grubfmia32.efi grubfmx64.efi grubfm.iso"
     if exist "%curpath%\grubfm-*.7z" (
         cls & echo. & echo %_lang0224_%
         7za x "%curpath%\grubfm-*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
@@ -389,6 +394,8 @@ exit /b 0
 exit /b 0
 
 :multibootscan
+    call :colortool
+    call language.bat
     call :scan.label MULTIBOOT
     call :check.author %ducky%
         if "%installed%"=="true" (
@@ -415,8 +422,6 @@ exit /b 0
         echo. & echo ^>^> Multiboot Drive Found ^^^^
         timeout /t 2 >nul
         del /s /q "%tmp%\identify.vbs" >nul
-    call :colortool
-    call language.bat
     call :partassist.init
 exit /b 0
 
