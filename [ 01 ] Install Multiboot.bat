@@ -598,6 +598,8 @@ exit /b 0
     cd /d "%tmp%\grub2"
         grub-install --target=x86_64-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
         grub-install --target=i386-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
+    cd /d "%ducky%\EFI\BOOT\backup"
+        if not exist Grub2 mkdir Grub2
     cd /d "V:\EFI\BOOT"
         :: copy to multiboot data partition
         copy "BOOTIA32.EFI" "%ducky%\EFI\BOOT\grubia32.efi" /y >nul
@@ -607,6 +609,8 @@ exit /b 0
         copy "BOOTIA32.EFI" "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootia32.efi" /y >nul
         copy "BOOTX64.EFI"  "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootx64.efi"  /y >nul
         copy "grub.efi"     "%bindir%\secureboot\EFI\Boot\backup\Grub2\grub.efi"     /y >nul
+    cd /d "%bindir%\secureboot\EFI\Boot\backup"
+        copy "Grub2" "%ducky%\EFI\BOOT" /y >nul
     cd /d "%tmp%"
         (
             echo select vdisk file="%tmp%\Grub2.vhd"

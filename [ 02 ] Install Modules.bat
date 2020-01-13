@@ -295,7 +295,6 @@ call :colortool
         cls & echo. & echo %_lang0224_%
         7za x "%curpath%\grubfm-*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
     )
-)
 
 :: copy all *.exe module on multiboot
 cd /d "%curpath%"

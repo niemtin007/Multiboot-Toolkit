@@ -917,6 +917,8 @@ exit /b 0
     echo.
     echo                  ------------------------------------
     echo.
+    cd /d "%bindir%"
+        7za x "wget.7z" -o"%tmp%" -aoa -y >nul
     cd /d "%ducky%"
         if exist boot ren boot BOOT >nul
     cd /d "%ducky%\boot"
@@ -947,8 +949,6 @@ exit /b 0
         if errorlevel 1 goto :grub4dos.fix
     
     :grub4dos.fix
-    cd /d "%bindir%"
-        7za x "wget.7z" -o"%tmp%" -aoa -y >nul
     cd /d "%tmp%"
         wget -q -O g4dtemp.log  http://grub4dos.chenall.net >nul
         for /f "tokens=2,3 delims=/" %%a in (
@@ -970,12 +970,12 @@ exit /b 0
     echo.
     choice /c yn /cs /n /m "%_lang0503_%"
         if errorlevel 2 goto :config.fix
-        if errorlevel 1 (
-        cd /d "%bindir%"
-            echo %_lang0504_%
-            call :grub2installer MULTIBOOT >nul 2>&1
-        )
-    
+        if errorlevel 1 cd /d "%bindir%"
+
+        call :grub2.get
+        echo %_lang0504_%
+        call :grub2installer MULTIBOOT >nul 2>&1
+
     :config.fix
     cd /d "%bindir%\config\"
         call "main.bat"
@@ -997,72 +997,118 @@ exit /b 0
     call :clean.bye
 exit /b 0
 
+:grub2.get
+    cd /d "%tmp%"
+        :: download last release
+        echo ^  Downloading Grub2 from A1ive...
+        set "sourcelink=https://github.com/a1ive/grub/releases/download/latest/grub2-latest.tar.gz"
+        wget -q --show-progress -O grub2-latest.tar.gz %sourcelink%
+        echo ^  Repacking Grub2...
+        set "list=i386-efi i386-pc locale x86_64-efi grub-install.exe"
+        "%bindir%\7za.exe" x grub2-latest.tar.gz >nul
+        "%bindir%\7za.exe" x grub2-latest.tar %list% -r -y >nul
+        ren grub grub2 >nul
+        "%bindir%\7za.exe" a grub2.7z grub2\ -sdel >nul
+        if exist "grub2" rd /s /q "grub2" >nul
+        if exist "grub2-latest.*" del "grub2-latest.*" /s /q /f >nul
+        move /y grub2.7z %bindir% >nul
+    cd /d "%bindir%"
+exit /b 0
+
 :grub2-filemanager
     cls
     echo.
-    echo ^> Downloading grub2-filemanager...
-    cd /d "%bindir%\extra-modules"
-        "%bindir%\7za.exe" x "%bindir%\curl.7z" -o"%tmp%" -aos -y >nul
-        "%tmp%\curl\curl.exe" -L -s -o master.zip https://github.com/a1ive/grub2-filemanager/archive/master.zip
-        "%bindir%\7za.exe" x "%bindir%\extra-modules\master.zip" -o"%bindir%\extra-modules\" -y >nul
-        del "master.zip" /s /q /f >nul
-    cd /d "%bindir%\extra-modules\grub2-filemanager-master\boot\
-        xcopy "grub" "%bindir%\extra-modules\grub2-filemanager\" /e /y /q >nul
-    cd /d "%bindir%\extra-modules\"
-        rmdir "grub2-filemanager-master" /s /q >nul
-    
-    echo.
-    echo ^> Setting grub2-filemanager config...
-    :: insert backdoor
-    cd /d "%bindir%\extra-modules\grub2-filemanager\"
-    
-    >> main.lua (
-        echo hotkey = "f6" 
-        echo command = "configfile $prefix/main.cfg"
-        echo grub.add_hidden_menu ^(hotkey, command, "return"^)
-    )
-    
-    >> help.lua (
-        echo hotkey = "f6" 
-        echo command = "configfile $prefix/main.cfg"
-        echo grub.add_hidden_menu ^(hotkey, command, "return"^)
-    )
-    
-    >> open.lua (
-        echo hotkey = "f6" 
-        echo command = "configfile $prefix/main.cfg"
-        echo grub.add_hidden_menu ^(hotkey, command, "return"^)
-    )
-    
-    >> osdetect.lua (
-        echo hotkey = "f6" 
-        echo command = "configfile $prefix/main.cfg"
-        echo grub.add_hidden_menu ^(hotkey, command, "return"^)
-    )
-    
-    >> power.lua (
-        echo hotkey = "f6" 
-        echo command = "configfile $prefix/main.cfg"
-        echo grub.add_hidden_menu ^(hotkey, command, "return"^)
-    )
-    
-    >> settings.lua (
-        echo hotkey = "f6" 
-        echo command = "configfile $prefix/main.cfg"
-        echo grub.add_hidden_menu ^(hotkey, command, "return"^)
-    )
-    timeout /t 2 >nul
-    
-    :: store grub2-filemanager to archive
-    cd /d "%bindir%\extra-modules"
-        "%bindir%\7za.exe" a grub2-filemanager.7z .\grub2-filemanager\* >nul
-        if exist "grub2-filemanager" rd /s /q "grub2-filemanager" >nul
-        if "%installed%"=="false" call :clean.bye
+    cd /d "%bindir%"
+        7za x "wget.7z" -o"%tmp%" -aoa -y >nul
+    choice /c 12b /cs /n /m "*          [ 1 ] Origin build  -  [ 2 ] Source Script  > "
+        if errorlevel 3 goto :main
+        if errorlevel 2 goto :grubfm-script
+        if errorlevel 1 goto :grubfm-build
+
+    :grubfm-build
+    cd /d "%tmp%"
+        set "sourcelink=https://github.com/a1ive/grub2-filemanager/releases"
+        wget.exe -q -O grubfm.log %sourcelink% >nul
+        for /f "tokens=1,6 delims=/" %%a in (
+            'type grubfm.log ^| findstr /i "releases/tag.*.</a>" ^| find /n /v "" ^| find "[1]"'
+        ) do set "ver=%%b"
+        set "ver=%ver:~8,6%"
+        set "url=https://github.com/a1ive/grub2-filemanager/releases/download/%ver%/grubfm-%langfm%.7z"
+        cls
         echo.
-        echo ^> Updating grub2-filemanager to MultibootUSB...
-        "%bindir%\7za.exe" x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
-        timeout /t 3 >nul
+        echo ^> Downloading grub2-filemanager %ver%...
+        wget.exe -q --show-progress -O grubfm.7z %url%
+        set "list=grubfmia32.efi grubfmx64.efi grubfm.iso"
+        cls & echo. & echo %_lang0224_%
+        "%bindir%\7za.exe" x "%tmp%\grubfm.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
+        if exist "grubfm.*" del "grubfm.*" /s /q /f >nul
         call :clean.bye
+    
+    :grubfm-script
+        echo.
+        echo ^> Downloading grub2-filemanager...
+        cd /d "%bindir%\extra-modules"
+            "%bindir%\7za.exe" x "%bindir%\curl.7z" -o"%tmp%" -aos -y >nul
+            "%tmp%\curl\curl.exe" -L -s -o master.zip https://github.com/a1ive/grub2-filemanager/archive/master.zip
+            "%bindir%\7za.exe" x "%bindir%\extra-modules\master.zip" -o"%bindir%\extra-modules\" -y >nul
+            del "master.zip" /s /q /f >nul
+        cd /d "%bindir%\extra-modules\grub2-filemanager-master\boot\
+            xcopy "grub" "%bindir%\extra-modules\grub2-filemanager\" /e /y /q >nul
+        cd /d "%bindir%\extra-modules\"
+            rmdir "grub2-filemanager-master" /s /q >nul
+
+        rem echo.
+        rem echo ^> Setting grub2-filemanager config...
+        rem :: insert backdoor
+        rem cd /d "%bindir%\extra-modules\grub2-filemanager\"
+        rem 
+        rem >> main.lua (
+        rem     echo hotkey = "f6" 
+        rem     echo command = "configfile $prefix/main.cfg"
+        rem     echo grub.add_hidden_menu ^(hotkey, command, "return"^)
+        rem )
+        rem 
+        rem >> help.lua (
+        rem     echo hotkey = "f6" 
+        rem     echo command = "configfile $prefix/main.cfg"
+        rem     echo grub.add_hidden_menu ^(hotkey, command, "return"^)
+        rem )
+        rem 
+        rem >> open.lua (
+        rem     echo hotkey = "f6" 
+        rem     echo command = "configfile $prefix/main.cfg"
+        rem     echo grub.add_hidden_menu ^(hotkey, command, "return"^)
+        rem )
+        rem 
+        rem >> osdetect.lua (
+        rem     echo hotkey = "f6" 
+        rem     echo command = "configfile $prefix/main.cfg"
+        rem     echo grub.add_hidden_menu ^(hotkey, command, "return"^)
+        rem )
+        rem 
+        rem >> power.lua (
+        rem     echo hotkey = "f6" 
+        rem     echo command = "configfile $prefix/main.cfg"
+        rem     echo grub.add_hidden_menu ^(hotkey, command, "return"^)
+        rem )
+        rem 
+        rem >> settings.lua (
+        rem     echo hotkey = "f6" 
+        rem     echo command = "configfile $prefix/main.cfg"
+        rem     echo grub.add_hidden_menu ^(hotkey, command, "return"^)
+        rem )
+        rem timeout /t 2 >nul
+
+        :: store grub2-filemanager to archive
+        cd /d "%bindir%\extra-modules"
+            "%bindir%\7za.exe" a grub2-filemanager.7z .\grub2-filemanager\* >nul
+            if exist "grub2-filemanager" rd /s /q "grub2-filemanager" >nul
+            if "%installed%"=="false" call :clean.bye
+            echo.
+            echo ^> Updating grub2-filemanager to MultibootUSB...
+            "%bindir%\7za.exe" x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
+            timeout /t 3 >nul
+            call :clean.bye
 exit /b 0
 
 :setdefaultboot
@@ -1770,6 +1816,8 @@ exit /b 0
     cd /d "%tmp%\grub2"
         grub-install --target=x86_64-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
         grub-install --target=i386-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
+    cd /d "%ducky%\EFI\BOOT\backup"
+        if not exist Grub2 mkdir Grub2
     cd /d "V:\EFI\BOOT"
         :: copy to multiboot data partition
         copy "BOOTIA32.EFI" "%ducky%\EFI\BOOT\grubia32.efi" /y >nul
@@ -1779,6 +1827,8 @@ exit /b 0
         copy "BOOTIA32.EFI" "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootia32.efi" /y >nul
         copy "BOOTX64.EFI"  "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootx64.efi"  /y >nul
         copy "grub.efi"     "%bindir%\secureboot\EFI\Boot\backup\Grub2\grub.efi"     /y >nul
+    cd /d "%bindir%\secureboot\EFI\Boot\backup"
+        copy "Grub2" "%ducky%\EFI\BOOT" /y >nul
     cd /d "%tmp%"
         (
             echo select vdisk file="%tmp%\Grub2.vhd"
@@ -1809,7 +1859,7 @@ cd /d "%tmp%"
     for %%d in (%dlist%) do (
         if exist "%%d" rmdir "%%d" /s /q >nul
     )
-    set "flist=hide.vbs Output.log qemuboottester.exe wincdemu.exe wget.exe"
+    set "flist=hide.vbs Output.log qemuboottester.exe wincdemu.exe *wget*"
     for %%f in (%flist%) do (
         if exist "%%f" del "%%f" /s /q >nul
     )
