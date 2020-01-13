@@ -1828,7 +1828,7 @@ exit /b 0
         copy "BOOTX64.EFI"  "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootx64.efi"  /y >nul
         copy "grub.efi"     "%bindir%\secureboot\EFI\Boot\backup\Grub2\grub.efi"     /y >nul
     cd /d "%bindir%\secureboot\EFI\Boot\backup"
-        copy "Grub2" "%ducky%\EFI\BOOT" /y >nul
+        copy "Grub2" "%ducky%\EFI\BOOT\backup\Grub2" /y >nul
     cd /d "%tmp%"
         (
             echo select vdisk file="%tmp%\Grub2.vhd"
