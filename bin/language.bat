@@ -93,7 +93,7 @@ set "_lang0012_=^>^> Successful..."
 set "_lang0013_=^>^> Thank you for using Multiboot Toolkit ^^^^"
 set "_lang0014_=^> Please wait..."
 set "_lang0015_=module is being copied. Please wait..."
-set "_lang0016_=^> Choose language"
+set "_lang0016_=^> Choose language [ ? ] = "
 rem >> [ 01 ] Install Multiboot
 set "_lang0101_=Disk Number [ ? ] = "
 set "_lang0102_=Multiboot Toolkit only allows you to install on an external drive."
@@ -148,10 +148,10 @@ set "_lang0223_=>> Do you want to install PortableApps.com Platform? [ y/n ] >"
 set "_lang0224_=^>^> Installing Grub2 File Manager..."
 rem >> [ 03 ] Change Grub2 Theme
 set "_lang0300_=Current Grub2 theme:"
-set "_lang0301_=Choose theme"
+set "_lang0301_=Choose theme [ ? ]  = "
 rem >> [ 04 ] Change rEFInd Theme
 set "_lang0400_=^>^>  Current rEFInd theme:"
-set "_lang0401_=^>^>  Choose theme"
+set "_lang0401_=^>^>  Choose theme [ ? ]  = "
 set "_lang0402_=^>^> Installing icons..."
 rem >> [ 05 ] Update Multiboot Device
 set "_lang0500_=^>^> Run [ 01 ] Install Multiboot.bat to reinstall"
@@ -234,7 +234,7 @@ set "_lang0901_=      [ 1 ] Set Windows Boot Manager ^& rEFInd    (Secure Boot)"
 set "_lang0902_=      [ 2 ] Set Windows Boot Manager ^& Grub2     (Secure Boot)"
 set "_lang0903_=      [ 3 ] Set default for rEFInd Boot Manager  (Normal Boot)"
 set "_lang0904_=      [ 4 ] Set default for Grub2 Bootloader     (Normal Boot)"
-set "_lang0905_=Option"
+set "_lang0905_=Option ^> "
 REM >> CHANGE GRUB2 CONFIG LANGUAGE
 set "_config0000_=return to main menu"
 set "_config0001_=Loading..."
@@ -335,7 +335,7 @@ set "_lang0012_=^>^> Thành công..."
 set "_lang0013_=^>^> Cám ơn bạn đã sử dụng Multiboot Toolkit ^^^^"
 set "_lang0014_=^> Vui lòng chờ..."
 set "_lang0015_=module đang được sao chép. Vui lòng chờ..."
-set "_lang0016_=^> Chọn ngôn ngữ"
+set "_lang0016_=^> Chọn ngôn ngữ [ ? ] = "
 rem >> [ 01 ] Install Multiboot
 set "_lang0101_=Nhập số thứ tự của thiết bị [ ? ] = "
 set "_lang0102_=CẢNH BÁO: SỐ THỨ TỰ BẠN NHẬP KHÔNG PHẢI LÀ THIẾT BỊ GẮN NGOÀI"
@@ -390,10 +390,10 @@ set "_lang0223_=>> Bạn có muốn cài trình quản lý PortableApps không? 
 set "_lang0224_=^>^> Đang cài đặt trình quản lý Grub2..."
 rem >> [ 03 ] Change Grub2 Theme
 set "_lang0300_=Giao diện hiện tại của Grub2:"
-set "_lang0301_=Chọn gói giao diện"
+set "_lang0301_=Chọn gói giao diện [ ? ]  = "
 rem >> [ 04 ] Change rEFInd Theme
 set "_lang0400_=^>^>  Giao diện hiện tại của rEFInd:"
-set "_lang0401_=^>^>  Chọn gói giao diện"
+set "_lang0401_=^>^>  Chọn gói giao diện [ ? ]  = "
 set "_lang0402_=^>^> Đang cài đặt icon..."
 rem >> [ 05 ] Update Multiboot Device
 set "_lang0500_=^>^> Chạy [ 01 ] Install Multiboot.bat để cài đặt lại"
@@ -476,7 +476,7 @@ set "_lang0901_=   [ 1 ] Sử dụng cả Windows Boot Manager ^& rEFInd    (Sec
 set "_lang0902_=   [ 2 ] Sử dụng cả Windows Boot Manager ^& Grub2     (Secure Boot)"
 set "_lang0903_=   [ 3 ] Chỉ sử dụng rEFInd Boot Manager             (Normal Boot)"
 set "_lang0904_=   [ 4 ] Chỉ sử dụng Grub2 Bootloader                (Normal Boot)"
-set "_lang0905_=Lựa chọn của bạn"
+set "_lang0905_=Lựa chọn của bạn ^> "
 REM >> CHANGE GRUB2 CONFIG LANGUAGE
 set "_config0000_=trở về menu chính"
 set "_config0001_=Đang tải..."
@@ -577,7 +577,7 @@ set "_lang0012_=^>^> Basarili..."
 set "_lang0013_=^>^> Multiboot Toolkit'i kullandiginiz icin tesekkur ederiz ^^^^"
 set "_lang0014_=^> Lutfen bekleyin..."
 set "_lang0015_=Moduller kopyalaniyor. Lutfen Bekleyin..."
-set "_lang0016_=^> Kurulum Dilini Seciniz"
+set "_lang0016_=^> Kurulum Dilini Seciniz [ ? ] = "
 rem >> [ 01 ] Install Multiboot
 set "_lang0101_=Disk Numarasi [ ? ] = "
 set "_lang0102_=HATA:SECTIGINIZ SURUCU,BİR USB SURUCU DEGIL"
@@ -632,10 +632,10 @@ set "_lang0223_=>> PortableApps.com Platformunu kurmak istermisiniz? [ y/n ] >"
 set "_lang0224_=^>^> Grub2 Dosya Yöneticisi kuruluyor..."
 rem >> [ 03 ] Change Grub2 Theme
 set "_lang0300_=Su anki Grub2 Temasi:"
-set "_lang0301_=Temayi secin"
+set "_lang0301_=Temayi secin [ ? ]  = "
 rem >> [ 04 ] Change rEFInd Theme
 set "_lang0400_=^>^>  Mevcut rEFInd temasi:"
-set "_lang0401_=^>^>  Temayi secin"
+set "_lang0401_=^>^>  Temayi secin [ ? ]  = "
 set "_lang0402_=^>^> Simgeler yukleniyor..."
 rem >> [ 05 ] Update Multiboot USB
 set "_lang0500_=^>^> Yeniden kurulum icin [01] Install Multiboot.bat dosyasini calistirin"
@@ -718,7 +718,7 @@ set "_lang0901_=[ 1 ] ESP1 i Windows Boot Manager ^& ESP2 yi rEFInd olarak ayarl
 set "_lang0902_=[ 2 ] ESP1 i Windows Boot Manager ^& ESP2 yi Grub2  olarak ayarla (Secure Boot)"
 set "_lang0903_=[ 3 ] ESP1 i rEFInd  Boot Manager olarak ayarla                  (Normal Boot)"
 set "_lang0904_=[ 4 ] ESP1 i Grub2   Boot Manager olarak ayarla                  (Normal Boot)"
-set "_lang0905_=Seciminiz"
+set "_lang0905_=Seciminiz ^> "
 REM >> CHANGE GRUB2 CONFIG LANGUAGE
 set "_config0000_=Ana Menuye Don"
 set "_config0001_=Yukleniyor..."
@@ -819,7 +819,7 @@ set "_lang0012_=^>^> 成功..."
 set "_lang0013_=^>^> 感谢您使用 Multiboot Toolkit ^^^^"
 set "_lang0014_=^> 请稍候..."
 set "_lang0015_=正在复制模块.请稍候..."
-set "_lang0016_=^> 选择语言"
+set "_lang0016_=^> 选择语言 [ ? ] = "
 rem >> [ 01 ] Install Multiboot
 set "_lang0101_=磁盘编号 [ ? ] = "
 set "_lang0102_=Multiboot Toolkit 仅支持安装到可移动磁盘上."
@@ -874,10 +874,10 @@ set "_lang0223_=>> 是否安装 PortableApps.com 平台? [ y/n ] >"
 set "_lang0224_=^>^> 正在安装 Grub2 File Manager..."
 rem >> [ 03 ] Change Grub2 Theme
 set "_lang0300_=当前 Grub2 主题:"
-set "_lang0301_=选择主题"
+set "_lang0301_=选择主题 [ ? ]  = "
 rem >> [ 04 ] Change rEFInd Theme
 set "_lang0400_=^>^>  当前 rEFInd 主题:"
-set "_lang0401_=^>^>  选择主题"
+set "_lang0401_=^>^>  选择主题 [ ? ]  = "
 set "_lang0402_=^>^> 正在安装图标..."
 rem >> [ 05 ] Update Multiboot Device
 set "_lang0500_=^>^> 运行 [ 01 ] Install Multiboot.bat 以重新安装"
@@ -960,7 +960,7 @@ set "_lang0901_=           [ 1 ] 设置 Windows 启动管理器 和 rEFInd    (�
 set "_lang0902_=           [ 2 ] 设置 Windows 启动管理器 和 Grub2     (安全启动)"
 set "_lang0903_=           [ 3 ] 设置 默认为 rEFInd 启动管理器        (普通启动)"
 set "_lang0904_=           [ 4 ] 设置 默认为 Grub2 启动管理器         (普通启动)"
-set "_lang0905_=选项"
+set "_lang0905_=选项 ^> "
 REM >> CHANGE GRUB2 CONFIG LANGUAGE
 set "_config0000_=返回主菜单"
 set "_config0001_=载入中..."

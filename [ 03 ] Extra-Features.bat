@@ -36,7 +36,7 @@ echo =====================================================================
 echo.
 :: set default
 set "option=14"
-set /p option= %_lang0905_% [ ? ] = 
+set /p option= %_lang0905_%
 
 if exist "%ducky%\EFI\Boot\usb.gpt" goto :usb.gpt
 if "%installed%"=="true"  goto :online
@@ -361,11 +361,12 @@ exit /b 0
     echo ======================================================================
     echo.
     set mylang=1
-    set /P mylang= %_lang0016_% [ ? ] = 
+    set /P mylang= %_lang0016_%
     if "%mylang%"=="1" set "lang=English" & goto :continue.lang
     if "%mylang%"=="2" set "lang=Vietnam" & goto :continue.lang
     if "%mylang%"=="3" set "lang=Turkish" & goto :continue.lang
     if "%mylang%"=="4" set "lang=SimplifiedChinese" & goto :continue.lang
+    if "%mylang%"=="b" set goto :main
     color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :changelanguage
     
     :continue.lang
@@ -432,7 +433,7 @@ exit /b 0
     echo 10 = Bluec4d   20 = FagiadaBue    30 = RainbowDash 40 = Vimix        
     echo =====================================================================
     echo.
-    set /P ask= %_lang0301_% [ ? ]  = 
+    set /P ask= %_lang0301_%
     if "%ask%"=="1"  (set "gtheme=Aero"            & goto :continue.gtheme)
     if "%ask%"=="2"  (set "gtheme=Air_Vision"      & goto :continue.gtheme)
     if "%ask%"=="3"  (set "gtheme=Alienware"       & goto :continue.gtheme)
@@ -473,6 +474,7 @@ exit /b 0
     if "%ask%"=="38" (set "gtheme=Tela"            & goto :continue.gtheme)
     if "%ask%"=="39" (set "gtheme=Ubuntu-lucid"    & goto :continue.gtheme)
     if "%ask%"=="40" (set "gtheme=Vimix"           & goto :continue.gtheme)
+    if "%ask%"=="b"  goto :main
     color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :grub2theme
     
     :continue.gtheme
@@ -506,7 +508,7 @@ exit /b 0
     echo 11 = ClassicMacOS 22 = GameOfThrones 33 = Neon       44 = Woody      
     echo =====================================================================
     echo.
-    set /P ask= %_lang0401_% [ ? ]  = 
+    set /P ask= %_lang0401_%
     if "%ask%"=="1"  set "rtheme=Apocalypse"     & goto :continue.rtheme
     if "%ask%"=="2"  set "rtheme=BGM"            & goto :continue.rtheme
     if "%ask%"=="3"  set "rtheme=BGM256"         & goto :continue.rtheme
@@ -551,6 +553,7 @@ exit /b 0
     if "%ask%"=="42" set "rtheme=Underground"    & goto :continue.rtheme
     if "%ask%"=="43" set "rtheme=Universe"       & goto :continue.rtheme
     if "%ask%"=="44" set "rtheme=Woody"          & goto :continue.rtheme
+    if "%ask%"=="b"  goto :main
     color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :rEFIndtheme
 
     :continue.rtheme
@@ -700,7 +703,8 @@ exit /b 0
     echo                 --------------------------------------
     echo.
     cd /d "%bindir%"
-    choice /c yn /cs /n /m "%_lang0800_%"
+    choice /c ynb /cs /n /m "%_lang0800_%"
+        if errorlevel 3 goto :main
         if errorlevel 2 goto :option.pe
         if errorlevel 1 call :bcdautomenu
     
@@ -886,9 +890,10 @@ exit /b 0
     echo                -------------------------------------
     echo.
     set mode=
-    set /P mode= ^*              [ 1 ] Legacy mode - [ 2 ] UEFI mode ^> 
+    set /P mode= "^*              [ 1 ] Legacy mode - [ 2 ] UEFI mode ^> "
     if "%mode%"=="1" goto :legacy.winsetup
     if "%mode%"=="2" goto :uefi.winsetup
+    if "%mode%"=="b" goto :main
     color 0e & echo. & echo ^>^>  Invalid Input. & timeout /t 15 >nul & goto :option.winsetup
     
     :legacy.winsetup
@@ -936,7 +941,8 @@ exit /b 0
     :grub.fix
     if "%GPT%"=="true" goto :grub2.fix
     echo.
-    choice /c yn /cs /n /m "%_lang0837_%"
+    choice /c ynb /cs /n /m "%_lang0837_%"
+        if errorlevel 3 goto :main
         if errorlevel 2 goto :grub2.fix
         if errorlevel 1 goto :grub4dos.fix
     
@@ -1061,11 +1067,15 @@ exit /b 0
 
 :setdefaultboot
     call :colortool
+    cd /d "%bindir%\secureboot\EFI\Boot\backup"
+        if not exist Grub2 mkdir Grub2
     cd /d "%ducky%\BOOT"
         if not exist "secureboot" goto :option.default
         set "Grub2=%bindir%\secureboot\EFI\Boot\backup\Grub2"
         set "rEFInd=%bindir%\secureboot\EFI\Boot\backup\rEFInd"
         set "WinPE=%bindir%\secureboot\EFI\Boot\backup\WinPE"
+    cd /d "%ducky%\EFI\BOOT\backup"
+        if exist Grub2 copy Grub2 %Grub2% /y >nul
     
     :option.default
     echo.
@@ -1077,11 +1087,12 @@ exit /b 0
     echo  %_lang0904_%
     echo ---------------------------------------------------------------------
     set "mode=3"
-    set /P mode= %_lang0905_% ^> 
+    set /P mode= %_lang0905_%
         if "%mode%"=="1" set "option=Secure_rEFInd" & goto :checkdisk.default
         if "%mode%"=="2" set "option=Secure_Grub2"  & goto :checkdisk.default
         if "%mode%"=="3" set "option=rEFInd"        & goto :checkdisk.default
         if "%mode%"=="4" set "option=Grub2"         & goto :checkdisk.default
+        if "%mode%"=="b" goto :main
         color 0e & echo. & echo %_lang0104_% & timeout /t 15 >nul & goto :option.default
     
     :checkdisk.default
@@ -1182,7 +1193,8 @@ exit /b 0
     echo.          [ 1 ] Update config only   [ 2 ] Update full data
     echo ---------------------------------------------------------------------
     echo.
-    choice /c 123 /cs /n /m "#   Choose your option [ ? ] > "
+    choice /c 12b /cs /n /m "#   Choose your option [ ? ] > "
+        if errorlevel 3 goto :main
         if errorlevel 2 goto :updatefull
         if errorlevel 1 goto :updateconfig
     
@@ -1328,7 +1340,8 @@ exit /b 0
     :clover
     cls 
     call :cloverinterface
-    choice /c yn /cs /n /m "%_lang0700_% > "
+    choice /c ynb /cs /n /m "%_lang0700_% > "
+        if errorlevel 3 goto :main
         if errorlevel 2 goto :cloverconfig
         if errorlevel 1 goto :download.clover
     
@@ -1528,7 +1541,8 @@ exit /b 0
     
     :refind
     call :rEFIndinterface
-    choice /c yn /cs /n /m "%_lang0600_% > "
+    choice /c ynb /cs /n /m "%_lang0600_% > "
+        if errorlevel 3 goto :main
         if errorlevel 2 goto :option.rEFInd
         if errorlevel 1 goto :download.rEFInd
     
