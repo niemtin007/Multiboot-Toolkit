@@ -9,7 +9,6 @@
   ==============================================================================
 * Fixed installer script for Virtual Disk & USB in the Turkish system language
 * Added more modules (AOMEI Backupper, TrueImage 2020, Bob.Ombs.Win10PEx64...)
-* Updated Grub2 Boot Loader v2.05, Grub2 file Manager (thanks to A1ive)
 * Supported to update Grub4dos automatic with the batch script
 * Supported Turkish & Vietnamese language in Grub2 file Manager (thanks to A1ive)
 * Fixed bug in the grub2 installer script for GPT disk
@@ -21,6 +20,7 @@
 * Display copy percentage when integrating Wim, ISO modules type
 * Disabled SpVoice on Windows lite, added more grub2 themes
 * Supported install Windows from ISO directly (thanks to A1ive)
+* Supported script to update grub2 and grubfm automatic (thanks to By_FaRuK)
   ------------------------------------------------------------------------------
 
 

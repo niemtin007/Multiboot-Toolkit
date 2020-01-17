@@ -5,20 +5,613 @@
 :: Thank you for using Multiboot Toolkit.
 
 cd /d "%~dp0"
-set "skipscan=true"
-set "curdir=%~dp0"
 set "bindir=%~dp0bin"
+set "skipscan=false"
+set "rtheme=Leather"
+set "gtheme=CyberSecurity"
+set "title=License"
+if not exist Modules mkdir Modules
+
 if not exist "bin" (
-    color 4f & echo.
-    echo ^>^> Warning: Data Loss
+    call :colortool
+    echo. & echo ^>^> Warning: Data Loss
     timeout /t 15 >nul & exit
 ) else (
     call :permissions
-    call :multibootscan
-    call :gather.info
+    call :colortool
+    call language.bat
+    if exist "X:\" (
+        call :check.letter X: return
+    )
+    call :license
 )
 
-:main
+:mainMenu
+call :colortool
+echo.
+echo =====================================================================
+echo %_lang0017_%
+echo %_lang0018_%
+echo %_lang0019_%
+echo =====================================================================
+echo.
+choice /c 123 /cs /n /m "%_lang0020_%"
+    if errorlevel 3 timeout /t 1 >nul & goto :extraFeatures
+    if errorlevel 2 timeout /t 1 >nul & goto :moduleInstaller
+    if errorlevel 1 timeout /t 1 >nul & goto :bootableCreator
+
+
+
+
+
+:: =========================================
+:: INSTALL MULTIBOOT
+:: =========================================
+
+:bootableCreator
+call :colortool
+set "title=Bootable Creator"
+call :list.disk
+echo.
+set /p disk= %_lang0101_%
+if "%disk%"=="b" goto :mainMenu
+set /a disk=%disk%+0
+call :checkdisktype
+    if "%virtualdisk%"=="true"  call :rEFInd.part      & goto :External
+    if "%harddisk%"=="true"     call :harddisk.warning & goto :bootableCreator
+    if "%usb%"=="true"          call :rEFInd.part      & goto :removable
+    if "%externaldisk%"=="true" call :rEFInd.part      & goto :External
+    color 0e & echo. & echo %_lang0104_% & timeout /t 15 >nul & goto :bootableCreator
+
+:removable
+:: prepare partitions space for removable Media
+call :colortool
+call :clean.disk
+:: create rEFInd partition
+call :colortool
+%partassist% /hd:%disk% /cre /pri /size:%esp% /end /fs:fat32 /align /label:rEFInd /letter:X
+call :unhide.partition 0
+call :pushdata.rEFInd
+%partassist% /hd:%disk% /hide:0
+if "%secureboot%"=="n" goto :usbmultibootdata
+:: create ESP partition
+call :colortool
+%partassist% /hd:%disk% /cre /pri /size:50 /fs:fat32 /label:M-ESP /letter:X
+%partassist% /move:X /right:auto /align
+call :unhide.partition 0
+call :pushdata.ESP
+%partassist% /hd:%disk% /hide:0
+:usbmultibootdata
+:: create Multiboot data partition
+call :colortool
+%partassist% /hd:%disk% /cre /pri /size:auto /fs:ntfs /act /align /label:MULTIBOOT /letter:X
+call :unhide.partition 0
+goto :extractdata
+
+:External
+call :scan.label MULTIBOOT
+:: prepare partitions space for External hard disk media
+call :count.partition
+    :: the disk is an unallocated
+    if not defined partcount goto :Setup
+    :: set multiboot data partition size
+    set /a GB=0
+    echo.
+    set /p GB= %_lang0106_%
+    set /a GB=%GB%+0
+    :: check the character of the number
+    echo %esp%| findstr /r "^[1-9][0-9]*$">nul
+    if not "%errorlevel%"=="0" goto :External
+    :: sum size of the esp partition
+    set /a MB=(%GB%*1024+%esp%)
+    :: check the installed status and give instruction
+    if "%online%"=="true" if "%disk%"=="%diskscan%" (
+        echo. & echo %_lang0107_% & timeout /t 300 >nul
+        goto :delete
+    )
+    if "%online%"=="false" if "%GB%"=="0" (
+        call :colortool
+        echo. & echo %_lang0108_% & timeout /t 15 >nul
+        goto :External
+    )
+    goto :continue
+:delete
+call :colortool
+call :count.partition
+    if not defined partcount goto :Setup
+:: delete all multiboot partition without data loss
+%partassist% /hd:%disk% /unhide:0
+%partassist% /hd:%disk% /setletter:0 /letter:X
+call :check.author X:
+:: this code not perfect
+:: {case-1} if a partition file system isn't windows type may be deleted
+:: {case-2} data will lose if the user copied the EFI folder into a 
+::          data partition with the same Multiboot's drive label
+if "%installed%"=="true" if "%disk%"=="%diskscan%" (
+    %partassist% /hd:%disk% /del:0
+    goto :delete
+)
+:continue
+if exist X:\ chkdsk X: /f
+%partassist% /hd:%disk% /setletter:0 /letter:auto
+:: only resize partition for new size setting or new installing
+if "%online%"=="true" if not "%GB%"=="0" (
+    %partassist% /hd:%disk% /resize:0 /reduce-left:%MB% /align
+)
+if "%online%"=="false" (
+    %partassist% /hd:%disk% /resize:0 /reduce-left:%MB% /align
+)
+
+:Setup
+if "%secureboot%"=="n" (
+    set /a rpart=0
+    set /a mpart=1
+    set /a offset=%esp%+8
+    goto :esp2
+) else (
+    set /a rpart=1
+    set /a mpart=2
+    set /a offset=%esp%+58
+    goto :esp1
+)
+:esp1
+:: Create ESP Partition
+call :colortool
+%partassist% /hd:%disk% /cre /pri /size:50 /fs:fat32 /act /align /label:M-ESP /letter:X
+call :unhide.partition 0
+call :pushdata.ESP
+%partassist% /hd:%disk% /hide:0
+:esp2
+:: Create rEFInd partition
+call :colortool
+%partassist% /hd:%disk% /cre /pri /size:%esp% /fs:fat32 /act /align /label:rEFInd /letter:X
+call :unhide.partition %rpart%
+call :pushdata.rEFInd
+%partassist% /hd:%disk% /hide:%rpart%
+:: Create Multiboot Data Partition
+call :colortool
+call :check.partitiontable
+if "%GPT%"=="true" (
+    %partassist% /hd:%disk% /cre /pri /size:auto /offset:%offset% /fs:ntfs /act /align /label:MULTIBOOT /letter:X
+) else (
+    %partassist% /hd:%disk% /cre /pri /size:auto /fs:ntfs /act /align /label:MULTIBOOT /letter:X
+)
+call :unhide.partition %mpart%
+
+:extractdata
+call :colortool
+call :scan.label MULTIBOOT
+    if "%ducky%"=="X:" (
+        7za x "data.7z" -o"X:\" -aoa -y
+    ) else (
+        call :colortool
+        echo. & echo %_lang0110_% & timeout /t 7 >nul
+        :: change data partition label to DATA
+        label %ducky% DATA & goto :extractdata
+    )
+    >"X:\EFI\BOOT\mark"          (echo niemtin007)
+    >"X:\BOOT\rEFInd"            (echo %rtheme%)
+    >"X:\BOOT\grub\themes\theme" (echo %gtheme%)
+    >"X:\BOOT\esp"               (echo %esp%)
+    >"X:\BOOT\lang"              (echo %lang%)
+    >"X:\BOOT\secureboot"        (echo %secureboot%)
+    xcopy "version" "X:\EFI\BOOT\" >nul
+    if "%virtualdisk%"=="true" (
+        >"X:\BOOT\virtualdisk" (echo true)
+    )
+    if "%GPT%"=="true" (
+        >"X:\BOOT\bootmgr\disk.gpt" (echo true)
+    ) else (
+        >"X:\BOOT\bootmgr\disk.mbr" (echo true)
+    )
+cd /d "%bindir%\config\bcd"
+    xcopy "B84" "X:\BOOT\bootmgr\" /e /g /h /r /y /q >nul
+cd /d "%bindir%\secureboot\BOOT"
+    xcopy "boot.sdi" "X:\BOOT\"    /e /g /h /r /y /q >nul
+cd /d "%bindir%"
+    :: install grub4dos
+    xcopy "extra-modules\grub4dos\grldr" "X:\" /e /g /h /r /y /q >nul
+    :: install wincdemu to mount iso files
+    7za x "wincdemu.7z" -o"X:\ISO\" -aoa -y >nul
+    :: install Syslinux Bootloader
+    syslinux --force --directory /BOOT/syslinux X: X:\BOOT\syslinux\syslinux.bin
+    :: install grub2 Bootloader
+    call :colortool
+    if "%GPT%"=="true" call :gdisk
+    echo.
+    echo %_lang0116_%
+    call :grub2installer MULTIBOOT >nul 2>&1
+    7za x "extra-modules\grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y >nul
+    >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
+    :: install language
+    echo.
+    echo %_lang0112_% %lang%
+    7za x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
+cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
+    echo.
+    echo %_lang0111_% %rtheme%
+    call :rEFInd.icons X:
+cd /d "%bindir%"
+    echo.
+    echo %_lang0113_% %gtheme%
+    7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
+    7za x "%bindir%\grub2_themes\icons.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
+    call "%bindir%\config\main.bat"
+cd /d "%bindir%\secureboot\EFI\Microsoft\Boot"
+    call :bcdautoset bcd
+:: install secure boot file
+set "source=%bindir%\secureboot"
+if "%secureboot%"=="n" (
+    call :pushdata.secure
+    call :check.letter %ducky%
+)
+:: push secure boot files for USB
+if "%secureboot%"=="y" if "%usb%"=="true" (
+    %partassist% /hd:%disk% /whide:1 /src:%source%
+    call :check.letter %ducky% >nul
+)
+:: push secure boot files for HDD/SSD
+if "%secureboot%"=="y" if "%usb%"=="false" (
+    %partassist% /hd:%disk% /whide:0 /src:%source%
+    call :check.letter %ducky% >nul
+)
+:: start modules installer
+if "%installmodules%"=="y" (
+    cd /d "%~dp0"
+        call :moduleInstaller
+)
+call :clean.bye
+
+
+
+
+
+:: =========================================
+:: INSTALL MODULES
+:: =========================================
+
+:moduleInstaller
+
+call :colortool
+
+set "title=Module Installer"
+set "curpath=%~dp0Modules"
+set "skipscan=false"
+
+call :multibootscan
+
+
+:modules.main
+> "%tmp%\modules.vbs" (
+    echo Dim Message, Speak
+    echo Set Speak=CreateObject^("sapi.spvoice"^)
+    echo Speak.Speak "Please put all modules you need into the Modules folder."
+    echo Speak.Speak "Then press any key to continue..."
+)
+:: move module to the source folder
+if exist "%bindir%\Special_ISO" (
+    cd /d "%bindir%\Special_ISO"
+        if exist "*.iso" move /y "*.iso" "%curpath%" >nul
+)
+if exist "%bindir%\ISO_Extract" (
+    cd /d "%bindir%\ISO_Extract"
+        if exist "*.iso" move /y "*.iso" "%curpath%" >nul
+)
+
+if exist "X:\" call :check.letter X:
+
+if "%installmodules%"=="y" (
+    call :check.empty
+    goto :modules.continue
+)
+
+call :colortool
+echo.
+echo ======================================================================
+echo %_lang0200_%
+echo ^   %curpath%
+echo %_lang0201_% %ducky%
+echo ======================================================================
+if not exist "%ducky%\PortableApps" call :PortableAppsPlatform
+echo.
+echo %_lang0202_%
+cd /d "%tmp%"
+    if exist "%systemroot%\SysWOW64\Speech\SpeechUX\sapi.cpl" start modules.vbs
+    echo %_lang0203_% & timeout /t 300 >nul
+    taskkill /f /im wscript.exe /t /fi "status eq running">nul
+    del /s /q modules.vbs >nul
+    call :check.empty
+
+:modules.continue
+cd /d "%ducky%\BOOT"
+    if not exist "secureboot" set "secureboot=n" & goto :modules.progress
+    for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
+
+:modules.progress
+cd /d "%bindir%"
+    if not exist Special_ISO mkdir Special_ISO
+    if not exist ISO_Extract mkdir ISO_Extract
+
+:: create all modules namelist
+if not exist "%ducky%\BOOT\namelist\temp" mkdir "%ducky%\BOOT\namelist\temp"
+for /f "tokens=*" %%i in ('dir /a:-d /b "%curpath%"') do (
+    >"%ducky%\BOOT\namelist\temp\%%~ni" (echo %%i)
+)
+:: rename all modules namelist
+cd /d "%bindir%"
+    for /f "delims=" %%f in (iso.list, iso_extract.list, specialiso.list, wim.list) do (
+        cd /d "%ducky%\BOOT\namelist\temp"
+            if exist "*%%f*" ren "*%%f*" "%%f" >nul
+        cd /d "%bindir%"
+    )
+:: move all iso to temp folder
+cd /d "%bindir%"
+    for /f "delims=" %%f in (iso_extract.list) do (
+        cd /d "%curpath%"
+            if exist "*%%f*.iso" move /y "*%%f*.iso" "%bindir%\ISO_Extract" >nul
+        cd /d "%bindir%"
+    )
+cd /d "%bindir%"
+    for /f "delims=" %%f in (specialiso.list) do (
+        cd /d "%curpath%"
+            if exist "*%%f*" move /y "*%%f*" "%bindir%\Special_ISO" >nul
+        cd /d "%bindir%"
+    )
+
+:: check iso extract type 
+cd /d "%bindir%\ISO_Extract"
+    for /f "delims=" %%f in (%bindir%\iso_extract.list) do (
+            if exist "*%%f*.iso" goto :modules.extract
+    )
+    goto :modules.specialiso
+:modules.extract
+cd /d "%bindir%"
+    7za x "wincdemu.7z" -o"%tmp%" -aoa -y >nul
+cd /d "%tmp%"
+    wincdemu /install
+cd /d "%ducky%\BOOT\namelist\temp"
+    call :iso.extract aomei , AOMEI-Backup
+    call :iso.extract android , Android-x86
+    call :iso.extract anhdv , anhdvPE
+    call :iso.extract Bob.Ombs , Bob.Ombs.Win10PEx64
+    call :iso.extract bugtraq , Bugtraq
+    call :iso.extract caine , Caine
+    call :iso.extract cyborg-hawk , Cyborg-hawk
+    call :iso.extract discreete , Discreete
+    call :iso.extract dlc.boot , DLCBoot
+    call :iso.extract drweb , Dr.Web
+    call :iso.extract eset_sysrescue , Eset
+    call :iso.extract hbcd_pe , HirensBoot
+    call :iso.extract phoenixos , PhoenixOS
+    call :iso.extract primeos , PrimeOS
+    call :iso.extract -elite- , Weakerthan
+    call :iso.extract wnl8 , WeakNet
+    call :iso.extract lionsec , LionSec
+    call :iso.extract subgraph-os , Subgraph-os
+    call :iso.extract Sergei_Strelec , Strelec
+    call :iso.extract systemrescuecd , SystemRescueCD
+cd /d "%tmp%"
+    wincdemu /uninstall
+
+:modules.specialiso
+:: disabled iso linux run on fat32 partition (hidden partition)
+if exist "%ducky%\EFI\BOOT\usb.gpt" goto :modules.populariso
+:: check special iso type 
+cd /d "%bindir%\Special_ISO"
+    for /f "delims=" %%f in (%bindir%\specialiso.list) do (
+        if exist "*%%f*.iso" goto :modules.specialiso-go
+    )
+    goto :modules.populariso
+:modules.specialiso-go
+cd /d "%ducky%\BOOT"
+    for /f "tokens=*" %%b in (esp) do set "esp=%%b"
+    set /a "esp=%esp%+0"
+    set /a "size=0"
+    if exist secureboot (
+        for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
+    )
+    if "%secureboot%"=="n" (set rpart=0) else (set rpart=1)
+call :colortool
+    for /f "tokens=*" %%x in ('dir /s /a /b "Special_ISO"') do set /a "size+=%%~zx"
+    set /a "size=%size%/1024/1024"
+    set "source=%bindir%\Special_ISO"
+
+if %size% LEQ %esp% (
+    if exist "%bindir%\Special_ISO\*.iso" (
+        cls & echo. & echo %_lang0204_%
+        timeout /t 2 >nul
+        %partassist% /hd:%disk% /whide:%rpart% /src:%source% /dest:ISO
+        timeout /t 3 >nul
+    )
+) else (
+    call :colortool
+    echo. & echo %_lang0205_%
+    echo ----------------------------------------------------------------------
+    echo %_lang0206_%
+    echo %_lang0207_%
+    echo %_lang0208_%
+    echo ----------------------------------------------------------------------
+    timeout /t 15 >nul
+)
+
+:modules.populariso
+:: copy all ISO to multiboot
+call :colortool
+echo.
+echo %_lang0209_%
+for /f "delims=" %%f in (iso.list) do (
+    if not exist "%ducky%\ISO\*%%f*.iso" (
+        if exist "%curpath%\*%%f*.iso" (
+            robocopy "%curpath%" "%ducky%\ISO" *%%f*.iso /njh /njs /nc /ns
+        )
+    )
+)
+
+:: copy Kaspersky Rescue Disk 18 to multiboot
+call :colortool
+if exist "%curpath%\krd.iso" (
+    if not exist "%ducky%\DATA\krd.iso" (
+        echo.
+        echo ^> Kaspersky Rescue Disk 18 %_lang0015_%
+        robocopy "%curpath%" "%ducky%\DATA" krd.iso /njh /njs /nc /ns
+    )
+)
+
+:modules.wim
+:: copy all *.wim module on multiboot
+call :colortool
+echo.
+echo %_lang0210_%
+echo.
+for /f "delims=" %%f in (wim.list) do (
+    if not exist "%ducky%\WIM\%%f" (
+        if not exist "%ducky%\APPS\%%f" (
+            if exist "%curpath%\%%f.wim" (
+                robocopy "%curpath%" "%ducky%\WIM" %%f.wim /njh /njs /nc /ns
+            )
+            if exist "%curpath%\%%f.7z" (
+                robocopy "%curpath%" "%ducky%\WIM" %%f.7z /njh /njs /nc /ns
+            )
+        )
+    )
+)
+:: rename and move all *.wim to the destination
+cd /d "%ducky%\WIM"
+    if exist *w*8*1*.wim (
+        move /y *w*8*1*.wim WIM
+        cd /d "%ducky%\WIM"
+            ren *w*8*1*64* w8.1se64.wim
+            ren *w*8*1*32* w8.1se32.wim
+            ren *w*8*1*86* w8.1se32.wim
+        cd /d "%ducky%"
+    )
+    :: rename winpe
+    if exist *w*10*64*  ren *w*10*64* w10pe64.wim
+    if exist *w*10*32*  ren *w*10*32* w10pe32.wim
+    if exist *w*10*86*  ren *w*10*86* w10pe32.wim
+    if exist *w*8*64*   ren *w*8*64*  w8pe64.wim
+    if exist *w*8*32*   ren *w*8*32*  w8pe32.wim
+    if exist *w*8*86*   ren *w*8*86*  w8pe32.wim
+    if exist *w*7*32*   ren *w*7*32*  w7pe32.wim
+    if exist *xp*       ren *xp*      XP.wim
+    :: rename apps & tools for winpe
+    if exist *dr*v*.wim move /y *drv*.wim  %ducky%\APPS >nul
+    if exist *dr*v*.iso move /y *drv*.iso  %ducky%\APPS >nul
+    if exist *app*.wim  move /y *app*.wim  %ducky%\APPS >nul
+    if exist *app*.iso  move /y *app*.iso  %ducky%\APPS >nul
+    if exist *tool*.wim move /y *tool*.wim %ducky%\APPS >nul
+    if exist *tool*.iso move /y *tool*.iso %ducky%\APPS >nul
+
+:: Install Wim Sources Module
+if not exist "%ducky%\WIM\bootx64.wim" if not exist "%ducky%\WIM\bootx86.wim" (
+    if exist "%~dp0Modules\*Wim*Sources*Module*.7z" (
+        cls & echo. & echo %_lang0213_%
+        "%bindir%\7za.exe" x "%~dp0Modules\*Wim*Sources*Module*.7z" -o"%ducky%\" -aoa -y >nul
+        cd /d "%bindir%\secureboot\EFI\Boot\backup\WinSetupISOWIM"
+            if exist winsetupia32.efi copy winsetupia32.efi "%ducky%\EFI\BOOT" /y >nul
+            if exist winsetupx64.efi  copy winsetupx64.efi "%ducky%\EFI\BOOT" /y >nul
+        cd /d "%bindir%\config"
+            if exist bootisowim copy bootisowim "%ducky%\BOOT\bootmgr" /y >nul
+    )
+)
+:: Windows install.wim module (wim method)
+call :colortool
+echo.
+echo %_lang0214_%
+echo.
+echo %_lang0215_%
+echo.
+setlocal enabledelayedexpansion
+for %%i in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
+    if exist "%%i:\sources\setup.exe" (
+        if exist "%%i:\sources\install.wim" (
+            for /f "tokens=4 delims= " %%j in ('dism /Get-WimInfo /WimFile:%%i:\sources\install.wim /index:1 ^| Find "Name"') do (
+                echo ^   * Windows %%j ISO found in %%i:\ drive
+                echo %_lang0216_%
+                if not exist "%ducky%\Sources\install%%~nj8664.wim" (
+                    copy "%%i:\sources\install.wim" "%ducky%\Sources\" >nul
+                    cd /d "%ducky%\Sources\"
+                    ren install.wim install%%~nj8664.wim
+                    echo %_lang0217_%
+                ) else (
+                    echo ^     ^>^> Your Windows %%j doesn't need to install again
+                )
+            )
+        )
+    )
+)
+endlocal & cls
+
+:: Windows Install ISO Module (ISO method)
+cd /d "%ducky%\WIM"
+    if not exist "bootisox64.wim" if not exist "bootisox86.wim" (
+    cd /d "%curpath%"
+        if exist "*WinSetup*ISO*Module*.7z" (
+            cls & echo. & echo %_lang0218_%
+            "%bindir%\7za.exe" x "*WinSetup*ISO*Module*.7z" -o"%ducky%\WIM\" -aoa -y
+        )
+    )
+
+:: Install Grub2 File Manager
+call :colortool
+    set "list=grubfmia32.efi grubfmx64.efi grubfm.iso"
+    if exist "%curpath%\grubfm-*.7z" (
+        cls & echo. & echo %_lang0224_%
+        7za x "%curpath%\grubfm-*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
+    )
+
+:: copy all *.exe module on multiboot
+cd /d "%curpath%"
+    if exist "*portable.*" (
+        cls & echo. & echo %_lang0219_%
+        "%bindir%\7za.exe" x "*portable.*" -o"%ducky%\PortableApps\" -aoa -y >nul
+    )
+:: return iso file to modules folder
+cd /d "%bindir%"
+    if exist "ISO_Extract\*.iso" (move /y "ISO_Extract\*.iso" "%curpath%" >nul)
+    if exist "Special_ISO\*.iso" (move /y "Special_ISO\*.iso" "%curpath%" >nul)
+
+for /f "tokens=*" %%i in ('dir /s /a /b "%ducky%\BOOT\namelist\temp"') do set /a tsize+=%%~zi
+    if defined tsize (move /y "%ducky%\BOOT\namelist\temp\*.*" "%ducky%\BOOT\namelist\" >nul)
+    rd /s /q "%ducky%\BOOT\namelist\temp"
+
+:: update config for Grub2
+if not exist "%ducky%\EFI\BOOT\usb.gpt" (
+    cd /d "%ducky%\BOOT"
+        for /f "tokens=*" %%b in (lang) do set "lang=%%b"
+    cd /d "%ducky%\BOOT\grub\themes"
+        for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
+    cd /d "%bindir%\config"
+        call "main.bat"
+)
+
+cd /d "%bindir%"
+    rd /s /q Special_ISO >nul
+    rd /s /q ISO_Extract >nul
+
+call :clean.bye
+
+
+
+
+
+:: =========================================
+:: EXTRAL FEATURES
+:: =========================================
+
+:extraFeatures
+
+call :colortool
+
+set "title=Extra Features"
+set "skipscan=true"
+set "curdir=%~dp0"
+
+call :multibootscan
+call :gather.info
+
+
+:extra.main
 call :colortool
 echo.
 echo =====================================================================
@@ -36,13 +629,14 @@ echo =====================================================================
 echo.
 :: set default
 set "option=14"
-set /p option= %_lang0905_%
+set /p option= "%_lang0905_% > "
 
+if "%option%"=="b" goto :mainMenu
 if exist "%ducky%\EFI\Boot\usb.gpt" goto :usb.gpt
-if "%installed%"=="true"  goto :online
-if "%installed%"=="false" goto :offline
+if "%installed%"=="true"  goto :extra.online
+if "%installed%"=="false" goto :extra.offline
 
-:online
+:extra.online
 if "%option%"=="1"  call :grub2theme
 if "%option%"=="2"  call :rEFIndtheme
 if "%option%"=="3"  call :cloverinstaller
@@ -59,16 +653,16 @@ if "%option%"=="13" call :changelanguage
 if "%option%"=="14" call :qemuboottester
 if "%option%"=="15" call :updatemultiboot
 if "%option%"=="16" call :sortgrub2menu
-color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :main
+color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :extra.main
 
-:Offline
+:extra.offline
 if "%option%"=="3"  call :cloverinstaller
 if "%option%"=="4"  call :rEFIndInstaller
 if "%option%"=="8"  call :grub2-filemanager
 if "%option%"=="10" call :unhidedatapartition
 if "%option%"=="11" call :easeconvertdisk
 if "%option%"=="14" call :qemuboottester
-color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :main
+color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :extra.main
 
 :usb.gpt
 if "%option%"=="1"  call :grub2theme
@@ -80,108 +674,30 @@ if "%option%"=="12" call :NTFSdriveprotect
 if "%option%"=="13" call :changelanguage
 if "%option%"=="14" call :qemuboottester
 if "%option%"=="16" call :sortgrub2menu
-color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :main
+color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :extra.main
 
 
 
 
 
-:: begin functions
-:permissions
-    call :colortool
-    
-    ver | findstr /i "6\.1\." >nul
-        if %errorlevel% equ 0 set "windows=7"
-        if not "%windows%"=="7" chcp 65001 >nul
-    
-    set randname=%random%%random%%random%%random%%random%
-    md "%windir%\%randname%" 2>nul
-    if %errorlevel%==0 goto :permissions.end
-    if %errorlevel%==1 (
-        echo.& echo ^>^> Please use right click - Run as administrator
-        color 4f & timeout /t 15 >nul
-        Set admin=fail
-        goto permissions.end
-    )
-    goto :permissions
-    
-    :permissions.end
-    rd "%windir%\%randname%" 2>nul
-    if "%admin%"=="fail" exit
-exit /b 0
 
-:multibootscan
-    call :colortool
-    call language.bat
-    call :scan.label MULTIBOOT
-    call :check.author %ducky%
-        if "%installed%"=="true" (
-            set /a disk=%diskscan%
-            goto :break.scan
-        ) else (
-            goto :progress.scan
-        )
-    :progress.scan
-        if "%skipscan%"=="true"     goto :offline.scan
-        cls & echo ^> Connecting    & timeout /t 1 >nul
-        cls & echo ^> Connecting.   & timeout /t 1 >nul
-        cls & echo ^> Connecting..  & timeout /t 1 >nul
-        cls & echo ^> Connecting... & timeout /t 1 >nul
-        goto :multibootscan
-    :break.scan
-    cd /d "%tmp%"
-        > identify.vbs (
-            echo Dim Message, Speak
-            echo Set Speak=CreateObject^("sapi.spvoice"^)
-            echo Speak.Speak "Multiboot Drive Found"
-        )
-        if exist "%systemroot%\SysWOW64\Speech\SpeechUX\sapi.cpl" start identify.vbs
-    call :colortool
-        echo. & echo ^>^> Multiboot Drive Found ^^^^
-        timeout /t 2 >nul
-    :: get disk number from drive label
-        del /s /q "%tmp%\identify.vbs" >nul
-    :offline.scan
-    call :partassist.init
-exit /b 0
 
-:partassist.init
-    cls
-    echo.
-    cd /d "%bindir%"
-        echo ^>^> Loading, Please wait...
-        7za x "partassist.7z" -o"%tmp%" -aos -y >nul
-        set partassist="%tmp%\partassist\partassist.exe"
-        set bootice="%bindir%\bootice.exe"
-    cd /d "%tmp%\partassist"
-        if "%processor_architecture%"=="x86" (
-            SetupGreen32 -i >nul
-            LoadDrv_Win32 -i >nul
-        ) else (
-            SetupGreen64 -i >nul
-            LoadDrv_x64 -i >nul
-        )
-        > cfg.ini (
-            echo [Language]
-            echo LANGUAGE=lang\%langpa%.txt;%langcode%
-            echo LANGCHANGED=1
-            echo [Version]
-            echo Version=4
-            echo [Product Version]
-            echo v=2
-            echo Lang=%langpa%
-            echo [CONFIG]
-            echo COUNT=2
-            echo KEY=AOPR-21ROI-6Y7PL-Q4118
-            echo [PA]
-            echo POPUPMESSAGE=1
-        )
-        > winpeshl.ini (
-            echo [LaunchApp]
-            echo AppPath=%tmp%\partassist\PartAssist.exe
-        )
-    cls
-exit /b 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+:: =========================================
+:: BEGIN FUNCTIONS
+:: =========================================
 
 :colortool
     cls
@@ -216,8 +732,168 @@ exit /b 0
     cls
     cd /d "%bindir%"
     mode con lines=18 cols=70
-    title Multiboot Toolkit %cur_a%.%cur_b%.%cur_c% - Extra Features
+    title Multiboot Toolkit %cur_a%.%cur_b%.%cur_c% - %title%
 exit /b 0
+
+
+:permissions
+    call :colortool
+    
+    ver | findstr /i "6\.1\." >nul
+        if %errorlevel% equ 0 set "windows=7"
+        if not "%windows%"=="7" chcp 65001 >nul
+    
+    set randname=%random%%random%%random%%random%%random%
+    md "%windir%\%randname%" 2>nul
+    if %errorlevel%==0 goto :permissions.end
+    if %errorlevel%==1 (
+        echo. & echo ^>^> Please use right click - Run as administrator
+        color 4f & timeout /t 15 >nul
+        Set admin=fail
+        goto permissions.end
+    )
+    goto :permissions
+    
+    :permissions.end
+    rd "%windir%\%randname%" 2>nul
+    if "%admin%"=="fail" exit
+exit /b 0
+
+
+:license
+    call :colortool
+    cd /d "%tmp%"
+    > welcome.vbs (
+        echo Dim Message, Speak
+        echo Set Speak=CreateObject^("sapi.spvoice"^)
+        echo Speak.Speak "Welcome to Multiboot Toolkit %cur_a%.%cur_b%.%cur_c%"
+        echo WScript.Sleep 1
+        echo Speak.Speak "Multiboot Toolkit is the open-source software."
+        echo Speak.Speak "It's released under General Public Licence."
+        echo Speak.Speak "You can use, modify and redistribute if you wish."
+        echo Speak.Speak "Choose a default language to continue..."
+    )
+    echo ^  __  __      _ _   _ _              _     _____         _ _   _ _   
+    echo ^ ^|  \/  ^|_  _^| ^| ^|_^(_^) ^|__  ___  ___^| ^|_  ^|_   _^|__  ___^| ^| ^|_^(_^) ^|_ 
+    echo ^ ^| ^|\/^| ^| ^|^| ^| ^|  _^| ^| '_ \/ _ \/ _ \  _^|   ^| ^|/ _ \/ _ \ ^| / / ^|  _^|
+    echo ^ ^|_^|  ^|_^|\_,_^|_^|\__^|_^|_.__/\___/\___/\__^|   ^|_^|\___/\___/_^|_\_\_^|\__^|
+    echo ^                                                                %cur_a%.%cur_b%.%cur_c%
+    echo.
+    echo ^  Multiboot Toolkit is the open-source software. It's released under
+    echo ^  General Public Licence ^(GPL^). You can use, modify and redistribute
+    echo ^  if you wish. You can download from my blog niemtin007.blogspot.com
+    echo.
+    echo ^  Thanks to:
+    echo ^  ------------------------------------------------------------------
+    echo ^  Ha Son, Tayfun Akkoyun, anhdv, lethimaivi, A1ive, Hoang Duch2, ...
+    echo ^  ------------------------------------------------------------------
+    if exist "%systemroot%\SysWOW64\Speech\SpeechUX\sapi.cpl" start welcome.vbs
+    echo.
+    echo ^  [ 1 ] = English  [ 2 ] = Vietnam  [ 3 ] = Turkish  [ 4 ] = Chinese
+    echo.
+    choice /c 1234a /cs /n /m "> Choose a default language [ ? ] = "
+        if errorlevel 1 set "lang=English"
+        if errorlevel 2 set "lang=Vietnam"
+        if errorlevel 3 set "lang=Turkish"
+        if errorlevel 4 set "lang=SimplifiedChinese"
+        if errorlevel 5 set "lang=autodetect"
+    taskkill /f /im wscript.exe /t /fi "status eq running">nul
+    del /s /q welcome.vbs >nul
+    call :partassist.init
+    :: change language
+    call :colortool
+    call language.bat
+exit /b 0
+
+
+:partassist.init
+    cls
+    echo.
+    cd /d "%bindir%"
+        echo ^>^> Loading, Please wait...
+        7za x "partassist.7z" -o"%tmp%" -aos -y >nul
+        set partassist="%tmp%\partassist\partassist.exe"
+        set bootice="%bindir%\bootice.exe"
+    :: begin preparing file
+    cd /d "%tmp%"
+        if not exist rEFInd_themes mkdir rEFInd_themes
+    call :colortool
+        7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
+        7za x "refind.7z" -o"%tmp%" -aoa -y >nul
+    cd /d "%tmp%\partassist"
+        if "%processor_architecture%"=="x86" (
+            SetupGreen32 -i >nul
+            LoadDrv_Win32 -i >nul
+        ) else (
+            SetupGreen64 -i >nul
+            LoadDrv_x64 -i >nul
+        )
+        > cfg.ini (
+            echo [Language]
+            echo LANGUAGE=lang\%langpa%.txt;%langcode%
+            echo LANGCHANGED=1
+            echo [Version]
+            echo Version=4
+            echo [Product Version]
+            echo v=2
+            echo Lang=%langpa%
+            echo [CONFIG]
+            echo COUNT=2
+            echo KEY=AOPR-21ROI-6Y7PL-Q4118
+            echo [PA]
+            echo POPUPMESSAGE=1
+        )
+        > winpeshl.ini (
+            echo [LaunchApp]
+            echo AppPath=%tmp%\partassist\PartAssist.exe
+        )
+    cls
+exit /b 0
+
+
+:clean.bye
+    call :colortool
+    for /f %%b in (
+        'wmic volume get driveletter^, label ^| findstr /i "MULTIBOOT"'
+        ) do set "ducky=%%b"
+    for /f "delims=" %%f in (hide.list) do (
+        if exist "%ducky%\%%f"     attrib +s +h "%ducky%\%%f"
+        if exist "%ducky%\ISO\%%f" attrib +s +h "%ducky%\ISO\%%f"
+        if exist "%ducky%\WIM\%%f" attrib +s +h "%ducky%\WIM\%%f"
+    )
+    cd /d "%tmp%\partassist"
+        if "%processor_architecture%"=="x86" (
+            SetupGreen32 -u >nul
+            LoadDrv_Win32 -u >nul
+        ) else (
+            SetupGreen64 -u >nul
+            LoadDrv_x64 -u >nul
+        )
+    cd /d "%tmp%"
+        :: clean up the trash and exit
+        set "dlist=colortool curl driveprotect gdisk grub2 partassist rEFInd rEFInd_themes"
+        for %%d in (%dlist%) do (
+            if exist "%%d" rmdir "%%d" /s /q >nul
+        )
+        set "flist=hide.vbs Output.log qemuboottester.exe wincdemu.exe wget.exe"
+        for %%f in (%flist%) do (
+            if exist "%%f" del "%%f" /s /q >nul
+        )
+        > thanks.vbs (
+            echo Dim Message, Speak
+            echo Set Speak=CreateObject^("sapi.spvoice"^)
+            echo Speak.Speak "Successful! Thank you for using Multiboot Toolkit"
+        )
+        cls
+        echo.
+        echo %_lang0012_%
+        echo %_lang0013_%
+        if exist "%systemroot%\SysWOW64\Speech\SpeechUX\sapi.cpl" start thanks.vbs
+        timeout /t 3 >nul
+        del /s /q thanks.vbs >nul
+        exit
+exit /b 0
+
 
 :check.partitiontable
     set GPT=false
@@ -228,25 +904,11 @@ exit /b 0
             set    diskunit=%%c
             if /i "%%d"=="*" set GPT=true
         )
+    for /f "tokens=1 delims=\\.\" %%b in (
+        'wmic diskdrive list brief ^| find /i "physicaldrive%disk%"'
+        ) do set "model=%%b"
 exit /b 0
 
-:gather.info
-    cd /d "%ducky%\BOOT"
-        if exist lang (
-            for /f "tokens=*" %%b in (lang) do set "lang=%%b"
-        )
-        if exist rEFInd (
-            for /f "tokens=*" %%b in (rEFInd) do set "rtheme=%%b"
-        )
-        if exist secureboot (
-            for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
-        )
-    cd /d "%ducky%\BOOT\GRUB\themes\"
-        if exist theme (
-            for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
-        )
-    cd /d "%bindir%"
-exit /b 0
 
 :check.letter
     echo.
@@ -266,8 +928,9 @@ exit /b 0
         echo select volume %volume%
         echo assign letter=%freedrive%
     ) | diskpart >nul
-    if "%~2"=="return" call "[ 01 ] Install Multiboot.bat"
+    if "%~2"=="return" call "Multiboot-Toolkit.bat"
 exit /b 0
+
 
 :scan.label
     set online=false
@@ -289,6 +952,7 @@ exit /b 0
             ) do set "diskscan=%%b"
             if defined diskscan set /a "diskscan=%diskscan:~1,1%"
 exit /b 0
+
 
 :check.author
     set label=false
@@ -313,8 +977,9 @@ exit /b 0
     )
 exit /b 0
 
+
 :checkdisktype
-    :: reset all disk variable
+    :: reset all disks variable
     set "virtualdisk=false"
     set "harddisk=false"
     set "usb=false"
@@ -337,18 +1002,596 @@ exit /b 0
         if not errorlevel 1 set "externaldisk=true"
 exit /b 0
 
-:silentcmd
-    > "%tmp%\hide.vbs" (
-        echo.
-        echo Dim Args^(^)
-        echo ReDim Args^(WScript.Arguments.Count - 1^)
-        echo.
-        echo For i = 0 To WScript.Arguments.Count - 1
-        echo     Args^(i^) = """" ^& WScript.Arguments^(i^) ^& """"
-        echo Next
-        echo.
-        echo CreateObject^("WScript.Shell"^).Run Join^(Args^), 0, False
+
+:count.partition
+    set "partcount="
+    :: count the total number of partition in a disk
+    for /f "tokens=3 delims=#" %%b in (
+        'wmic partition get name ^| findstr /i "#%disk%,"'
+        ) do set "partcount=%%b"
+exit /b 0
+
+
+:unhide.partition
+    if not exist "X:\" (
+        %partassist% /hd:%disk% /unhide:%~1
+        %partassist% /hd:%disk% /setletter:%~1 /letter:X
+        goto :unhide.partition
     )
+exit /b 0
+
+
+:list.disk
+    setlocal
+    :: find the last disk
+    for /f "tokens=2" %%b in (
+        'echo list disk ^| diskpart ^| find /i "Disk"'
+        ) do set /a disk=%%b
+    :: check USB GPT
+    echo.
+    echo Loading, please wait...
+    cd /d "%bindir%"
+        call :checkdisktype
+        if "%usb%"=="true" call :check.partitiontable
+    :: display USB GPT information for partassist
+    cls & %partassist% /list
+    if "%usb%"=="true" if "%GPT%"=="true" (
+        if "%diskunit%"=="GB" echo   %disk%     ^| %disksize% %diskunit%         ^| %model% GPT
+        if "%diskunit%"=="MB" echo   %disk%     ^| %disksize% %diskunit%       ^| %model% GPT
+    )
+    endlocal
+exit /b 0
+
+
+:clean.disk
+    (
+        echo select disk %disk%
+        echo clean
+        echo convert mbr
+        echo exit
+    ) | diskpart >nul
+exit /b 0
+
+
+:harddisk.warning
+    echo. & echo. & echo %_lang0102_%
+    color 0e & echo %_lang0103_% & timeout /t 15 >nul & cls
+exit /b 0
+
+
+:pushdata.ESP
+    cd /d "X:\"
+        mkdir "X:\EFI\BOOT\"
+        >"X:\EFI\BOOT\mark" (echo niemtin007)
+    cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
+        xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q >nul
+exit /b 0
+
+
+:pushdata.rEFInd
+    cd /d "X:\"
+        mkdir "X:\ISO\"
+        mkdir "X:\EFI\BOOT\themes\"
+        >"X:\EFI\BOOT\mark" (echo niemtin007)
+    cd /d "%tmp%"
+        xcopy "rEfind" "X:\EFI\BOOT\" /e /g /h /r /y /q >nul
+    cd /d "%tmp%\rEfind_themes"
+        xcopy "%rtheme%" "X:\EFI\BOOT\themes\" /e /g /h /r /y /q >nul
+exit /b 0
+
+
+:pushdata.secure
+    >"X:\BOOT\secureboot" (echo n)
+    cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
+        xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q >nul
+    cd /d "%bindir%"
+        xcopy "secureboot" "X:\" /e /g /h /r /y /q >nul
+exit /b 0
+
+
+:rEFInd.icons
+    copy "grubx64.png" "%~1\EFI\BOOT\grubx64.png" >nul
+    copy "grubx64.png" "%~1\EFI\BOOT\grubia32.png" >nul
+    copy "os_linux.icns" "%~1\EFI\BOOT\OneFileLinux.png" >nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupx64.png" >nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupia32.png" >nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupfmx64.png" >nul
+    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupfmia32.png" >nul
+    copy "xorbootx64.png" "%~1\EFI\BOOT\xorbootx64.png" >nul
+    xcopy "others" "%~1\EFI\BOOT\" /e /g /h /r /y /q >nul
+exit /b 0
+
+
+:grub2installer
+    cd /d "%bindir%"
+        7za x "grub2.7z" -o"%tmp%" -aos -y >nul
+        if exist "V:\" call :check.letter V:
+    :: create vhd disk
+    cd /d "%tmp%"
+        if exist "Grub2.vhd" del /s /q "Grub2.vhd" >nul
+        (
+            echo create vdisk file="%tmp%\Grub2.vhd" maximum=50 type=expandable
+            echo attach vdisk
+            echo create partition primary
+            echo format fs=fat32 label="Grub2"
+            echo assign letter=v
+        ) | diskpart
+    :: install grub2 for Legacy BIOS mode
+    if not "%~2"=="legacydisable" (
+        move /y "%ducky%\BOOT\grub\*.lst" "%ducky%\BOOT" >nul
+        cd /d "%tmp%\grub2"
+            grub-install --target=i386-pc --force --boot-directory=%ducky%\BOOT \\.\physicaldrive%disk%
+        move /y "%ducky%\BOOT\*.lst" "%ducky%\BOOT\grub" >nul
+        cd /d "%tmp%\grub2\i386-pc"
+            copy "lnxboot.img" "%ducky%\BOOT\grub\i386-pc" /y >nul
+        cd /d "%ducky%\BOOT\grub\i386-pc"
+            copy /b lnxboot.img+Core.img g2ldr
+    )
+    :: install grub2 for EFI mode
+    cd /d "%tmp%\grub2"
+        grub-install --target=x86_64-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
+        grub-install --target=i386-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
+    cd /d "%ducky%\EFI\BOOT\backup"
+        if not exist Grub2 mkdir Grub2
+    cd /d "V:\EFI\BOOT"
+        :: copy to multiboot data partition
+        copy "BOOTIA32.EFI" "%ducky%\EFI\BOOT\grubia32.efi" /y >nul
+        copy "BOOTX64.EFI"  "%ducky%\EFI\BOOT\grubx64.efi"  /y >nul
+        copy "grub.efi"     "%ducky%\EFI\BOOT\grub.efi"     /y >nul
+        :: make backup
+        copy "BOOTIA32.EFI" "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootia32.efi" /y >nul
+        copy "BOOTX64.EFI"  "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootx64.efi"  /y >nul
+        copy "grub.efi"     "%bindir%\secureboot\EFI\Boot\backup\Grub2\grub.efi"     /y >nul
+    cd /d "%bindir%\secureboot\EFI\Boot\backup"
+        copy "Grub2" "%ducky%\EFI\BOOT\backup\Grub2" /y >nul
+    cd /d "%tmp%"
+        (
+            echo select vdisk file="%tmp%\Grub2.vhd"
+            echo detach vdisk
+        ) | diskpart
+        del /s /q "Grub2.vhd" >nul
+    cd /d "%bindir%"
+exit /b 0
+
+
+:gdisk
+    cd /d "%bindir%"
+        7za x "gdisk.7z" -o"%tmp%" -aos -y >nul
+        if "%processor_architecture%"=="x86" (
+            set gdisk=gdisk32.exe
+        ) else (
+            set gdisk=gdisk64.exe
+        )
+    cd /d "%tmp%\gdisk"
+        (
+            echo n
+            echo.
+            echo.
+            echo.
+            echo ef02
+            echo w
+            echo y
+        ) | %gdisk% \\.\physicaldrive%disk% >nul 2>&1
+        cls
+        echo.
+        echo %_lang0117_%
+    cd /d "%bindir%"
+        timeout /t 1 >nul
+exit /b 0
+
+
+:rEFInd.part
+    if "%usb%"=="false" goto :rEFInd.ask
+    color 0e
+    echo.
+    echo -------------------------------------------------------------------
+    echo %_lang0118_%
+    echo %_lang0119_%
+    echo -------------------------------------------------------------------
+    echo.
+    choice /c yn /cs /n /m "%_lang0120_%"
+        if errorlevel 1 set "usbgpt=true"
+        if errorlevel 2 set "usbgpt=false"
+        if "%usbgpt%"=="false" goto :rEFInd.ask
+        if "%usbgpt%"=="true" if "%windows%"=="7" (
+            echo %_lang0125_% & timeout /t 15 >nul & goto :rEFInd.ask
+        )
+    choice /c yn /cs /n /m "%_lang0124_%"
+        if errorlevel 1 set "usblegacy=false"
+        if errorlevel 2 set "usblegacy=true"
+        if "%usbgpt%"=="true" call :createusb.gpt
+    :rEFInd.ask
+    call :colortool
+    echo.
+    echo 	  %_lang0006_%           %_lang0007_% (MB)
+    echo 	==========================         ===============
+    echo 	^* Bitdefender                                  900
+    echo 	^* Fedora                                      1800
+    echo 	^* Network Security Toolkit                    3400
+    echo 	==========================         ===============
+    echo 	^* %_lang0008_%                                 6100
+    echo 	+++++++++++++++++++++++++++++++++++++++++++++++++++
+    echo 	%_lang0009_%=50MB)
+    echo.
+    choice /c yn /cs /n /m "%_lang0114_%"
+        if errorlevel 1 set "installmodules=y"
+        if errorlevel 2 set "installmodules=n"
+    echo.
+    choice /c ynb /cs /n /m "%_lang0115_%"
+        if errorlevel 1 set "secureboot=y"
+        if errorlevel 2 set "secureboot=n"
+        if errorlevel 3 goto :rEFInd.ask
+    :rEFIndsize
+    echo.
+    set esp=50
+    set /p esp= %_lang0010_% ^> 
+        :: check the character of the number
+        echo %esp%| findstr /r "^[1-9][0-9]*$">nul
+        if not "%errorlevel%"=="0" goto :rEFIndsize
+        :: set the minimum size of the partition
+        if %esp% LSS 50 (
+            echo. & echo %_lang0011_% 50MB & timeout /t 15 >nul
+            goto :rEFIndsize
+        )
+exit /b 0
+
+
+:bcdautoset
+    echo.
+    echo %_lang0004_%
+    set "bcd=%~1"
+    set "Object={7619dcc8-fafe-11d9-b411-000476eba25f}"
+    :: edit menu [ 01 ] Win10PE SE                x64 UEFI
+    set "bootfile=\WIM\w10pe64.wim"
+    set "identifier={default}"
+    call :bcd.reset
+    :: edit menu [ 02 ] Win8PE                    x64 UEFI
+    set "bootfile=\WIM\w8pe64.wim"
+    set "identifier={6e700c3b-7cca-4b2b-bca6-5a486db4b4ec}"
+    call :bcd.reset
+    :: edit menu [ 03 ] Win10PE SE                x64 UEFI           DLC Boot
+    set "bootfile=\DLC1\W10PE\W10x64.wim"
+    set "identifier={1584ef96-c13d-4ee2-b1b1-8fce4a0834a1}"
+    call :bcd.reset
+    :: edit menu [ 04 ] Win10PE SE                x64 UEFI           Strelec
+    set "bootfile=\SSTR\strelec10x64Eng.wim"
+    set "identifier={ebb0ef9d-19d7-47a6-8f0a-ec37ffa958fb}"
+    call :bcd.reset
+    :: edit menu [ 05 ] Hiren’s BootCD PE         x64 UEFI
+    set "bootfile=\WIM\hbcdpe.wim"
+    set "identifier={9a349bcd-72ba-40e1-ba0d-c2638ebbeeab}"
+    call :bcd.reset
+    :: edit menu [ 06 ] Bob.Omb’s Modified Win10PEx64 UEFI
+    set "bootfile=\WIM\BobW10PE.wim"
+    set "identifier={dfbac4eb-329a-4665-a876-568ae3f1f3c4}"
+    call :bcd.reset
+    :: edit menu [ 07 ] Setup Windows from sources                   Wim & ISO
+    set "bootfile=\WIM\bootisox64.wim"
+    set "identifier={d314f67b-45b3-4dac-b244-46a733f2583c}"
+    call :bcd.reset
+    :: --------------------------------------------------------------------------
+    echo.& echo %_lang0005_%
+    :: edit menu [ 01 ] Win10PE SE                x86 UEFI
+    set "bootfile=\WIM\w10pe32.wim"
+    set "identifier={8b08eb1f-1588-45d5-9327-a8c3c9af04cb}"
+    call :bcd.reset
+    :: edit menu [ 02 ] Win8PE                    x86 UEFI
+    set "bootfile=\WIM\w8pe32.wim"
+    set "identifier={1d17bd3f-8d1f-45af-98ff-fde29926a9c5}"
+    call :bcd.reset
+    :: edit menu [ 03 ] Win10PE SE                x86 UEFI           DLC Boot
+    set "bootfile=\DLC1\W10PE\W10x86.wim"
+    set "identifier={0e695210-306a-45df-9a89-7710c2b80ed0}"
+    call :bcd.reset
+    :: edit menu [ 04 ] Win10PE SE                x86 UEFI           Strelec
+    set "bootfile=\SSTR\strelec10Eng.wim"
+    set "identifier={65fcaee2-301e-44b2-94ee-e8875e58f509}"
+    call :bcd.reset
+    :: edit menu [ 05 ] Setup Windows from sources                   Wim & ISO
+    set "bootfile=\WIM\bootisox86.wim"
+    set "identifier={2247cc17-b047-45e4-b2cd-d4196ff5d2fb}"
+    call :bcd.reset
+exit /b 0
+:bcd.reset
+    bcdedit /store %bcd% /set %identifier% device ramdisk=[%ducky%]%bootfile%,%Object% >nul
+    bcdedit /store %bcd% /set %identifier% osdevice ramdisk=[%ducky%]%bootfile%,%Object% >nul
+exit /b 0
+
+
+:createusb.gpt
+    :: create ESP partition
+    echo.
+    echo %_lang0121_%
+    (
+        echo select disk %disk%
+        echo clean
+        echo convert gpt
+        echo create partition primary size=50
+        echo format quick fs=fat label="ESP"
+        echo assign letter=X
+        echo exit
+    ) | diskpart >nul
+    :: push files into the ESP partition
+    call :pushdata.rEFInd
+    :: remove drive letter
+    (
+        echo select volume X
+        echo remove letter X
+        echo exit
+    ) | diskpart >nul
+    :: create MULTIBOOT partition
+    (
+        echo select disk %disk%
+        echo create partition primary
+        echo format quick fs=ntfs label="MULTIBOOT"
+        echo shrink desired=8
+        echo assign letter=X
+        echo exit
+    ) | diskpart >nul
+    :: create BIOS Boot Partition for Legacy BIOS Mode
+    if "%usblegacy%"=="true" (
+        call :gdisk
+        :: a guide of the disk format waning messenger
+        echo -------------------------------------------------------------------
+        echo %_lang0126_%
+        echo %_lang0127_%
+        echo -------------------------------------------------------------------
+        :: delete drive letter for BIOS Boot Partition
+        %bootice% /device=%disk%:2 /partitions /delete_letter /quiet
+    )
+    :: recheck data partition
+    call :scan.label MULTIBOOT
+    if not "%ducky%"=="X:" (
+        call :colortool
+        echo. & echo %_lang0110_% & timeout /t 15 >nul & exit
+    )
+    :: installing data
+    echo.
+    echo %_lang0122_%
+    cd /d "X:\"
+        for %%b in (APPS BOOT\grub\themes EFI\BOOT ISO WIM) do mkdir %%b
+        >"BOOT\lang"              (echo %lang%)
+        >"EFI\BOOT\mark"          (echo niemtin007)
+        >"BOOT\grub\themes\theme" (echo %gtheme%)
+        >"EFI\BOOT\usb.gpt"       (echo USB GPT Bootable Disk)
+    cd /d "%bindir%"
+        xcopy "secureboot" "X:\" /e /g /h /r /y /q >nul
+        set "file=Autorun.inf usb.ico B64 XORBOOT grub"
+        set "efi=gdisk.efi OneFileLinux.efi winsetupia32.efi winsetupx64.efi xorbootx64.efi"
+        if "%usblegacy%"=="true" (
+            7za x "data.7z" -o"X:\" -aoa -y >nul
+        ) else (
+            7za x "data.7z" -o"X:\" %file% %efi% -r >nul
+        )
+        :: install grub2 bootloader
+        echo.
+        echo %_lang0116_%
+        if "%usblegacy%"=="true" (
+            call :grub2installer MULTIBOOT >nul 2>&1
+        ) else (
+            call :grub2installer MULTIBOOT legacydisable >nul 2>&1
+        )
+        :: install grub2 file manager
+        7za x "extra-modules\grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y >nul
+        >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
+        :: install language
+        echo.
+        echo %_lang0112_% %lang%
+        7za x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
+        :: install grub2 theme
+        echo.
+        echo %_lang0113_% %gtheme%
+        7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
+        7za x "%bindir%\grub2_themes\icons.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
+        :: make grub2 config
+        call "%bindir%\config\main.bat"
+    cd /d "X:\EFI\Microsoft\Boot"
+        :: setup WIM path in BCD store for UEFI mode
+        call :bcdautoset bcd
+    cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
+        :: install icons for rEFInd Boot Manager
+        call :rEFInd.icons X:
+        :: normalize drive letter
+        call :check.letter
+    :: specifies that the ESP does not receive a drive letter by default
+    (
+        echo select disk %disk%
+        echo select partition 1
+        echo gpt attributes=0x4000000000000000
+        echo select partition 3
+        echo gpt attributes=0x4000000000000000
+        echo exit
+    ) | diskpart >nul
+        call :clean.bye
+exit /b 0
+
+
+
+
+
+
+
+:: --------------------------------------------
+:: Module functions
+:: --------------------------------------------
+
+:multibootscan
+    cls
+    call language.bat
+    call :scan.label MULTIBOOT
+    call :check.author %ducky%
+        if "%installed%"=="true" (
+            set /a disk=%diskscan%
+            goto :break.scan
+        ) else (
+            goto :progress.scan
+        )
+    :progress.scan
+        if "%skipscan%"=="true"     goto :offline.scan
+        cls & echo ^> Connecting    & timeout /t 1 >nul
+        cls & echo ^> Connecting.   & timeout /t 1 >nul
+        cls & echo ^> Connecting..  & timeout /t 1 >nul
+        cls & echo ^> Connecting... & timeout /t 1 >nul
+        goto :multibootscan
+    :break.scan
+    cd /d "%tmp%"
+        > identify.vbs (
+            echo Dim Message, Speak
+            echo Set Speak=CreateObject^("sapi.spvoice"^)
+            echo Speak.Speak "Multiboot Drive Found"
+        )
+        if exist "%systemroot%\SysWOW64\Speech\SpeechUX\sapi.cpl" start identify.vbs
+    call :colortool
+        echo. & echo ^>^> Multiboot Drive Found ^^^^
+        timeout /t 2 >nul
+    :: get disk number from drive label
+        del /s /q "%tmp%\identify.vbs" >nul
+    :offline.scan
+    call :partassist.init
+exit /b 0
+
+
+:check.empty
+    setlocal
+    set _tmp=
+    for /f "delims=" %%b in ('dir /b "%curpath%"') do set _tmp="%%b"
+    if {%_tmp%}=={} (
+        call :colortool
+        cls
+        echo.
+        echo %_lang0220_%
+        echo.
+        choice /c yn /cs /n /m "%_lang0221_%"
+        if errorlevel 2 goto :modules.main
+        if errorlevel 1 start https://docs.google.com/spreadsheets/d/1HzW6t3Rh_8_BnT8Ddawe1epwrMdVzvmRAjtN3qX-G9k/edit?usp=sharing & exit
+    )
+    cd /d "%bindir%"
+        set "module=false"
+        for /f "delims=" %%f in (iso.list, iso_extract.list, specialiso.list, wim.list) do (
+            cd /d "%curpath%"
+                if exist "*%%f*" set "module=true"
+            cd /d "%bindir%"
+        )
+        if "%module%"=="false" (
+            cls & echo.
+            echo %_lang0222_%
+            pause >nul
+            goto :modules.main
+        )
+    endlocal
+exit /b 0
+
+
+:iso.extract
+    if exist "%~1" if not exist "%ducky%\ISO_Extract\%~2\*.*" (
+        set "modulename=%~2"
+        for /f "tokens=*" %%b in (%~1) do set "isopath=%bindir%\ISO_Extract\%%b"
+        call :iso.mount & goto :extract
+    )
+exit /b 0
+
+
+:iso.mount
+    call :colortool
+    cd /d "%tmp%"
+    wincdemu "%isopath%" X: /wait
+    cls
+    echo.
+    echo ^>^> %modulename% %_lang0015_%
+    echo.
+    cd /d "X:\"
+        if "%modulename%"=="AOMEI-Backup" (
+            copy "sources\boot.wim" "%ducky%\WIM\aomeibackup.wim" /y >nul
+            mkdir "%ducky%\ISO_Extract\%modulename%\"
+            >"%ducky%\ISO_Extract\%modulename%\Author.txt" (echo AOMEI)
+            goto :iso.unmount
+        )
+        if "%modulename%"=="anhdvPE" (
+            :: xcopy "APPS" "%ducky%\APPS\" /e /g /h /r /y
+            robocopy "X:\APPS" "%ducky%\APPS" /njh /njs /nc /ns
+            :: xcopy "WIM" "%ducky%\WIM\" /e /g /h /r /y
+            robocopy "X:\WIM" "%ducky%\WIM" /njh /njs /nc /ns
+            mkdir "%ducky%\ISO_Extract\%modulename%\"
+            >"%ducky%\ISO_Extract\%modulename%\Author.txt" (echo Dang Van Anh)
+            goto :iso.unmount
+        )
+        if "%modulename%"=="Bob.Ombs.Win10PEx64" (
+            copy "sources\boot.wim" "%ducky%\WIM\BobW10PE.wim" /y >nul
+            xcopy "Programs" "%ducky%\Programs\" /e /g /h /r /y
+            mkdir "%ducky%\ISO_Extract\%modulename%\"
+            >"%ducky%\ISO_Extract\%modulename%\Author.txt" (echo Bob.Ombs)
+            goto :iso.unmount
+        )
+        if "%modulename%"=="DLCBoot" (
+            xcopy "DLCBoot.exe" "%ducky%\" /e /g /h /r /y
+            xcopy "DLC1" "%ducky%\DLC1\" /e /g /h /r /y
+            mkdir "%ducky%\ISO_Extract\%modulename%\"
+            >"%ducky%\ISO_Extract\%modulename%\Author.txt" (echo Tran Duy Linh)
+            goto :iso.unmount
+        )
+        if "%modulename%"=="HirensBoot" (
+            copy "sources\boot.wim" "%ducky%\WIM\hbcdpe.wim" /y >nul
+            xcopy /s "Version.txt" "%ducky%\ISO_Extract\%modulename%\"
+            goto :iso.unmount
+        )
+        if "%modulename%"=="Strelec" (
+            xcopy "SSTR" "%ducky%\SSTR\" /e /g /h /r /y
+            mkdir "%ducky%\ISO_Extract\%modulename%\"
+            >"%ducky%\ISO_Extract\%modulename%\Author.txt" (echo Sergei Strelec)
+            goto :iso.unmount
+        )
+    cd /d "%bindir%"
+        for /f "delims=" %%f in (copy.list) do (
+            if exist "X:\%%f" (
+                xcopy /s "X:\%%f" "%ducky%\ISO_Extract\%modulename%\"
+            )
+        )
+:iso.unmount
+    cd /d "%tmp%"
+        wincdemu /unmount X:
+        cls
+exit /b 0
+
+
+:PortableAppsPlatform
+    echo.
+    choice /c yn /cs /n /m "%_lang0223_%"
+        if errorlevel 1 set "portable=true"
+        if errorlevel 2 set "portable=false"
+        if "%portable%"=="true" (
+            cd /d "%bindir%"
+                7za x "PortableApps.7z" -o"%ducky%\" -aoa -y >nul
+                echo %_lang0012_%
+                timeout /t 2 >nul
+        )
+exit /b 0
+
+
+
+
+
+
+
+:: --------------------------------------------
+:: Extra functions
+:: --------------------------------------------
+
+:gather.info
+    cd /d "%ducky%\BOOT"
+        if exist lang (
+            for /f "tokens=*" %%b in (lang) do set "lang=%%b"
+        )
+        if exist rEFInd (
+            for /f "tokens=*" %%b in (rEFInd) do set "rtheme=%%b"
+        )
+        if exist secureboot (
+            for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
+        )
+    cd /d "%ducky%\BOOT\GRUB\themes\"
+        if exist theme (
+            for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
+        )
+    cd /d "%bindir%"
 exit /b 0
 
 :changelanguage
@@ -366,7 +1609,7 @@ exit /b 0
     if "%mylang%"=="2" set "lang=Vietnam" & goto :continue.lang
     if "%mylang%"=="3" set "lang=Turkish" & goto :continue.lang
     if "%mylang%"=="4" set "lang=SimplifiedChinese" & goto :continue.lang
-    if "%mylang%"=="b" set goto :main
+    if "%mylang%"=="b" set goto :extra.main
     color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :changelanguage
     
     :continue.lang
@@ -474,7 +1717,7 @@ exit /b 0
     if "%ask%"=="38" (set "gtheme=Tela"            & goto :continue.gtheme)
     if "%ask%"=="39" (set "gtheme=Ubuntu-lucid"    & goto :continue.gtheme)
     if "%ask%"=="40" (set "gtheme=Vimix"           & goto :continue.gtheme)
-    if "%ask%"=="b"  goto :main
+    if "%ask%"=="b"  goto :extra.main
     color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :grub2theme
     
     :continue.gtheme
@@ -553,7 +1796,7 @@ exit /b 0
     if "%ask%"=="42" set "rtheme=Underground"    & goto :continue.rtheme
     if "%ask%"=="43" set "rtheme=Universe"       & goto :continue.rtheme
     if "%ask%"=="44" set "rtheme=Woody"          & goto :continue.rtheme
-    if "%ask%"=="b"  goto :main
+    if "%ask%"=="b"  goto :extra.main
     color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :rEFIndtheme
 
     :continue.rtheme
@@ -605,18 +1848,6 @@ exit /b 0
         %partassist% /hd:%disk% /whide:%securepart% /src:%source% /dest:EFI\BOOT
     )
     call :clean.bye
-exit /b 0
-
-:rEFInd.icons
-    copy "grubx64.png" "%~1\EFI\BOOT\grubx64.png" >nul
-    copy "grubx64.png" "%~1\EFI\BOOT\grubia32.png" >nul
-    copy "os_linux.icns" "%~1\EFI\BOOT\OneFileLinux.png" >nul
-    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupx64.png" >nul
-    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupia32.png" >nul
-    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupfmx64.png" >nul
-    copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupfmia32.png" >nul
-    copy "xorbootx64.png" "%~1\EFI\BOOT\xorbootx64.png" >nul
-    xcopy "others" "%~1\EFI\BOOT\" /e /g /h /r /y /q >nul
 exit /b 0
 
 :easeconvertdisk
@@ -693,7 +1924,7 @@ exit /b 0
     timeout /t 2 >nul
     
     :exit.convert
-    call :clean.bye
+    goto :mainMenu
 exit /b 0
 
 :editWinPEbootmanager
@@ -704,7 +1935,7 @@ exit /b 0
     echo.
     cd /d "%bindir%"
     choice /c ynb /cs /n /m "%_lang0800_%"
-        if errorlevel 3 goto :main
+        if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :option.pe
         if errorlevel 1 call :bcdautomenu
     
@@ -765,7 +1996,7 @@ exit /b 0
         %partassist% /hd:%disk% /whide:%securepart% /src:%source% /dest:EFI\Microsoft\Boot
     )
     call :colortool
-    call :clean.bye
+    goto :extra.main
 exit /b 0
 
 :bcdautomenu
@@ -893,7 +2124,7 @@ exit /b 0
     set /P mode= "^*              [ 1 ] Legacy mode - [ 2 ] UEFI mode ^> "
     if "%mode%"=="1" goto :legacy.winsetup
     if "%mode%"=="2" goto :uefi.winsetup
-    if "%mode%"=="b" goto :main
+    if "%mode%"=="b" goto :extra.main
     color 0e & echo. & echo ^>^>  Invalid Input. & timeout /t 15 >nul & goto :option.winsetup
     
     :legacy.winsetup
@@ -944,7 +2175,7 @@ exit /b 0
     if "%GPT%"=="true" goto :grub2.fix
     echo.
     choice /c ynb /cs /n /m "%_lang0837_%"
-        if errorlevel 3 goto :main
+        if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :grub2.fix
         if errorlevel 1 goto :grub4dos.fix
     
@@ -1021,7 +2252,7 @@ exit /b 0
     cd /d "%bindir%"
         7za x "wget.7z" -o"%tmp%" -aoa -y >nul
     choice /c 12b /cs /n /m "*          [ 1 ] Origin build  -  [ 2 ] Source Script  > "
-        if errorlevel 3 goto :main
+        if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :grubfm-script
         if errorlevel 1 goto :grubfm-build
 
@@ -1133,12 +2364,12 @@ exit /b 0
     echo  %_lang0904_%
     echo ---------------------------------------------------------------------
     set "mode=3"
-    set /P mode= %_lang0905_%
+    set /P mode= "%_lang0905_% > "
         if "%mode%"=="1" set "option=Secure_rEFInd" & goto :checkdisk.default
         if "%mode%"=="2" set "option=Secure_Grub2"  & goto :checkdisk.default
         if "%mode%"=="3" set "option=rEFInd"        & goto :checkdisk.default
         if "%mode%"=="4" set "option=Grub2"         & goto :checkdisk.default
-        if "%mode%"=="b" goto :main
+        if "%mode%"=="b" goto :extra.main
         color 0e & echo. & echo %_lang0104_% & timeout /t 15 >nul & goto :option.default
     
     :checkdisk.default
@@ -1240,7 +2471,7 @@ exit /b 0
     echo ---------------------------------------------------------------------
     echo.
     choice /c 12b /cs /n /m "#   Choose your option [ ? ] > "
-        if errorlevel 3 goto :main
+        if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :updatefull
         if errorlevel 1 goto :updateconfig
     
@@ -1387,7 +2618,7 @@ exit /b 0
     cls 
     call :cloverinterface
     choice /c ynb /cs /n /m "%_lang0700_% > "
-        if errorlevel 3 goto :main
+        if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :cloverconfig
         if errorlevel 1 goto :download.clover
     
@@ -1562,7 +2793,6 @@ exit /b 0
                 call :clean.bye
         )
 exit /b 0
-:: clover function
 :cloverinterface
     echo.
     echo ----------------------------------------------------------------------
@@ -1588,7 +2818,7 @@ exit /b 0
     :refind
     call :rEFIndinterface
     choice /c ynb /cs /n /m "%_lang0600_% > "
-        if errorlevel 3 goto :main
+        if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :option.rEFInd
         if errorlevel 1 goto :download.rEFInd
     
@@ -1715,7 +2945,6 @@ exit /b 0
                 call :clean.bye
         )
 exit /b 0
-:: rEFInd functions
 :rEFIndinterface
     call :colortool
     echo.
@@ -1724,158 +2953,3 @@ exit /b 0
     echo ----------------------------------------------------------------------
     echo.
 exit /b 0
-
-:bcdautoset
-    echo.
-    echo %_lang0004_%
-    set "bcd=%~1"
-    set "Object={7619dcc8-fafe-11d9-b411-000476eba25f}"
-    :: edit menu [ 01 ] Win10PE SE                x64 UEFI
-    set "bootfile=\WIM\w10pe64.wim"
-    set "identifier={default}"
-    call :bcd.reset
-    :: edit menu [ 02 ] Win8PE                    x64 UEFI
-    set "bootfile=\WIM\w8pe64.wim"
-    set "identifier={6e700c3b-7cca-4b2b-bca6-5a486db4b4ec}"
-    call :bcd.reset
-    :: edit menu [ 03 ] Win10PE SE                x64 UEFI           DLC Boot
-    set "bootfile=\DLC1\W10PE\W10x64.wim"
-    set "identifier={1584ef96-c13d-4ee2-b1b1-8fce4a0834a1}"
-    call :bcd.reset
-    :: edit menu [ 04 ] Win10PE SE                x64 UEFI           Strelec
-    set "bootfile=\SSTR\strelec10x64Eng.wim"
-    set "identifier={ebb0ef9d-19d7-47a6-8f0a-ec37ffa958fb}"
-    call :bcd.reset
-    :: edit menu [ 05 ] Hiren’s BootCD PE         x64 UEFI
-    set "bootfile=\WIM\hbcdpe.wim"
-    set "identifier={9a349bcd-72ba-40e1-ba0d-c2638ebbeeab}"
-    call :bcd.reset
-    :: edit menu [ 06 ] Bob.Omb’s Modified Win10PEx64 UEFI
-    set "bootfile=\WIM\BobW10PE.wim"
-    set "identifier={dfbac4eb-329a-4665-a876-568ae3f1f3c4}"
-    call :bcd.reset
-    :: edit menu [ 07 ] Setup Windows from sources                   Wim & ISO
-    set "bootfile=\WIM\bootisox64.wim"
-    set "identifier={d314f67b-45b3-4dac-b244-46a733f2583c}"
-    call :bcd.reset
-    :: --------------------------------------------------------------------------
-    echo.& echo %_lang0005_%
-    :: edit menu [ 01 ] Win10PE SE                x86 UEFI
-    set "bootfile=\WIM\w10pe32.wim"
-    set "identifier={8b08eb1f-1588-45d5-9327-a8c3c9af04cb}"
-    call :bcd.reset
-    :: edit menu [ 02 ] Win8PE                    x86 UEFI
-    set "bootfile=\WIM\w8pe32.wim"
-    set "identifier={1d17bd3f-8d1f-45af-98ff-fde29926a9c5}"
-    call :bcd.reset
-    :: edit menu [ 03 ] Win10PE SE                x86 UEFI           DLC Boot
-    set "bootfile=\DLC1\W10PE\W10x86.wim"
-    set "identifier={0e695210-306a-45df-9a89-7710c2b80ed0}"
-    call :bcd.reset
-    :: edit menu [ 04 ] Win10PE SE                x86 UEFI           Strelec
-    set "bootfile=\SSTR\strelec10Eng.wim"
-    set "identifier={65fcaee2-301e-44b2-94ee-e8875e58f509}"
-    call :bcd.reset
-    :: edit menu [ 05 ] Setup Windows from sources                   Wim & ISO
-    set "bootfile=\WIM\bootisox86.wim"
-    set "identifier={2247cc17-b047-45e4-b2cd-d4196ff5d2fb}"
-    call :bcd.reset
-exit /b 0
-
-:bcd.reset
-    bcdedit /store %bcd% /set %identifier% device ramdisk=[%ducky%]%bootfile%,%Object% >nul
-    bcdedit /store %bcd% /set %identifier% osdevice ramdisk=[%ducky%]%bootfile%,%Object% >nul
-exit /b 0
-
-:grub2installer
-    cd /d "%bindir%"
-        7za x "grub2.7z" -o"%tmp%" -aos -y >nul
-        if exist "V:\" call :check.letter V:
-    :: create vhd disk
-    cd /d "%tmp%"
-        if exist "Grub2.vhd" del /s /q "Grub2.vhd" >nul
-        (
-            echo create vdisk file="%tmp%\Grub2.vhd" maximum=50 type=expandable
-            echo attach vdisk
-            echo create partition primary
-            echo format fs=fat32 label="Grub2"
-            echo assign letter=v
-        ) | diskpart
-    :: install grub2 for Legacy BIOS mode
-    if not "%~2"=="legacydisable" (
-        move /y "%ducky%\BOOT\grub\*.lst" "%ducky%\BOOT" >nul
-        cd /d "%tmp%\grub2"
-            grub-install --target=i386-pc --force --boot-directory=%ducky%\BOOT \\.\physicaldrive%disk%
-        move /y "%ducky%\BOOT\*.lst" "%ducky%\BOOT\grub" >nul
-        cd /d "%tmp%\grub2\i386-pc"
-            copy "lnxboot.img" "%ducky%\BOOT\grub\i386-pc" /y >nul
-        cd /d "%ducky%\BOOT\grub\i386-pc"
-            copy /b lnxboot.img+Core.img g2ldr
-    )
-    :: install grub2 for EFI mode
-    cd /d "%tmp%\grub2"
-        grub-install --target=x86_64-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
-        grub-install --target=i386-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
-    cd /d "%ducky%\EFI\BOOT\backup"
-        if not exist Grub2 mkdir Grub2
-    cd /d "V:\EFI\BOOT"
-        :: copy to multiboot data partition
-        copy "BOOTIA32.EFI" "%ducky%\EFI\BOOT\grubia32.efi" /y >nul
-        copy "BOOTX64.EFI"  "%ducky%\EFI\BOOT\grubx64.efi"  /y >nul
-        copy "grub.efi"     "%ducky%\EFI\BOOT\grub.efi"     /y >nul
-        :: make backup
-        copy "BOOTIA32.EFI" "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootia32.efi" /y >nul
-        copy "BOOTX64.EFI"  "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootx64.efi"  /y >nul
-        copy "grub.efi"     "%bindir%\secureboot\EFI\Boot\backup\Grub2\grub.efi"     /y >nul
-    cd /d "%bindir%\secureboot\EFI\Boot\backup"
-        copy "Grub2" "%ducky%\EFI\BOOT\backup\Grub2" /y >nul
-    cd /d "%tmp%"
-        (
-            echo select vdisk file="%tmp%\Grub2.vhd"
-            echo detach vdisk
-        ) | diskpart
-        del /s /q "Grub2.vhd" >nul
-    cd /d "%bindir%"
-exit /b 0
-
-:clean.bye
-call :colortool
-for /f "delims=" %%f in (hide.list) do (
-    if exist "%ducky%\%%f"     attrib +s +h "%ducky%\%%f"
-    if exist "%ducky%\ISO\%%f" attrib +s +h "%ducky%\ISO\%%f"
-    if exist "%ducky%\WIM\%%f" attrib +s +h "%ducky%\WIM\%%f"
-)
-cd /d "%tmp%\partassist"
-    if "%processor_architecture%"=="x86" (
-        SetupGreen32 -u >nul
-        LoadDrv_Win32 -u >nul
-    ) else (
-        SetupGreen64 -u >nul
-        LoadDrv_x64 -u >nul
-    )
-cd /d "%tmp%"
-    :: clean up the trash and exit
-    set "dlist=colortool curl driveprotect gdisk grub2 partassist rEFInd rEFInd_themes"
-    for %%d in (%dlist%) do (
-        if exist "%%d" rmdir "%%d" /s /q >nul
-    )
-    set "flist=hide.vbs Output.log qemuboottester.exe wincdemu.exe *wget*"
-    for %%f in (%flist%) do (
-        if exist "%%f" del "%%f" /s /q >nul
-    )
-    > thanks.vbs (
-        echo Dim Message, Speak
-        echo Set Speak=CreateObject^("sapi.spvoice"^)
-        echo Speak.Speak "Successful! Thank you for using Multiboot Toolkit"
-    )
-    cls
-    echo.
-    echo %_lang0012_%
-    echo %_lang0013_%
-    if exist "%systemroot%\SysWOW64\Speech\SpeechUX\sapi.cpl" start thanks.vbs
-    timeout /t 3 >nul
-    del /s /q thanks.vbs >nul
-    exit
-exit /b 0
-
-:: end function
