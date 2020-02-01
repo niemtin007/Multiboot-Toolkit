@@ -122,7 +122,7 @@ cd /d "%ducky%\BOOT\grub"
         echo     }
         echo fi
         echo.
-        echo if [ -e "/BOOT/bootmgr/disk.mbr" ]; then
+        echo if [ -e ^(hd0,msdos1^)/* ]; then
         echo    if [ -e "/SSTR/bootmgr" ]; then
         echo    menuentry "%_config0104_%" --class strelec {
         echo        search --file /SSTR/bootmgr --set=root
@@ -344,7 +344,7 @@ exit /b 0
     echo    fi
     echo fi
     echo if [ "${grub_platform}" == "pc" ]; then
-    echo     if [ -e "/BOOT/bootmgr/disk.mbr" ]; then
+    echo     if [ -e ^(hd0,msdos1^)/* ]; then
     echo     menuentry "%_config0106_%" --class win8 {
     echo         search --file /BOOT/bootmgr/bootmgr --set=root
     echo         insmod ntldr
@@ -383,7 +383,7 @@ exit /b 0
     echo fi
     echo.
     echo if [ "${grub_platform}" == "pc" ]; then
-    echo    if [ -e "/BOOT/bootmgr/disk.mbr" ]; then
+    echo    if [ -e ^(hd0,msdos1^)/* ]; then
     echo        if [ -e "/bootmgr" ]; then
     echo           menuentry "%_config0101_%" --class winusb {
     echo               search --file /bootmgr --set=root
@@ -419,7 +419,7 @@ exit /b 0
 :: Legacy BIOS Mode Menu
 >>"main.cfg" (
     echo if [ "${grub_platform}" == "pc" ]; then
-    echo    if [ -e "/BOOT/bootmgr/disk.mbr" ]; then
+    echo    if [ -e ^(hd0,msdos1^)/* ]; then
     echo       menuentry "%_config0102_%" --class syslinux {
     echo           chainloader /Boot/Syslinux/syslinux.bin
     echo       }
@@ -481,7 +481,7 @@ exit /b 0
     echo    }
     echo fi
     echo if [ "${grub_platform}" == "pc" ]; then
-    echo    if [ -e "/BOOT/bootmgr/disk.mbr" ]; then
+    echo    if [ -e ^(hd0,msdos1^)/* ]; then
     echo       menuentry "%_config0127_%" --class win {
     echo           search --file /BOOT/HDD --set=root/BOOT
     echo           insmod ntldr

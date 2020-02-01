@@ -10,7 +10,6 @@
 * Fixed installer script for Virtual Disk & USB in the Turkish system language
 * Added more modules (AOMEI Backupper, TrueImage 2020, Bob.Ombs.Win10PEx64...)
 * Supported to update Grub4dos automatic with the batch script
-* Supported Turkish & Vietnamese language in Grub2 file Manager (thanks to A1ive)
 * Fixed bug in the grub2 installer script for GPT disk
 * Supported script to create a new WIM menu in the WinPE Boot Manager
 * Supported Simplified Chinese language (thanks to A1ive)
@@ -21,6 +20,8 @@
 * Disabled SpVoice on Windows lite, added more grub2 themes
 * Supported install Windows from ISO directly (thanks to A1ive)
 * Supported script to update grub2 and grubfm automatic (thanks to By_FaRuK)
+* Supported to boot Linux Distro live ISO via partnew - Easy2Boot method
+  (thanks to Steve6375 & A1ive)
   ------------------------------------------------------------------------------
 
 

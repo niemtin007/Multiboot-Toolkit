@@ -1,8 +1,8 @@
 @echo off
 
-rem >> https://niemtin007.blogspot.com
-rem >> The batch file is written by niemtin007.
-rem >> Thank you for using Multiboot Toolkit.
+:: https://niemtin007.blogspot.com
+:: The batch file is written by niemtin007.
+:: Thank you for using Multiboot Toolkit.
 
 if exist "%ducky%\BOOT\lang" (
     for /f "delims=" %%b in (%ducky%\BOOT\lang) do set "lang=%%b"
@@ -18,16 +18,16 @@ if "%lang%"=="Vietnam" (
     set "langfm=vi_VN"
     set "langpa=en"
     set "langcode=9"
-    rem set "langpa=vn"
-    rem set "langcode=42"
+    :: set "langpa=vn"
+    :: set "langcode=42"
     goto :Vietnam
 )
 if "%lang%"=="Turkish" (
     set "langfm=tr_TR"
     set "langpa=en"
     set "langcode=9"
-    rem set "langpa=tr"
-    rem set "langcode=31"
+    :: set "langpa=tr"
+    :: set "langcode=31"
     goto :Turkish
 )
 if "%lang%"=="SimplifiedChinese" (
@@ -37,7 +37,7 @@ if "%lang%"=="SimplifiedChinese" (
     goto :SimplifiedChinese
 )
 
-rem auto detect system language
+:: auto detect system language
 for /f "tokens=3 delims= " %%b in (
     'reg query "hklm\system\controlset001\control\nls\language" /v Installlanguage'
 ) do set "langnum=%%b"
@@ -53,8 +53,8 @@ for /f "tokens=3 delims= " %%b in (
         set "langfm=vi_VN"
         set "langpa=en"
         set "langcode=9"
-        rem set "langpa=vn"
-        rem set "langcode=42"
+        :: set "langpa=vn"
+        :: set "langcode=42"
         goto :Vietnam
     )
     if "%langnum%"=="041F" (
@@ -62,8 +62,8 @@ for /f "tokens=3 delims= " %%b in (
         set "langfm=tr_TR"
         set "langpa=en"
         set "langcode=9"
-        rem set "langpa=tr"
-        rem set "langcode=31"
+        :: set "langpa=tr"
+        :: set "langcode=31"
         goto :Turkish
     )
     if "%langnum%"=="0804" (
@@ -76,7 +76,7 @@ for /f "tokens=3 delims= " %%b in (
 
 
 :English
-rem >> common language variable
+:: common language variable
 set "_lang0000_=^>^> PLEASE CHANGE YOUR DRIVE LETTER X:\ TO THE OTHER"
 set "_lang0001_=^>^> Your operating system does not install in UEFI mode"
 set "_lang0002_=^>^> Press any key to continue without multi system function"
@@ -98,7 +98,7 @@ set "_lang0017_=^                   [ 1 ] CREATE A BOOTABLE DISK"
 set "_lang0018_=^                   [ 2 ] INSTALL THE MODULES"
 set "_lang0019_=^                   [ 3 ] CUSTOM THE MULTIBOOT DEVICE"
 set "_lang0020_=> Please make a choice: "
-rem >> [ 01 ] Install Multiboot
+:: [ 01 ] Install Multiboot
 set "_lang0101_=Disk Number [ ? ] = "
 set "_lang0102_=Multiboot Toolkit only allows you to install on an external drive."
 set "_lang0103_=press any key to choose again..."
@@ -126,7 +126,7 @@ set "_lang0124_=--> Disable boot into Legacy BIOS mode  (recommend) [ y/n ] > "
 set "_lang0125_=--^> Sorry, this feature is not supported on Windows 7"
 set "_lang0126_=*  A disk format warning messenger may appear now because BIOS Boot    Partition is not a Windows disk type format."
 set "_lang0127_=*  You can close it by clicking the "Cancel" button, or you do not     need to do anything."
-rem >> [ 02 ] Install Modules
+:: [ 02 ] Install Modules
 set "_lang0200_=^>^> Default module directory is:"
 set "_lang0201_=^>^> All modules will be installed to"
 set "_lang0202_=^>^> Please put all modules you need into the "Modules" folder."
@@ -150,20 +150,20 @@ set "_lang0221_=>> Do you want to access to the modules list [ y/n ] > "
 set "_lang0222_=^>^> Modules you choose are not supported"
 set "_lang0223_=>> Do you want to install PortableApps.com Platform? [ y/n ] >"
 set "_lang0224_=^>^> Installing Grub2 File Manager..."
-rem >> [ 03 ] Change Grub2 Theme
+:: [ 03 ] Change Grub2 Theme
 set "_lang0300_=Current Grub2 theme:"
 set "_lang0301_=Choose theme [ ? ]  = "
-rem >> [ 04 ] Change rEFInd Theme
+:: [ 04 ] Change rEFInd Theme
 set "_lang0400_=^>^>  Current rEFInd theme:"
 set "_lang0401_=^>^>  Choose theme [ ? ]  = "
 set "_lang0402_=^>^> Installing icons..."
-rem >> [ 05 ] Update Multiboot Device
+:: [ 05 ] Update Multiboot Device
 set "_lang0500_=^>^> Run [ 01 ] Install Multiboot.bat to reinstall"
 set "_lang0501_=^>^> This is not higher version, doesn't need to update"
 set "_lang0502_=^>^> Press any key to exit..."
 set "_lang0503_=> Do you want to reinstall Grub2 Bootloader? [ y/n ] > "
 set "_lang0504_=^  Reinstalling Grub2 Bootloader..."
-rem >> [ 06 ] Install rEFInd (UEFI mode)
+:: [ 06 ] Install rEFInd (UEFI mode)
 set "_lang0600_=> Do you want to download the last release of the rEFInd? [y/n]"
 set "_lang0601_=^>^> The browser is going to open in a few seconds. Please wait..."
 set "_lang0603_=               [ 1 ] Update rEFInd for Multiboot USB                                       (For USB or External Hard Drive)"
@@ -175,7 +175,7 @@ set "_lang0608_=^>^> You can not choose this option, rEFInd just support for UEF
 set "_lang0609_=>  Confirm to install the rEFInd to EFI System Partition [ y/n ] > "
 set "_lang0610_=^   Successful..."
 set "_lang0611_=> Edit UEFI boot entries with EasyUEFI [ y/n ] >"
-rem >> [ 07 ] Install Clover (UEFI mode)
+:: [ 07 ] Install Clover (UEFI mode)
 set "_lang0700_=> Download the last release of the Clover [ y/n ]"
 set "_lang0701_=^>^> The browser is going to open in a few seconds. Please wait..."
 set "_lang0702_=> Make config.plist with Cloud Clover Editor  [y/n]"
@@ -193,7 +193,7 @@ set "_lang0713_=^>^> You can not choose this option, Clover just support for UEF
 set "_lang0714_=>  Confirm to install the Clover to EFI System Partition [ y/n ] > "
 set "_lang0715_=^   Successful..."
 set "_lang0716_=> Edit UEFI boot entries with EasyUEFI [ y/n ] >"
-rem >> [ 08 ] extra features
+:: [ 08 ] extra features
 set "_lang0800_=*               Do you want to add new menu? (y/n) > "
 set "_lang0801_=^>^>     Example WinPE Legacy BIOS entries"
 set "_lang0802_=^>^>     Example WinPE UEFI entries"
@@ -223,7 +223,7 @@ set "_lang0826_=Edit WinPE Boot Manager    "
 set "_lang0827_=Edit WinSetupFromUSB Menu  "
 set "_lang0828_=Update Grub2-filemanager   "
 set "_lang0829_=Fix/Update Bootloader "
-set "_lang0830_=Unhide Data Partition "
+set "_lang0830_=Download OneFileLinux "
 set "_lang0831_=Ease and Convert disk "
 set "_lang0832_=NTFS Drive Protect    "
 set "_lang0833_=Change Language       "
@@ -232,21 +232,21 @@ set "_lang0835_=Update Multiboot      "
 set "_lang0836_=Sort Grub2 Menu       "
 set "_lang0837_=> Do you want to update grub4dos? [ y/n ] > "
 set "_lang0838_=# Please input menu order (a b c ..) > "
-rem >> [ 09 ] Set default boot for UEFI mode
+:: [ 09 ] Set default boot for UEFI mode
 set "_lang0900_=          ^>^> SET DEFAULT BOOTLOAER FOR UEFI MODE ^<^<"
 set "_lang0901_=      [ 1 ] Set Windows Boot Manager ^& rEFInd    (Secure Boot)"
 set "_lang0902_=      [ 2 ] Set Windows Boot Manager ^& Grub2     (Secure Boot)"
 set "_lang0903_=      [ 3 ] Set default for rEFInd Boot Manager  (Normal Boot)"
 set "_lang0904_=      [ 4 ] Set default for Grub2 Bootloader     (Normal Boot)"
 set "_lang0905_=Option"
-REM >> CHANGE GRUB2 CONFIG LANGUAGE
+:: CHANGE GRUB2 CONFIG LANGUAGE
 set "_config0000_=return to main menu"
 set "_config0001_=Loading..."
 set "_config0002_=(extracted)"
 set "_config0003_=Please wait..."
 set "_config0004_=Loading initrd..."
 set "_config0005_=Loading linux..."
-rem >> main config
+:: main config
 set "_config0100_=Boot WinPE Boot Manager UEFI"
 set "_config0101_=WinSetupFromUSB Boot Manager"
 set "_config0102_=Load Syslinux Bootloader"
@@ -281,7 +281,7 @@ set "_config0130_=Install Windows XP/2000/2003"
 set "_config0131_=Boot rEFInd Boot Manager UEFI"
 set "_config0132_=Press to list all WIM files"
 set "_config0133_=Install Windows from ISO files"
-rem >> partition config
+:: partition config
 set "_config0200_=Live Xp Kxpe"
 set "_config0201_=Hirens Boot DVD 15.2 Restored Edition v1.1"
 set "_config0202_=Easy Recovery Essentials Pro-Windows XP"
@@ -322,7 +322,7 @@ goto :eof
 
 
 :Vietnam
-rem >> common language variable
+:: common language variable
 set "_lang0000_=^>^> VUI LÒNG THAY ĐỔI TÊN Ổ ĐĨA X:\ SANG TÊN KHÁC"
 set "_lang0001_=^>^> Hệ điều hành của bạn không cài đặt với chế độ UEFI"
 set "_lang0002_=^>^> Chức năng hỗ trợ đa hệ đều hành sẽ không dùng được trên máy này"
@@ -344,7 +344,7 @@ set "_lang0017_=^                        [ 1 ] TẠO USB/HDD BOOT"
 set "_lang0018_=^                        [ 2 ] TÍCH HỢP MODULE"
 set "_lang0019_=^                        [ 3 ] TÙY CHỈNH"
 set "_lang0020_=> Vui lòng chọn: "
-rem >> [ 01 ] Install Multiboot
+:: [ 01 ] Install Multiboot
 set "_lang0101_=Nhập số thứ tự của thiết bị [ ? ] = "
 set "_lang0102_=CẢNH BÁO: SỐ THỨ TỰ BẠN NHẬP KHÔNG PHẢI LÀ THIẾT BỊ GẮN NGOÀI"
 set "_lang0103_=bấm phím bất kỳ để chọn lại..."
@@ -372,7 +372,7 @@ set "_lang0124_=--> Vô hiệu hóa khởi động ở chế độ Legacy   (đ�
 set "_lang0125_=--^> Xin lỗi, tính năng này không được hỗ trợ trên Windows 7"
 set "_lang0126_=*  Có thể Windows sẽ yêu cầu bạn định dạng lại ổ đĩa bởi vì phân       vùng khởi động BIOS không phải là một định dạng của Windows."
 set "_lang0127_=*  Bạn không cần phải làm gì cả, hoặc có thể tắt nó sau cũng được."
-rem >> [ 02 ] Install Modules
+:: [ 02 ] Install Modules
 set "_lang0200_=^>^> Thư mục module mặc định là:"
 set "_lang0201_=^>^> Tất cả Module sẽ được cài đặt vào"
 set "_lang0202_=^>^> Vui lòng đặt tất cả module bạn muốn vào folder "Modules" "
@@ -396,20 +396,20 @@ set "_lang0221_=>> Bạn có muốn mở danh sách module không? [ y/n ] > "
 set "_lang0222_=^>^> Module mà bạn chọn không được hỗ trợ"
 set "_lang0223_=>> Bạn có muốn cài trình quản lý PortableApps không? [ y/n ] >"
 set "_lang0224_=^>^> Đang cài đặt trình quản lý Grub2..."
-rem >> [ 03 ] Change Grub2 Theme
+:: [ 03 ] Change Grub2 Theme
 set "_lang0300_=Giao diện hiện tại của Grub2:"
 set "_lang0301_=Chọn gói giao diện [ ? ]  = "
-rem >> [ 04 ] Change rEFInd Theme
+:: [ 04 ] Change rEFInd Theme
 set "_lang0400_=^>^>  Giao diện hiện tại của rEFInd:"
 set "_lang0401_=^>^>  Chọn gói giao diện [ ? ]  = "
 set "_lang0402_=^>^> Đang cài đặt icon..."
-rem >> [ 05 ] Update Multiboot Device
+:: [ 05 ] Update Multiboot Device
 set "_lang0500_=^>^> Chạy [ 01 ] Install Multiboot.bat để cài đặt lại"
 set "_lang0501_=^>^> Đây không phải là phiên bản cao hơn, không cần update"
 set "_lang0502_=^>^> Nhấn phím bất kỳ để thoát..."
 set "_lang0503_=> Bạn có muốn cài lại Grub2 Bootloader không? [ y/n ] > "
 set "_lang0504_=^  Đang cài đặt lại Grub2 Bootloader..."
-rem >> [ 06 ] Install rEFInd (UEFI mode)
+:: [ 06 ] Install rEFInd (UEFI mode)
 set "_lang0600_=> Bạn có muốn tải phiên bản mới nhất của rEFInd không? [y/n]"
 set "_lang0601_=^>^> Trình duyệt sẽ mở trong vòng vài giây nữa. Vui lòng chờ..."
 set "_lang0603_=               [ 1 ] Cập nhật rEFInd cho Multiboot USB                                        (USB hoặc ổ cứng gắn ngoài)"
@@ -421,7 +421,7 @@ set "_lang0608_=^>^> Bạn không thể chọn lựa chọn này, rEFInd chỉ h
 set "_lang0609_=>   Xác nhận cài đặt rEFInd vào phân vùng EFI của hệ thống [ y/n ] > "
 set "_lang0610_=^   Thành công..."
 set "_lang0611_=> Thêm và chỉnh sửa menu của UEFI với EasyUEFI [ y/n ] >"
-rem >> [ 07 ] Install Clover (UEFI mode)
+:: [ 07 ] Install Clover (UEFI mode)
 set "_lang0700_=> Bạn có muốn tải phiên bản mới nhất của Clover không? [y/n]"
 set "_lang0701_=^>^> Trình duyệt sẽ mở trong vòng vài giây nữa. Vui lòng chờ..."
 set "_lang0702_=> Tạo config.plist với Cloud Clover Editor [y/n]"
@@ -439,7 +439,7 @@ set "_lang0713_=^>^> Bạn không thể chọn lựa chọn này, rEFInd chỉ h
 set "_lang0714_=>   Xác nhận cài đặt Clover vào phân vùng EFI của hệ thống [ y/n ] > "
 set "_lang0715_=^   Thành công..."
 set "_lang0716_=> Thêm và chỉnh sửa menu của UEFI với EasyUEFI [ y/n ] >"
-rem >> [ 08 ] extra features
+:: [ 08 ] extra features
 set "_lang0800_=*            Bạn muốn tạo thêm một menu mới không? (y/n) > "
 set "_lang0801_=^>^>     Ví dụ tên các mục WinPE ở chế độ Legacy BIOS"
 set "_lang0802_=^>^>     Ví dụ tên các mục WinPE ở chế độ UEFI"
@@ -469,7 +469,7 @@ set "_lang0826_=Tùy chỉnh menu WinPE       "
 set "_lang0827_=Tùy chỉnh WinSetupFromUSB  "
 set "_lang0828_=Cập nhật Grub2-filemanager "
 set "_lang0829_=Sửa lỗi/cập nhật boot "
-set "_lang0830_=Hiện phân vùng data   "
+set "_lang0830_=Tải thêm OneFileLinux "
 set "_lang0831_=Xóa và chuyển đổi đĩa "
 set "_lang0832_=Bảo vệ phân vùng NTFS "
 set "_lang0833_=Thay đổi ngôn ngữ     "
@@ -478,21 +478,21 @@ set "_lang0835_=Cập nhật Multiboot    "
 set "_lang0836_=Sắp xếp menu Grub2    "
 set "_lang0837_=> Bạn có muốn cập nhật grub4dos không? [ y/n ] > "
 set "_lang0838_=# Nhập thứ tự menu của grub2 (a b c ..) > "
-rem >> [ 09 ] Set default boot for UEFI mode
+:: [ 09 ] Set default boot for UEFI mode
 set "_lang0900_=       ^>^> CÀI ĐẶT BOOTLOADER MẶC ĐỊNH CHO CHẾ ĐỘ UEFI ^<^<"
 set "_lang0901_=   [ 1 ] Sử dụng cả Windows Boot Manager ^& rEFInd    (Secure Boot)"
 set "_lang0902_=   [ 2 ] Sử dụng cả Windows Boot Manager ^& Grub2     (Secure Boot)"
 set "_lang0903_=   [ 3 ] Chỉ sử dụng rEFInd Boot Manager             (Normal Boot)"
 set "_lang0904_=   [ 4 ] Chỉ sử dụng Grub2 Bootloader                (Normal Boot)"
 set "_lang0905_=Lựa chọn của bạn"
-REM >> CHANGE GRUB2 CONFIG LANGUAGE
+:: CHANGE GRUB2 CONFIG LANGUAGE
 set "_config0000_=trở về menu chính"
 set "_config0001_=Đang tải..."
 set "_config0002_=(extracted)"
 set "_config0003_=Vui lòng chờ..."
 set "_config0004_=Đang tải initrd..."
 set "_config0005_=Đang tải linux..."
-rem >> main config
+:: main config
 set "_config0100_=Chạy trình quản lý WinPE cho UEFI"
 set "_config0101_=Trình quản lý cho WinSetupFromUSB"
 set "_config0102_=Khởi chạy Syslinux Bootloader"
@@ -526,7 +526,7 @@ set "_config0129_=Cài đặt Windows 7-8-10 (ISO-Wim)"
 set "_config0130_=Cài đặt Windows XP/2000/2003"
 set "_config0132_=Chọn để tìm tệp WIM"
 set "_config0133_=Cài Windows trực tiếp từ ISO"
-rem >> partition config
+:: partition config
 set "_config0200_=Live Xp Kxpe"
 set "_config0201_=Hirens Boot DVD 15.2 Restored Edition v1.1"
 set "_config0202_=Easy Recovery Essentials Pro-Windows XP"
@@ -567,8 +567,8 @@ goto :eof
 
 
 :Turkish
-rem >> translated by Tayfun Akkoyun
-rem >> common language variable
+:: translated by Tayfun Akkoyun
+:: common language variable
 set "_lang0000_=^>^> LUTFEN SURUCU HARFINI X:\ DIGER SURUCU HARFLERI ILE DEGISTIRIN"
 set "_lang0001_=^>^> Isletim sisteminiz UEFI modunda yuklenemiyor"
 set "_lang0002_=^>^> Coklu sistem fonksiyonu olmadan devam etmek icin herhangi bir tusa basin"
@@ -586,11 +586,11 @@ set "_lang0013_=^>^> Multiboot Toolkit'i kullandiginiz icin tesekkur ederiz ^^^^
 set "_lang0014_=^> Lutfen bekleyin..."
 set "_lang0015_=Moduller kopyalaniyor. Lutfen Bekleyin..."
 set "_lang0016_=^> Kurulum Dilini Seciniz [ ? ] = "
-set "_lang0017_=^                   [ 1 ] ÖNYüKLENEBILIR DISK OLUşTUR"
-set "_lang0018_=^                   [ 2 ] MODüLLERI KUR"
-set "_lang0019_=^                   [ 3 ] MULTIBOOT AYGıTı ÖZELLEşTIR"
+set "_lang0017_=^                   [ 1 ] Multiboot Toolkiti Kur"
+set "_lang0018_=^                   [ 2 ] Modül/Modülleri Kur"
+set "_lang0019_=^                   [ 3 ] Multiboot Toolkit i Özelleştirme  Menüsü"
 set "_lang0020_=> Lütfen bir seçim yapın: "
-rem >> [ 01 ] Install Multiboot
+:: [ 01 ] Install Multiboot
 set "_lang0101_=Disk Numarasi [ ? ] = "
 set "_lang0102_=HATA:SECTIGINIZ SURUCU,BİR USB SURUCU DEGIL"
 set "_lang0103_=Tekrar secmek icin herhangi bir tusa basin..."
@@ -618,7 +618,7 @@ set "_lang0124_=--> Eski Legacy BIOS modunda önyüklemeyi devre dışı bırak 
 set "_lang0125_=--^> Üzgünüm,bu özellik Windows7 de desteklenmiyor."
 set "_lang0126_=*  BIOS Önyükleme Bölümü Windows disk türü biçiminde olmadığından,     şimdi bir disk formatı uyarı mesajı görüntülenebilir. "
 set "_lang0127_=*  "İptal" düğmesini tıklatarak kapatabilirsiniz veya herhangi bir     şey yapmanıza gerek yoktur."
-rem >> [ 02 ] Install Modules
+:: [ 02 ] Install Modules
 set "_lang0200_=^>^> Varsayilan Module dizini:"
 set "_lang0201_=^>^> Tum moduller yuklenecek"
 set "_lang0202_=^>^> Lutfen ihtiyaciniz olan tum modulleri "Modules" klasorune koyunuz."
@@ -642,20 +642,20 @@ set "_lang0221_=>> Modül listesine ulaşmak istermisiniz? [ y/n ] > "
 set "_lang0222_=^>^> Seçtiğiniz modüller desteklenmiyor"
 set "_lang0223_=>> PortableApps.com Platformunu kurmak istermisiniz? [ y/n ] >"
 set "_lang0224_=^>^> Grub2 Dosya Yöneticisi kuruluyor..."
-rem >> [ 03 ] Change Grub2 Theme
+:: [ 03 ] Change Grub2 Theme
 set "_lang0300_=Su anki Grub2 Temasi:"
 set "_lang0301_=Temayi secin [ ? ]  = "
-rem >> [ 04 ] Change rEFInd Theme
+:: [ 04 ] Change rEFInd Theme
 set "_lang0400_=^>^>  Mevcut rEFInd temasi:"
 set "_lang0401_=^>^>  Temayi secin [ ? ]  = "
 set "_lang0402_=^>^> Simgeler yukleniyor..."
-rem >> [ 05 ] Update Multiboot USB
+:: [ 05 ] Update Multiboot USB
 set "_lang0500_=^>^> Yeniden kurulum icin [01] Install Multiboot.bat dosyasini calistirin"
 set "_lang0501_=^>^> Bu surum en yeni surum, guncelleme gerektirmiyor"
 set "_lang0502_=^>^> Cikmak icin herhangi bir tusa basin..."
 set "_lang0503_=> Grub2 Bootloader ı tekrar kurmak istermsiniz? [ y/n ] > "
 set "_lang0504_=^  Grub2 Bootloader tekrar kuruluyor..."
-rem >> [ 06 ] Install rEFInd(UEFI Mode)
+:: [ 06 ] Install rEFInd(UEFI Mode)
 set "_lang0600_=> rEFInd'in son surumunu indirmek ister misiniz? [ y/n ]"
 set "_lang0601_=^>^> Browser bir kac saniye icinde indirme sayfasina yonlendirilecek,Lutfen bekleyin..."
 set "_lang0603_=        [ 1 ] Multiboot Toolkit USB surucusundeki rEFInd                            in surumunu GUNCELLESTIR!"
@@ -667,7 +667,7 @@ set "_lang0608_=^>^> Bu secenegi secemezsiniz! rEFInd sadece UEFI modu icin dest
 set "_lang0609_=> EFI Sistemi Bolumune (ESP) rEFInd'i kurmak icin Enter tusuna basin..."
 set "_lang0610_=^    Kurulum Basarili..."
 set "_lang0611_=> EasyUEFI ile UEFI onyukleme girislerini duzenlemek icin [ y/n ] >"
-rem >> [ 07 ] Install Clover (UEFI mode)
+:: [ 07 ] Install Clover (UEFI mode)
 set "_lang0700_=> Clover'in en son surumunu indirmek ister misiniz? [y/n]"
 set "_lang0701_=^>^> Browser bir kac saniye icinde indirme sayfasina yonlendirilecek,Lutfen bekleyin..."
 set "_lang0702_=> Cloud Clover Editor ile config.plist duzenlemek istermisiniz? [y/n]"
@@ -685,7 +685,7 @@ set "_lang0713_=^>^> Bu secenegi secemezsiniz, Clover sadece UEFI moduna destek 
 set "_lang0714_=> Clover'i EFI Sistem Bolumune (ESP) yuklemek icin Enter tusuna basin..."
 set "_lang0715_=^   Kurulum Basarili..."
 set "_lang0716_=> EasyUEFI ile UEFI onyukleme girislerini duzenlemek icin [ y/n ] >"
-rem >> [ 08 ] extra features
+:: [ 08 ] extra features
 set "_lang0800_=*          Yeni menü seçeneği eklemek istermisiniz? (y/n) > "
 set "_lang0801_=^>^>     Örnek WinPE Legacy BIOS seçenekleri"
 set "_lang0802_=^>^>     Örnek WinPE UEFI seçenekleri"
@@ -715,7 +715,7 @@ set "_lang0826_=WinPE Menüsünü Düzenle  "
 set "_lang0827_=Winsetupfromusb düzenle "
 set "_lang0828_=Grub2 File Manager                                                    Güncelle                "
 set "_lang0829_=Bootloader'ı Onar     "
-set "_lang0830_=Data Partisyonunu göster"
+set "_lang0830_=OneFileLinux'u indirin"
 set "_lang0831_=Partisyonları sil-dönüştür"
 set "_lang0832_=NTFS sürücü koruması  "
 set "_lang0833_=Dil değiştir          "
@@ -724,21 +724,21 @@ set "_lang0835_=Multiboot'u Güncelle  "
 set "_lang0836_=Grub2 Menüyü Sırala   "
 set "_lang0837_=> Grub4DOS güncellensin mi? [ y/n ] > "
 set "_lang0838_=# Menü sıralamasını girin(Örneğin; a b ..) > "
-rem >> [ 09 ] Set default boot for UEFI mode
+:: [ 09 ] Set default boot for UEFI mode
 set "_lang0900_=       ^>^> VARSAYILAN BOOTLOADER I AYARLAMA EKRANI[UEFI MODDA] ^<^<"
 set "_lang0901_=[ 1 ] ESP1 i Windows Boot Manager ^& ESP2 yi rEFInd olarak ayarla (Secure Boot)"
 set "_lang0902_=[ 2 ] ESP1 i Windows Boot Manager ^& ESP2 yi Grub2  olarak ayarla (Secure Boot)"
 set "_lang0903_=[ 3 ] ESP1 i rEFInd  Boot Manager olarak ayarla                  (Normal Boot)"
 set "_lang0904_=[ 4 ] ESP1 i Grub2   Boot Manager olarak ayarla                  (Normal Boot)"
 set "_lang0905_=Seciminiz"
-REM >> CHANGE GRUB2 CONFIG LANGUAGE
+:: CHANGE GRUB2 CONFIG LANGUAGE
 set "_config0000_=Ana Menuye Don"
 set "_config0001_=Yukleniyor..."
 set "_config0002_=(Aciliyor)"
 set "_config0003_=Lutfen bekleyin..."
 set "_config0004_=initrd Yukleniyor..."
 set "_config0005_=linux Yukleniyor..."
-rem >> main config
+:: main config
 set "_config0100_=UEFI LIVE PE(WinPE) Sistemler Menusu"
 set "_config0101_=WinSetupFromUSB Boot Manager Menusu"
 set "_config0102_=Syslinux Bootloaderi Yukle..."
@@ -772,7 +772,7 @@ set "_config0129_=Kur Windows 7-8-10 (ISO-WIM Method)"
 set "_config0130_=Kur Windows XP/2000/2003"
 set "_config0132_=Tüm WIM Dosyalarını Listele"
 set "_config0133_=Windows ISO Imajlari Menusu"
-rem >> partition config
+:: partition config
 set "_config0200_=Live Xp Kxpe"
 set "_config0201_=Hirens Boot DVD 15.2 Restored Edition v1.1"
 set "_config0202_=Easy Recovery Essentials Pro-Windows XP"
@@ -813,8 +813,8 @@ goto :eof
 
 
 :SimplifiedChinese
-rem >> translated by A1ive
-rem >> common language variable
+:: translated by A1ive
+:: common language variable
 set "_lang0000_=^>^> 请将你的盘符从 X:\ 修改为其他"
 set "_lang0001_=^>^> 操作系统未以 UEFI 模式安装"
 set "_lang0002_=^>^> 按任意键以不带多系统功能的方式继续"
@@ -836,7 +836,7 @@ set "_lang0017_=^                   [ 1 ] CREATE A BOOTABLE DISK"
 set "_lang0018_=^                   [ 2 ] INSTALL THE MODULES"
 set "_lang0019_=^                   [ 3 ] CUSTOM THE MULTIBOOT DEVICE"
 set "_lang0020_=> Please make a choice: "
-rem >> [ 01 ] Install Multiboot
+:: [ 01 ] Install Multiboot
 set "_lang0101_=磁盘编号 [ ? ] = "
 set "_lang0102_=Multiboot Toolkit 仅支持安装到可移动磁盘上."
 set "_lang0103_=按任意键以再次选择..."
@@ -864,7 +864,7 @@ set "_lang0124_=--> 禁用 Legacy BIOS 启动模式 (推荐) [ y/n ] > "
 set "_lang0125_=--^> 抱歉, Windows 7 不支持此特性"
 set "_lang0126_=*  由于 BIOS 引导分区不是 Windows 磁盘类型格式，因此现在可能会出现磁盘格式警告消息."
 set "_lang0127_=*  你可以按"取消"关闭, 也可以不做任何处理."
-rem >> [ 02 ] Install Modules
+:: [ 02 ] Install Modules
 set "_lang0200_=^>^> 默认模块目录为:"
 set "_lang0201_=^>^> 所有模块将会被安装到"
 set "_lang0202_=^>^> 请将所有你需要的模块放到 "Modules" 文件夹下. "
@@ -888,20 +888,20 @@ set "_lang0221_=>> 是否获取模块列表 [ y/n ] > "
 set "_lang0222_=^>^> 不支持您选择的模块"
 set "_lang0223_=>> 是否安装 PortableApps.com 平台? [ y/n ] >"
 set "_lang0224_=^>^> 正在安装 Grub2 File Manager..."
-rem >> [ 03 ] Change Grub2 Theme
+:: [ 03 ] Change Grub2 Theme
 set "_lang0300_=当前 Grub2 主题:"
 set "_lang0301_=选择主题 [ ? ]  = "
-rem >> [ 04 ] Change rEFInd Theme
+:: [ 04 ] Change rEFInd Theme
 set "_lang0400_=^>^>  当前 rEFInd 主题:"
 set "_lang0401_=^>^>  选择主题 [ ? ]  = "
 set "_lang0402_=^>^> 正在安装图标..."
-rem >> [ 05 ] Update Multiboot Device
+:: [ 05 ] Update Multiboot Device
 set "_lang0500_=^>^> 运行 [ 01 ] Install Multiboot.bat 以重新安装"
 set "_lang0501_=^>^> 版本号较低，不需要更新"
 set "_lang0502_=^>^> 按任意键退出..."
 set "_lang0503_=> 是否重新安装 Grub2 启动管理器 [ y/n ] > "
 set "_lang0504_=^  正在重新安装 Grub2 启动管理器..."
-rem >> [ 06 ] Install rEFInd (UEFI mode)
+:: [ 06 ] Install rEFInd (UEFI mode)
 set "_lang0600_=> 是否下载最新版的 rEFInd? [ y/n ]"
 set "_lang0601_=^>^> 浏览器将会在几秒内打开.请稍候..."
 set "_lang0603_=            [ 1 ] 为多重启动U盘更新 rEFInd  (U盘或外置磁盘)"
@@ -913,7 +913,7 @@ set "_lang0608_=^>^> 不可选择此选项, rEFInd 仅支持 UEFI 模式"
 set "_lang0609_=>  确定将 rEFInd 安装到 EFI 系统分区 [ y/n ] > "
 set "_lang0610_=^   成功..."
 set "_lang0611_=> 键使用 EasyUEFI 编辑 UEFI 启动项 [ y/n ] >"
-rem >> [ 07 ] Install Clover (UEFI mode)
+:: [ 07 ] Install Clover (UEFI mode)
 set "_lang0700_=> 下载最新版 Clover [ y/n ]"
 set "_lang0701_=^>^> 浏览器将会在几秒内打开.请稍候..."
 set "_lang0702_=> 使用 Cloud Clover Editor 制作 config.plist  [y/n]"
@@ -931,7 +931,7 @@ set "_lang0713_=^>^> 不可选择此选项, Clover 仅支持 UEFI 模式"
 set "_lang0714_=> 确定将 Clover 安装到 EFI 系统分区 [ y/n ] > "
 set "_lang0715_=^   成功..."
 set "_lang0716_=> 键使用 EasyUEFI 编辑 UEFI 启动项 [ y/n ] >"
-rem >> [ 08 ] extra features
+:: [ 08 ] extra features
 set "_lang0800_=*               是否添加新的菜单? (y/n) > "
 set "_lang0801_=^>^>     WinPE Legacy BIOS 示例条目"
 set "_lang0802_=^>^>     WinPE UEFI 示例条目"
@@ -961,7 +961,7 @@ set "_lang0826_=编辑 WinPE 启动管理器          "
 set "_lang0827_=编辑 WinSetupFromUSB 菜单      "
 set "_lang0828_=更新 Grub2-filemanager         "
 set "_lang0829_=修复/更新启动引导 "
-set "_lang0830_=显示数据分区      "
+set "_lang0830_=下载 OneFileLinux"
 set "_lang0831_=释放并转换磁盘    "
 set "_lang0832_=NTFS 磁盘保护     "
 set "_lang0833_=更改语言          "
@@ -970,21 +970,21 @@ set "_lang0835_=更新多重启动      "
 set "_lang0836_=排序 Grub2 菜单   "
 set "_lang0837_=> 是否更新 grub4dos? [ y/n ] > "
 set "_lang0838_=# 请输入菜单顺序 (a b c ..) > "
-rem >> [ 09 ] Set default boot for UEFI mode
+:: [ 09 ] Set default boot for UEFI mode
 set "_lang0900_=               ^>^> 为 UEFI 模式设置默认启动管理器 ^<^<"
 set "_lang0901_=           [ 1 ] 设置 Windows 启动管理器 和 rEFInd    (安全启动)"
 set "_lang0902_=           [ 2 ] 设置 Windows 启动管理器 和 Grub2     (安全启动)"
 set "_lang0903_=           [ 3 ] 设置 默认为 rEFInd 启动管理器        (普通启动)"
 set "_lang0904_=           [ 4 ] 设置 默认为 Grub2 启动管理器         (普通启动)"
 set "_lang0905_=选项"
-REM >> CHANGE GRUB2 CONFIG LANGUAGE
+:: CHANGE GRUB2 CONFIG LANGUAGE
 set "_config0000_=返回主菜单"
 set "_config0001_=载入中..."
 set "_config0002_=(已解压)"
 set "_config0003_=请稍候..."
 set "_config0004_=正在加载 initrd..."
 set "_config0005_=正在加载 linux..."
-rem >> main config
+:: main config
 set "_config0100_=加载 UEFI WinPE 启动管理器"
 set "_config0101_=WinSetupFromUSB 启动管理器"
 set "_config0102_=加载 Syslinux 启动管理器"
@@ -1019,7 +1019,7 @@ set "_config0130_=安装 Windows XP/2000/2003"
 set "_config0131_=启动 rEFInd UEFI 启动管理器"
 set "_config0132_=按键以列出所有 WIM"
 set "_config0133_=从ISO文件安装Windows"
-rem >> partition config
+:: partition config
 set "_config0200_=Live Xp Kxpe"
 set "_config0201_=Hirens Boot DVD 15.2 Restored Edition v1.1"
 set "_config0202_=Easy Recovery Essentials Pro-Windows XP"
