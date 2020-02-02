@@ -18,16 +18,17 @@ if "%lang%"=="Vietnam" (
     set "langfm=vi_VN"
     set "langpa=en"
     set "langcode=9"
-    :: set "langpa=vn"
-    :: set "langcode=42"
+    rem set "langpa=vn"
+    rem set "langcode=42"
     goto :Vietnam
 )
+rem don't use "::" to comment in "()"
 if "%lang%"=="Turkish" (
     set "langfm=tr_TR"
     set "langpa=en"
     set "langcode=9"
-    :: set "langpa=tr"
-    :: set "langcode=31"
+    rem set "langpa=tr"
+    rem set "langcode=31"
     goto :Turkish
 )
 if "%lang%"=="SimplifiedChinese" (
