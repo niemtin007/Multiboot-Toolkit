@@ -479,6 +479,11 @@ exit /b 0
     echo        search -f /EFI/Microsoft/Boot/bootmgfw.efi -s root
     echo        chainloader /EFI/Microsoft/Boot/bootmgfw.efi
     echo    }
+    echo    if [ -e "/EFI/BOOT/OneFileLinux.efi" ]; then
+    echo        menuentry "One File Linux" --class icon-linux {
+    echo            chainloader /EFI/BOOT/OneFileLinux.efi
+    echo        }
+    echo    fi
     echo fi
     echo if [ "${grub_platform}" == "pc" ]; then
     echo    if [ -e ^(hd0,msdos1^)/* ]; then

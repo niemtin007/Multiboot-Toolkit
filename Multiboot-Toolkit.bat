@@ -26,7 +26,11 @@ if not exist "bin" (
 )
 
 :mainMenu
+
+set "title=Menu"
+
 call :colortool
+
 echo.
 echo =====================================================================
 echo %_lang0017_%
@@ -184,7 +188,7 @@ call :unhide.partition %mpart%
 call :colortool
 call :scan.label MULTIBOOT
     if "%ducky%"=="X:" (
-        7za x "data.7z" -o"X:\" -aoa -y
+        7z x "data.7z" -o"X:\" -aoa -y
     ) else (
         call :colortool
         echo. & echo %_lang0110_% & timeout /t 7 >nul
@@ -209,7 +213,7 @@ cd /d "%bindir%"
     :: install grub4dos
     xcopy "extra-modules\grub4dos\grldr" "X:\" /e /g /h /r /y /q >nul
     :: install wincdemu to mount iso files
-    7za x "wincdemu.7z" -o"X:\ISO\" -aoa -y >nul
+    7z x "wincdemu.7z" -o"X:\ISO\" -aoa -y >nul
     :: install Syslinux Bootloader
     syslinux --force --directory /BOOT/syslinux X: X:\BOOT\syslinux\syslinux.bin
     :: install grub2 Bootloader
@@ -218,20 +222,20 @@ cd /d "%bindir%"
     echo.
     echo %_lang0116_%
     call :grub2installer MULTIBOOT >nul 2>&1
-    7za x "extra-modules\grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y >nul
+    7z x "extra-modules\grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y >nul
     >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
     :: install language
     echo.
     echo %_lang0112_% %lang%
-    7za x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
+    7z x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
 cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
     echo.
     echo %_lang0111_% %rtheme%
     call :rEFInd.icons X:
     echo.
     echo %_lang0113_% %gtheme%
-    7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
-    7za x "%bindir%\grub2_themes\icons.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
+    7z x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
+    7z x "%bindir%\grub2_themes\icons.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
     call "%bindir%\config\main.bat"
 cd /d "%bindir%\secureboot\EFI\Microsoft\Boot"
     call :bcdautoset bcd
@@ -358,7 +362,7 @@ cd /d "%bindir%\ISO_Extract"
     goto :modules.specialiso
 :modules.extract
 cd /d "%bindir%"
-    7za x "wincdemu.7z" -o"%tmp%" -aoa -y >nul
+    7z x "wincdemu.7z" -o"%tmp%" -aoa -y >nul
     wincdemu /install
 cd /d "%ducky%\BOOT\namelist\temp"
     call :iso.extract aomei , AOMEI-Backup
@@ -496,7 +500,7 @@ cd /d "%ducky%\WIM"
 if not exist "%ducky%\WIM\bootx64.wim" if not exist "%ducky%\WIM\bootx86.wim" (
     if exist "%curpath%\*Wim*Sources*Module*.7z" (
         cls & echo. & echo %_lang0213_%
-        7za x "%curpath%\*Wim*Sources*Module*.7z" -o"%ducky%\" -aoa -y >nul
+        7z x "%curpath%\*Wim*Sources*Module*.7z" -o"%ducky%\" -aoa -y >nul
         cd /d "%bindir%\secureboot\EFI\Boot\backup\WinSetupISOWIM"
             if exist winsetupia32.efi copy winsetupia32.efi "%ducky%\EFI\BOOT" /y >nul
             if exist winsetupx64.efi  copy winsetupx64.efi "%ducky%\EFI\BOOT" /y >nul
@@ -538,7 +542,7 @@ cd /d "%ducky%\WIM"
     cd /d "%curpath%"
         if exist "*WinSetup*ISO*Module*.7z" (
             cls & echo. & echo %_lang0218_%
-            7za x "*WinSetup*ISO*Module*.7z" -o"%ducky%\WIM\" -aoa -y
+            7z x "*WinSetup*ISO*Module*.7z" -o"%ducky%\WIM\" -aoa -y
         )
     )
 
@@ -547,14 +551,14 @@ call :colortool
     set "list=grubfmia32.efi grubfmx64.efi grubfm.iso"
     if exist "%curpath%\grubfm-*.7z" (
         cls & echo. & echo %_lang0224_%
-        7za x "%curpath%\grubfm-*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
+        7z x "%curpath%\grubfm-*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
     )
 
 :: copy all *.exe module on multiboot
 cd /d "%curpath%"
     if exist "*portable.*" (
         cls & echo. & echo %_lang0219_%
-        7za x "*portable.*" -o"%ducky%\PortableApps\" -aoa -y >nul
+        7z x "*portable.*" -o"%ducky%\PortableApps\" -aoa -y >nul
     )
 :: return iso file to modules folder
 cd /d "%bindir%"
@@ -605,68 +609,65 @@ echo.
 echo =====================================================================
 echo %_lang0819_%
 echo =====================================================================
-echo  [ 01 ] = %_lang0821_% [ 09 ] = %_lang0829_%
-echo  [ 02 ] = %_lang0822_% [ 10 ] = %_lang0830_%
-echo  [ 03 ] = %_lang0823_% [ 11 ] = %_lang0831_%
-echo  [ 04 ] = %_lang0824_% [ 12 ] = %_lang0832_%
-echo  [ 05 ] = %_lang0825_% [ 13 ] = %_lang0833_%
-echo  [ 06 ] = %_lang0826_% [ 14 ] = %_lang0834_%
-echo  [ 07 ] = %_lang0827_% [ 15 ] = %_lang0835_%
-echo  [ 08 ] = %_lang0828_% [ 16 ] = %_lang0836_%
+echo  [ a ] = %_lang0821_%   [ i ] = %_lang0829_%
+echo  [ b ] = %_lang0822_%   [ j ] = %_lang0830_%
+echo  [ c ] = %_lang0823_%   [ k ] = %_lang0831_%
+echo  [ d ] = %_lang0824_%   [ l ] = %_lang0832_%
+echo  [ e ] = %_lang0825_%   [ m ] = %_lang0833_%
+echo  [ f ] = %_lang0826_%   [ n ] = %_lang0834_%
+echo  [ g ] = %_lang0827_%   [ o ] = %_lang0835_%
+echo  [ h ] = %_lang0828_%   [ p ] = %_lang0836_%
 echo =====================================================================
 echo.
-:: set default
-set "option=14"
-set /p option= "%_lang0905_% > "
-
-if "%option%"=="b" goto :mainMenu
+:: ----------------------------------------------
+:: a b c d e f g h i j  k  l  m  n  o  p  q
+:: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
+:: ----------------------------------------------
 if exist "%ducky%\EFI\Boot\usb.gpt" goto :usb.gpt
 if "%installed%"=="true"  goto :extra.online
 if "%installed%"=="false" goto :extra.offline
 
 :extra.online
-if "%option%"=="1"  call :grub2theme
-if "%option%"=="2"  call :rEFIndtheme
-if "%option%"=="3"  call :cloverinstaller
-if "%option%"=="4"  call :rEFIndInstaller
-if "%option%"=="5"  call :setdefaultboot
-if "%option%"=="6"  call :editWinPEbootmanager
-if "%option%"=="7"  call :editwinsetupfromUSB
-if "%option%"=="8"  call :grub2-filemanager
-if "%option%"=="9"  call :fixbootloader
-if "%option%"=="10" call :OneFileLinux
-if "%option%"=="11" call :easeconvertdisk
-if "%option%"=="12" call :NTFSdriveprotect
-if "%option%"=="13" call :changelanguage
-if "%option%"=="14" call :qemuboottester
-if "%option%"=="15" call :updatemultiboot
-if "%option%"=="16" call :sortgrub2menu
-color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :extra.main
+choice /c abcdefghijklmnopq /cs /n /m "%_lang0020_%"
+    if errorlevel 17 timeout /t 1 >nul & goto :mainMenu
+    if errorlevel 16 timeout /t 1 >nul & goto :sortgrub2menu
+    if errorlevel 15 timeout /t 1 >nul & goto :updatemultiboot
+    if errorlevel 14 timeout /t 1 >nul & goto :qemuboottester
+    if errorlevel 13 timeout /t 1 >nul & goto :changelanguage
+    if errorlevel 12 timeout /t 1 >nul & goto :NTFSdriveprotect
+    if errorlevel 11 timeout /t 1 >nul & goto :easeconvertdisk
+    if errorlevel 10 timeout /t 1 >nul & goto :OneFileLinux
+    if errorlevel 9  timeout /t 1 >nul & goto :fixbootloader
+    if errorlevel 8  timeout /t 1 >nul & goto :grub2-filemanager
+    if errorlevel 7  timeout /t 1 >nul & goto :editwinsetupfromUSB
+    if errorlevel 6  timeout /t 1 >nul & goto :editWinPEbootmanager
+    if errorlevel 5  timeout /t 1 >nul & goto :setdefaultboot
+    if errorlevel 4  timeout /t 1 >nul & goto :rEFIndInstaller
+    if errorlevel 3  timeout /t 1 >nul & goto :cloverinstaller
+    if errorlevel 2  timeout /t 1 >nul & goto :rEFIndtheme
+    if errorlevel 1  timeout /t 1 >nul & goto :grub2theme
 
 :extra.offline
-if "%option%"=="3"  call :cloverinstaller
-if "%option%"=="4"  call :rEFIndInstaller
-if "%option%"=="8"  call :grub2-filemanager
-if "%option%"=="11" call :easeconvertdisk
-if "%option%"=="14" call :qemuboottester
-color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :extra.main
+choice /c cdhknq /cs /n /m "%_lang0020_%"
+    if errorlevel 6  timeout /t 1 >nul & goto :mainMenu
+    if errorlevel 5  timeout /t 1 >nul & goto :qemuboottester
+    if errorlevel 4  timeout /t 1 >nul & goto :easeconvertdisk
+    if errorlevel 3  timeout /t 1 >nul & goto :grub2-filemanager
+    if errorlevel 2  timeout /t 1 >nul & goto :rEFIndInstaller
+    if errorlevel 1  timeout /t 1 >nul & goto :cloverinstaller
 
 :usb.gpt
-if "%option%"=="1"  call :grub2theme
-if "%option%"=="6"  call :editWinPEbootmanager
-if "%option%"=="7"  call :editwinsetupfromUSB
-if "%option%"=="8"  call :grub2-filemanager
-if "%option%"=="9"  call :fixbootloader
-if "%option%"=="12" call :NTFSdriveprotect
-if "%option%"=="13" call :changelanguage
-if "%option%"=="14" call :qemuboottester
-if "%option%"=="16" call :sortgrub2menu
-color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :extra.main
-
-
-
-
-
+choice /c afghilmnpq /cs /n /m "%_lang0020_%"
+    if errorlevel 10 timeout /t 1 >nul & goto :mainMenu
+    if errorlevel 9  timeout /t 1 >nul & goto :sortgrub2menu
+    if errorlevel 8  timeout /t 1 >nul & goto :qemuboottester
+    if errorlevel 7  timeout /t 1 >nul & goto :changelanguage
+    if errorlevel 6  timeout /t 1 >nul & goto :NTFSdriveprotect
+    if errorlevel 5  timeout /t 1 >nul & goto :fixbootloader
+    if errorlevel 4  timeout /t 1 >nul & goto :grub2-filemanager
+    if errorlevel 3  timeout /t 1 >nul & goto :editwinsetupfromUSB
+    if errorlevel 2  timeout /t 1 >nul & goto :editWinPEbootmanager
+    if errorlevel 1  timeout /t 1 >nul & goto :grub2theme
 
 
 
@@ -692,7 +693,7 @@ color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :extra.main
         set /a num=%random% %%105 +1
         set "itermcolors=%num%.itermcolors"
         if "%color%"=="true" goto :skipcheck.color
-        7za x "colortool.7z" -o"%tmp%" -aos -y >nul
+        7z x "colortool.7z" -o"%tmp%" -aos -y >nul
         :: get Multiboot Toolkit Version
         for /f "tokens=*" %%b in (version) do set /a "cur_version=%%b"
             set /a cur_a=%cur_version:~0,1%
@@ -700,8 +701,7 @@ color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :extra.main
             set /a cur_c=%cur_version:~2,1%
     :: Check for DotNet 4.0 Install
     cd /d "%tmp%\colortool"
-        set "checkdotnet=%temp%\Output.log"
-        reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP" /s | find "v4" > %checkdotnet%
+        reg query "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP" /s | find "v4" > Output.log
             if %errorlevel% equ 0 (
                 colortool -b -q %itermcolors%
                 set "color=true"
@@ -798,14 +798,14 @@ exit /b 0
     echo.
     cd /d "%bindir%"
         echo ^>^> Loading, Please wait...
-        7za x "partassist.7z" -o"%tmp%" -aos -y >nul
+        7z x "partassist.7z" -o"%tmp%" -aos -y >nul
         path=%path%;%bindir%;%tmp%;%tmp%\partassist
     :: begin preparing file
     cd /d "%tmp%"
         if not exist rEFInd_themes mkdir rEFInd_themes
     call :colortool
-        7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
-        7za x "refind.7z" -o"%tmp%" -aoa -y >nul
+        7z x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
+        7z x "refind.7z" -o"%tmp%" -aoa -y >nul
     cd /d "%tmp%\partassist"
         if "%processor_architecture%"=="x86" (
             SetupGreen32 -i >nul
@@ -861,7 +861,7 @@ exit /b 0
         for %%d in (%dlist%) do (
             if exist "%%d" rmdir "%%d" /s /q >nul
         )
-        set "flist=hide.vbs Output.log qemuboottester.exe wincdemu.exe wget.exe"
+        set "flist=clover* grubfm* hide.vbs Output.log qemuboottester.exe wincdemu.exe wget*"
         for %%f in (%flist%) do (
             if exist "%%f" del "%%f" /s /q >nul
         )
@@ -1091,7 +1091,7 @@ exit /b 0
 
 :grub2installer
     cd /d "%bindir%"
-        7za x "grub2.7z" -o"%tmp%" -aos -y >nul
+        7z x "grub2.7z" -o"%tmp%" -aos -y >nul
         if exist "V:\" call :check.letter V:
     :: create vhd disk
     cd /d "%tmp%"
@@ -1143,7 +1143,7 @@ exit /b 0
 
 :gdisk
     cd /d "%bindir%"
-        7za x "gdisk.7z" -o"%tmp%" -aos -y >nul
+        7z x "gdisk.7z" -o"%tmp%" -aos -y >nul
         if "%processor_architecture%"=="x86" (
             set gdisk=gdisk32.exe
         ) else (
@@ -1346,9 +1346,9 @@ exit /b 0
         set "file=Autorun.inf usb.ico B64 XORBOOT grub"
         set "efi=gdisk.efi OneFileLinux.efi winsetupia32.efi winsetupx64.efi xorbootx64.efi"
         if "%usblegacy%"=="true" (
-            7za x "data.7z" -o"X:\" -aoa -y >nul
+            7z x "data.7z" -o"X:\" -aoa -y >nul
         ) else (
-            7za x "data.7z" -o"X:\" %file% %efi% -r >nul
+            7z x "data.7z" -o"X:\" %file% %efi% -r >nul
         )
         :: install grub2 bootloader
         echo.
@@ -1359,17 +1359,17 @@ exit /b 0
             call :grub2installer MULTIBOOT legacydisable >nul 2>&1
         )
         :: install grub2 file manager
-        7za x "extra-modules\grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y >nul
+        7z x "extra-modules\grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y >nul
         >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
         :: install language
         echo.
         echo %_lang0112_% %lang%
-        7za x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
+        7z x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
         :: install grub2 theme
         echo.
         echo %_lang0113_% %gtheme%
-        7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
-        7za x "%bindir%\grub2_themes\icons.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
+        7z x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
+        7z x "%bindir%\grub2_themes\icons.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
         :: make grub2 config
         call "%bindir%\config\main.bat"
     cd /d "X:\EFI\Microsoft\Boot"
@@ -1548,7 +1548,7 @@ exit /b 0
         if errorlevel 2 set "portable=false"
         if "%portable%"=="true" (
             cd /d "%bindir%"
-                7za x "PortableApps.7z" -o"%ducky%\" -aoa -y >nul
+                7z x "PortableApps.7z" -o"%ducky%\" -aoa -y >nul
                 echo %_lang0012_%
                 timeout /t 2 >nul
         )
@@ -1597,14 +1597,14 @@ exit /b 0
     if "%mylang%"=="2" set "lang=Vietnam" & goto :continue.lang
     if "%mylang%"=="3" set "lang=Turkish" & goto :continue.lang
     if "%mylang%"=="4" set "lang=SimplifiedChinese" & goto :continue.lang
-    if "%mylang%"=="b" set goto :extra.main
+    if "%mylang%"=="b" goto :extra.main
     color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :changelanguage
     
     :continue.lang
     echo.
     echo %_lang0014_%
     cd /d "%bindir%"
-        7za.exe x "config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
+        7z.exe x "config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
         >"%ducky%\BOOT\lang" (echo %lang%)
         call language.bat
     cd /d "%bindir%\config"
@@ -1712,9 +1712,9 @@ exit /b 0
     cd /d "%ducky%\BOOT\grub\themes"
         if exist "%curtheme%" rmdir /s /q "%curtheme%" >nul
         if not exist "%gtheme%" (
-            7za x "%bindir%\grub2_themes\%gtheme%.7z" -aoa -y >nul
-            7za x "%bindir%\grub2_themes\icons.7z" -aoa -y >nul
-            7za x "%bindir%\grub2font.7z" -o"%gtheme%" -aoa -y >nul
+            7z x "%bindir%\grub2_themes\%gtheme%.7z" -aoa -y >nul
+            7z x "%bindir%\grub2_themes\icons.7z" -aoa -y >nul
+            7z x "%bindir%\grub2font.7z" -o"%gtheme%" -aoa -y >nul
         )
         >"%ducky%\BOOT\grub\themes\theme" (echo %gtheme%)
         call "%bindir%\config\main.bat"
@@ -1792,7 +1792,7 @@ exit /b 0
         if not exist rEFInd_themes mkdir rEFInd_themes
     cd /d "%bindir%"
         call :colortool
-        7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
+        7z x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
     cd /d "%tmp%\rEFInd_themes\%rtheme%\icons"
         >"%ducky%\BOOT\rEFInd" (echo %rtheme%)
         echo. & echo %_lang0402_%
@@ -2137,7 +2137,7 @@ exit /b 0
     echo                  ------------------------------------
     echo.
     cd /d "%bindir%"
-        7za x "wget.7z" -o"%tmp%" -aoa -y >nul
+        7z x "wget.7z" -o"%tmp%" -aoa -y >nul
     cd /d "%ducky%"
         if exist boot ren boot BOOT >nul
     cd /d "%ducky%\boot"
@@ -2165,25 +2165,7 @@ exit /b 0
     choice /c ynb /cs /n /m "%_lang0837_%"
         if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :grub2.fix
-        if errorlevel 1 goto :grub4dos.fix
-    
-    :grub4dos.fix
-    cd /d "%tmp%"
-        wget -q -O g4dtemp.log  http://grub4dos.chenall.net >nul
-        for /f "tokens=2,3 delims=/" %%a in (
-            'type "g4dtemp.log" ^| findstr /i "<h1.*.7z" ^| find /n /v "" ^| find "[1]"'
-            ) do (
-                set "ver=%%b"
-                set "sourcelink=http://dl.grub4dos.chenall.net/%%b.7z"
-            )
-        echo ^  Updating %ver%...
-        wget -q -O grub4dos.7z %sourcelink% >nul
-        del g4dtemp.log
-    cd /d "%bindir%\extra-modules"
-        set "file=grub4dos-0.4.6a/grldr grub4dos-0.4.6a/grub.exe grub4dos0.4.6a/grldr_cd.bin"
-        7za e -ogrub4dos -aoa "%tmp%\grub4dos.7z" %file% >nul
-        del /s /q "%tmp%\grub4dos.7z" >nul
-        xcopy "grub4dos\grldr" "%ducky%\" /e /g /h /r /y /q >nul
+        if errorlevel 1 call :download.grub4dos
     
     :grub2.fix
     echo.
@@ -2191,7 +2173,7 @@ exit /b 0
         if errorlevel 2 goto :config.fix
         if errorlevel 1 cd /d "%bindir%"
 
-        call :grub2.get
+        call :download.grub2
         echo %_lang0504_%
         call :grub2installer MULTIBOOT >nul 2>&1
 
@@ -2208,43 +2190,59 @@ exit /b 0
         )
     )
     :: --------------------------------------------------------------------
-    7za x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
+    7z x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
     cd /d "%bindir%\extra-modules"
-        7za x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
+        7z x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
         >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
     
     call :clean.bye
 exit /b 0
 
-:grub2.get
+:download.grub4dos
     cd /d "%tmp%"
+        wget -q -O g4dtemp.log  http://grub4dos.chenall.net >nul
+        for /f "tokens=2,3 delims=/" %%a in (
+            'type "g4dtemp.log" ^| findstr /i "<h1.*.7z" ^| find /n /v "" ^| find "[1]"'
+            ) do (
+                set "ver=%%b"
+                set "sourcelink=http://dl.grub4dos.chenall.net/%%b.7z"
+            )
+        if "%~1"=="skip" (
+            echo Updating %ver%...
+        ) else (
+            echo ^  Updating %ver%...
+        )
+        wget -q -O grub4dos.7z %sourcelink% >nul
+        del g4dtemp.log
+    cd /d "%bindir%\extra-modules"
+        set "file=grub4dos-0.4.6a/grldr grub4dos-0.4.6a/grub.exe grub4dos0.4.6a/grldr_cd.bin"
+        7z e -ogrub4dos -aoa "%tmp%\grub4dos.7z" %file% >nul
+        del /s /q "%tmp%\grub4dos.7z" >nul
+exit /b 0
+
+:download.grub2
+    cd /d "%tmp%"
+        if exist "grub" rd /s /q "grub" >nul
+        if exist "grub2" rd /s /q "grub2" >nul
         :: download last release
-        echo ^  Downloading Grub2 from A1ive...
+        if not "%~1"=="skip" echo ^  Downloading Grub2 from A1ive...
         set "sourcelink=https://github.com/a1ive/grub/releases/download/latest/grub2-latest.tar.gz"
         wget -q --show-progress -O grub2-latest.tar.gz %sourcelink%
-        echo ^  Repacking Grub2...
+        if not "%~1"=="skip" echo ^  Repacking Grub2...
         set "list=i386-efi i386-pc locale x86_64-efi grub-install.exe"
-        7za x grub2-latest.tar.gz >nul
-        7za x grub2-latest.tar %list% -r -y >nul
+        7z x grub2-latest.tar.gz >nul
+        7z x grub2-latest.tar %list% -r -y >nul
         ren grub grub2 >nul
-        7za a grub2.7z grub2\ -sdel >nul
+        7z a grub2.7z grub2\ -sdel >nul
         if exist "grub2" rd /s /q "grub2" >nul
         if exist "grub2-latest.*" del "grub2-latest.*" /s /q /f >nul
         move /y grub2.7z %bindir% >nul
     cd /d "%bindir%"
 exit /b 0
 
-:grub2-filemanager
-    cls
-    echo.
+:download.grubfm
     cd /d "%bindir%"
-        7za x "wget.7z" -o"%tmp%" -aoa -y >nul
-    choice /c 12b /cs /n /m "*          [ 1 ] Origin build  -  [ 2 ] Source Script  > "
-        if errorlevel 3 goto :extra.main
-        if errorlevel 2 goto :grubfm-script
-        if errorlevel 1 goto :grubfm-build
-
-    :grubfm-build
+        7z x "wget.7z" -o"%tmp%" -aoa -y >nul
     cd /d "%tmp%"
         set "sourcelink=https://github.com/a1ive/grub2-filemanager/releases"
         wget.exe -q -O grubfm.log %sourcelink% >nul
@@ -2253,23 +2251,34 @@ exit /b 0
         ) do set "ver=%%b"
         set "ver=%ver:~8,6%"
         set "url=https://github.com/a1ive/grub2-filemanager/releases/download/%ver%/grubfm-%langfm%.7z"
-        cls
-        echo.
-        echo ^> Downloading grub2-filemanager %ver%...
-        wget.exe -q --show-progress -O grubfm.7z %url%
+        if not "%~1"=="skip" (
+            echo.
+            echo ^> Downloading grub2-filemanager %ver%...
+        )
+        wget.exe -q --show-progress -O grubfm-%ver%.7z %url%
+exit /b 0
+:grub2-filemanager
+    cls
+    echo.
+    choice /c 12b /cs /n /m "*          [ 1 ] Origin build  -  [ 2 ] Source Script  > "
+        if errorlevel 3 goto :extra.main
+        if errorlevel 2 goto :grubfm-script
+        if errorlevel 1 goto :grubfm-build
+
+    :grubfm-build
+        call :download.grubfm
         set "list=grubfmia32.efi grubfmx64.efi grubfm.iso"
         cls & echo. & echo %_lang0224_%
-        7za x "%tmp%\grubfm.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
-        if exist "grubfm.*" del "grubfm.*" /s /q /f >nul
+        7z x "%tmp%\grubfm*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
         call :clean.bye
     
     :grubfm-script
         echo.
         echo ^> Downloading grub2-filemanager...
         cd /d "%bindir%\extra-modules"
-            7za x "%bindir%\curl.7z" -o"%tmp%" -aos -y >nul
+            7z x "%bindir%\curl.7z" -o"%tmp%" -aos -y >nul
             "%tmp%\curl\curl.exe" -L -s -o master.zip https://github.com/a1ive/grub2-filemanager/archive/master.zip
-            7za x "%bindir%\extra-modules\master.zip" -o"%bindir%\extra-modules\" -y >nul
+            7z x "%bindir%\extra-modules\master.zip" -o"%bindir%\extra-modules\" -y >nul
             del "master.zip" /s /q /f >nul
         cd /d "%bindir%\extra-modules\grub2-filemanager-master\boot\
             xcopy "grub" "%bindir%\extra-modules\grub2-filemanager\" /e /y /q >nul
@@ -2293,12 +2302,12 @@ exit /b 0
 
         :: store grub2-filemanager to archive
         cd /d "%bindir%\extra-modules"
-            7za a grub2-filemanager.7z .\grub2-filemanager\* >nul
+            7z a grub2-filemanager.7z .\grub2-filemanager\* >nul
             if exist "grub2-filemanager" rd /s /q "grub2-filemanager" >nul
             if "%installed%"=="false" call :clean.bye
             echo.
             echo ^> Updating grub2-filemanager to MultibootUSB...
-            7za x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
+            7z x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
             timeout /t 3 >nul
             call :clean.bye
 exit /b 0
@@ -2409,66 +2418,73 @@ exit /b 0
 :updatemultiboot
     :: Preparing files...
     call :colortool
-        echo. & echo ^>^>  Current language: %lang%
-        if not defined rtheme (
-            set rtheme=Universe
-        ) else (
-            echo. & echo %_lang0400_% %rtheme%
-        )
-        if not defined gtheme (
-            set gtheme=Breeze-5
-        ) else (
-            echo. & echo ^>^>  %_lang0300_% %gtheme%
-        )
-    
+    echo.
     cd /d "%bindir%"
-        7za x "grub2.7z" -o"%tmp%" -aos -y >nul
-        7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
-        7za x "refind.7z" -o"%tmp%" -aoa -y >nul
+        7z x "grub2.7z" -o"%tmp%" -aos -y >nul
+        7z x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
+        7z x "refind.7z" -o"%tmp%" -aoa -y >nul
     
     echo.
     echo ---------------------------------------------------------------------
     echo.          [ 1 ] Update config only   [ 2 ] Update full data
+    echo.          [ 3 ] Download and Update all bootloader and data
     echo ---------------------------------------------------------------------
     echo.
-    choice /c 12b /cs /n /m "#   Choose your option [ ? ] > "
-        if errorlevel 3 goto :extra.main
-        if errorlevel 2 goto :updatefull
+    choice /c 123b /cs /n /m "#   Choose your option [ ? ] > "
+        if errorlevel 4 goto :extra.main
+        if errorlevel 3 goto :updateOnline
+        if errorlevel 2 goto :updateOffline
         if errorlevel 1 goto :updateconfig
     
-    :updatefull
+    :updateOnline
+    echo.
+    call :download.clover skip
+    call :download.rEFInd
+    call :download.grub2 skip
+    call :download.grubfm skip
+    call :download.grub4dos skip
+
+    :updateOffline
     cd /d "%bindir%"
         echo. & echo ^>^> Updating data...
-        7za x "data.7z" -o"%ducky%\" -aoa -y >nul
+        7z x "data.7z" -o"%ducky%\" -aoa -y >nul
         xcopy /y "version" "%ducky%\EFI\BOOT\" >nul
     cd /d "%bindir%"
-        7za x "wincdemu.7z" -o"%ducky%\ISO\" -aoa -y >nul
+        7z x "wincdemu.7z" -o"%ducky%\ISO\" -aoa -y >nul
     cd /d "%bindir%\secureboot\BOOT"
         xcopy "boot.sdi" "%ducky%\BOOT\" /e /g /h /r /y /q >nul
     cd /d "%bindir%\extra-modules"
         xcopy "grub4dos\grldr" "%ducky%\" /e /g /h /r /y /q >nul
-    cd /d "%bindir%\extra-modules"
-        7za x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
+        xcopy "grub4dos\grub.exe" "%ducky%\BOOT\grub" /e /g /h /r /y /q >nul
+    cd /d "%tmp%"
+        set "list=grubfmia32.efi grubfmx64.efi grubfm.iso"
+        if exist "grubfm*.*" (
+            echo. & echo %_lang0224_%
+            7z x "%tmp%\grubfm*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
+            del "grubfm*.*" /s /q /f >nul
+        )
     
     :: install Syslinux Bootloader
     cd /d "%bindir%"
         syslinux --force --directory /BOOT/syslinux %ducky% %ducky%\BOOT\syslinux\syslinux.bin
-    
+
+    call :install.clover
     :: install grub2 Bootloader
     cd /d "%bindir%"
         echo.
         echo %_lang0116_%
         call :grub2installer MULTIBOOT >nul 2>&1
     cd /d "%bindir%"
-        7za x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
+        7z x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
         call :rEFInd.icons %ducky%
     cd /d "%bindir%"
-        7za x "%bindir%\grub2_themes\%gtheme%.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y >nul
-        7za x "%bindir%\grub2_themes\icons.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y >nul
+        7z x "%bindir%\grub2_themes\%gtheme%.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y >nul
+        7z x "%bindir%\grub2_themes\icons.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y >nul
     cd /d "%ducky%\EFI\Microsoft\Boot"
         call :bcdautoset bcd
-    
+    call :install.rEFInd
+
     :updateconfig
     cd /d "%bindir%\config"
         call "main.bat"
@@ -2480,7 +2496,7 @@ exit /b 0
     call :colortool
     echo.
     cd /d "%bindir%"
-        7za x "wget.7z" -o"%tmp%" -aoa -y >nul
+        7z x "wget.7z" -o"%tmp%" -aoa -y >nul
     cd /d "%tmp%"
         echo.
         echo ^> Get last version...
@@ -2504,7 +2520,7 @@ exit /b 0
 
 :NTFSdriveprotect
     call :colortool
-        7za x "driveprotect.7z" -o"%tmp%" -aos -y >nul
+        7z x "driveprotect.7z" -o"%tmp%" -aos -y >nul
         if "%processor_architecture%" == "x86" (
             set DriveProtect=driveprotect.exe
         ) else (
@@ -2525,12 +2541,93 @@ exit /b 0
         for /d %%i in ("%tmp%\*.*") do rmdir "%%i" /s /q >nul
         cls
     cd /d "%bindir%"
-        7za x "qemu.7z" -o"%tmp%" -aoa -y >nul
+        7z x "qemu.7z" -o"%tmp%" -aoa -y >nul
     cd /d "%tmp%"
         start qemuboottester.exe
         exit
 exit /b 0
 
+:get.cloverversion
+    for /f delims^=^"^ tokens^=2  %%a in (
+        'type "clover.log" ^| findstr /i "<tr.*.lzma" ^| find /n /v "" ^| find "[1]"'
+        ) do (set "name=%%a")
+exit /b 0
+:download.clover
+    cd /d "%bindir%"
+        if exist "clover" rd /s /q "clover" >nul
+        mkdir clover
+        7z x "clover.7z" -o"clover" -aoa -y >nul
+        7z x "wget.7z" -o"%tmp%" -aoa -y >nul
+    :: get clover iso file
+    cd /d "%tmp%"
+        :: get the lastest version name
+        set "sourcelink=https://sourceforge.net/projects/cloverefiboot/files/Bootable_ISO/"
+        wget -q -O "clover.log" %sourcelink%
+        call :get.cloverversion >nul 2>&1
+        :: download clover
+        if not "%~1"=="skip" (
+            cls & call :cloverinterface
+            echo ^>^> downloading %name%...
+        )
+        set "sourcelink=https://sourceforge.net/projects/cloverefiboot/files/Bootable_ISO/%name%/download"
+        wget -q --show-progress -O "%name%" %sourcelink%
+        del "clover.log" /s /q /f >nul
+        :: extract clover iso
+        if exist "*CloverISO*.tar.lzma" (
+            7z x "*CloverISO*.tar.lzma" -o"%tmp%" -y >nul
+            del "*CloverISO*.tar.lzma" /s /q /f >nul
+            7z x "*CloverISO*.tar" -o"%tmp%" -y >nul
+            del "*CloverISO*.tar" /s /q /f >nul
+            7z x "*Clover-*.iso" -o"%tmp%" EFI -r -y >nul
+        )
+    :: delete non-necessary file
+    if exist "%tmp%\EFI\CLOVER" (
+        cd /d "%bindir%"
+        for /f "delims=" %%f in (delete.list) do (
+            if exist "%tmp%\EFI\CLOVER\%%f" (
+                del "%tmp%\EFI\CLOVER\%%f" /s /q /f >nul
+            )
+        )
+    )
+    if exist "%tmp%\EFI\CLOVER" (
+        cd /d "%tmp%\EFI\CLOVER"
+            ren CLOVERX64.efi cloverx64.efi
+    )
+    xcopy "%tmp%\EFI\CLOVER" "%bindir%\Clover" /s /z /y /q >nul
+    :: make config for clover
+    call "%bindir%\config\clover.conf.bat"
+    :: use rEFInd driver for clover
+    7z x "%bindir%\refind.7z" -o"%tmp%" -aoa -y >nul
+    if exist "%tmp%\rEFInd\drivers_x64" (
+        xcopy "%tmp%\rEFInd\drivers_x64" "%bindir%\clover\drivers64UEFI" /s /z /y /q >nul
+    )
+    
+    cd /d "%tmp%"
+        if exist "EFI" (rd /s /q "EFI")
+        if exist "clover.iso" (del /s /q "clover.iso" >nul)
+    
+    :: cd /d "%tmp%" & del "%tmp%\*.*" /s /q /f >nul
+    :: for /d %%i in ("%tmp%\*.*") do rmdir "%%i" /s /q >nul
+    
+    :: store clover to archive
+    cd /d "%bindir%"
+        7z a clover.7z .\clover\* -sdel >nul
+        if exist "clover" (rd /s /q "clover" >nul)
+exit /b 0
+:install.clover
+    echo.
+    echo %_lang0712_%
+    cd /d "%tmp%"
+        if not exist rEFInd_themes (mkdir rEFInd_themes)
+    cd /d "%bindir%"
+        7z x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
+        if not exist "%ducky%\EFI\CLOVER\" (mkdir "%ducky%\EFI\CLOVER\")
+        7z x "clover.7z" -o"%ducky%\EFI\CLOVER\" -aoa -y >nul
+    cd /d "%tmp%\rEFInd_themes\%rtheme%\icons"
+        xcopy "cloverx64.png" "%ducky%\EFI\CLOVER\" /s /z /y /q >nul
+    echo %_lang0715_%
+    timeout /t 2 >nul
+exit /b 0
 :cloverinstaller
     call :colortool
     if "%PROCESSOR_ARCHITECTURE%"=="x86" (
@@ -2556,82 +2653,8 @@ exit /b 0
     choice /c ynb /cs /n /m "%_lang0700_% > "
         if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :cloverconfig
-        if errorlevel 1 goto :download.clover
-    
-    :download.clover
-    cd /d "%bindir%"
-        mkdir clover
-        7za x "clover.7z" -o"clover" -aoa -y >nul
-        7za x "wget.7z" -o"%tmp%" -aoa -y >nul
-    :: get clover iso file
-    cd /d "%tmp%"
-        :: get the lastest version name
-        set "sourcelink=https://sourceforge.net/projects/cloverefiboot/files/Bootable_ISO/"
-        wget -q -O "clover.log" %sourcelink%
-        for /f delims^=^"^ tokens^=2  %%a in (
-            'type "clover.log" ^| findstr /i "<tr.*.lzma" ^| find /n /v "" ^| find "[1]"'
-            ) do (set "name=%%a") >nul
-        :: download clover
-        cls
-        call :cloverinterface
-        echo ^>^> downloading %name%...
-        echo.
-        set "sourcelink=https://sourceforge.net/projects/cloverefiboot/files/Bootable_ISO/%name%/download"
-        wget -q --show-progress -O "%name%" %sourcelink%
-        del "clover.log" /s /q /f >nul
-        :: extract clover iso
-        if exist "*CloverISO*.tar.lzma" (
-            7za x "*CloverISO*.tar.lzma" -o"%tmp%" -y >nul
-            del "*CloverISO*.tar.lzma" /s /q /f >nul
-            7za x "*CloverISO*.tar" -o"%tmp%" -y >nul
-            del "*CloverISO*.tar" /s /q /f >nul
-            ren Clover-*.iso clover.iso
-        )
-    :: mount clover iso and copy file
-    cd /d "%bindir%"
-        7za x "wincdemu.7z" -o"%tmp%" -aoa -y >nul
-    cd /d "%tmp%"
-        wincdemu /install
-        wincdemu clover.iso X: /wait
-    cd /d "X:\"
-        xcopy "EFI" "%tmp%\EFI\" /s /z /y /q >nul
-    cd /d "%tmp%"
-        wincdemu /unmount X:
-        wincdemu /uninstall
-    :: delete non-necessary file
-    if exist "%tmp%\EFI\CLOVER" (
-        cd /d "%bindir%"
-        for /f "delims=" %%f in (delete.list) do (
-            if exist "%tmp%\EFI\CLOVER\%%f" (
-                del "%tmp%\EFI\CLOVER\%%f" /s /q /f >nul
-            )
-        )
-    )
-    if exist "%tmp%\EFI\CLOVER" (
-        cd /d "%tmp%\EFI\CLOVER"
-            ren CLOVERX64.efi cloverx64.efi
-    )
-    xcopy "%tmp%\EFI\CLOVER" "%bindir%\Clover" /s /z /y /q >nul
-    :: make config for clover
-    call "%bindir%\config\clover.conf.bat"
-    :: use rEFInd driver for clover
-    7za x "%bindir%\refind.7z" -o"%tmp%" -aoa -y >nul
-    if exist "%tmp%\rEFInd\drivers_x64" (
-        xcopy "%tmp%\rEFInd\drivers_x64" "%bindir%\clover\drivers64UEFI" /s /z /y /q >nul
-    )
-    
-    cd /d "%tmp%"
-        if exist "EFI" (rd /s /q "EFI")
-        if exist "clover.iso" (del /s /q "clover.iso" >nul)
-    
-    :: cd /d "%tmp%" & del "%tmp%\*.*" /s /q /f >nul
-    :: for /d %%i in ("%tmp%\*.*") do rmdir "%%i" /s /q >nul
-    
-    :: store clover to archive
-    cd /d "%bindir%"
-        7za a clover.7z .\clover\* -sdel >nul
-        if exist "clover" (rd /s /q "clover" >nul)
-    
+        if errorlevel 1 call :download.clover
+
     :cloverconfig
     call :colortool
     if "%structure%"=="MBR" goto :option.clover
@@ -2643,7 +2666,7 @@ exit /b 0
     
     :gdisk.clover
     call :colortool
-    7za x "gdisk.7z" -o"%tmp%" -aos -y >nul
+    7z x "gdisk.7z" -o"%tmp%" -aos -y >nul
     if "%PROCESSOR_ARCHITECTURE%"=="x86" (
         set gdisk=gdisk32.exe
     ) else (
@@ -2677,18 +2700,7 @@ exit /b 0
     :MultibootUSB.clover
     if "%installed%"=="false" goto :option.clover
     call :colortool
-    echo.
-    echo %_lang0712_%
-    cd /d "%tmp%"
-        if not exist rEFInd_themes (mkdir rEFInd_themes)
-    cd /d "%bindir%"
-        7za x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
-        if not exist "%ducky%\EFI\CLOVER\" (mkdir "%ducky%\EFI\CLOVER\")
-        7za x "clover.7z" -o"%ducky%\EFI\CLOVER\" -aoa -y >nul
-    cd /d "%tmp%\rEFInd_themes\%rtheme%\icons"
-        xcopy "cloverx64.png" "%ducky%\EFI\CLOVER\" /s /z /y /q >nul
-    echo %_lang0715_%
-    timeout /t 2 >nul
+    call :install.clover
     goto :EasyUEFI.clover
     
     :MultibootOS.clover
@@ -2704,7 +2716,7 @@ exit /b 0
     mountvol s: /s
     cd /d "%tmp%"
         mkdir CLOVER
-        7za x "%bindir%\clover.7z" -o"%tmp%\CLOVER\" -aoa -y >nul
+        7z x "%bindir%\clover.7z" -o"%tmp%\CLOVER\" -aoa -y >nul
         xcopy "%tmp%\CLOVER" "s:\EFI\CLOVER\" /e /y /q >nul
         if exist "%curdir%\config.plist" (
             xcopy "%curdir%\config.plist" "s:\EFI\CLOVER\" /e /y /q >nul
@@ -2719,7 +2731,7 @@ exit /b 0
     :EasyUEFI.clover
     cls
     call :cloverinterface
-    7za x "%bindir%\extra-modules\EasyUEFI.7z" -o"%tmp%" -y >nul
+    7z x "%bindir%\extra-modules\EasyUEFI.7z" -o"%tmp%" -y >nul
     echo.
     choice /c yn /cs /n /m "%_lang0716_%"
         if errorlevel 2 call :clean.bye
@@ -2737,40 +2749,18 @@ exit /b 0
     echo.
 exit /b 0
 
-:rEFIndinstaller
-    call :colortool
-    for /f "tokens=4 delims=\" %%b in ('wmic os get name') do set "harddisk=%%b"
-        if defined harddisk set /a "harddisk=%harddisk:~8,1%"
-    for /f "tokens=2" %%b in (
-        'wmic path Win32_diskpartition get type ^, diskindex ^| find /i "%harddisk%"'
-        ) do set "GPT=%%b"
-        if /i "%GPT%" NEQ "GPT:" (
-            color 0e & echo. & echo %_lang0001_%
-            echo %_lang0002_%
-            set "structure=MBR"
-            timeout /t 15 >nul
-        )
-    
-    :refind
-    call :rEFIndinterface
-    choice /c ynb /cs /n /m "%_lang0600_% > "
-        if errorlevel 3 goto :extra.main
-        if errorlevel 2 goto :option.rEFInd
-        if errorlevel 1 goto :download.rEFInd
-    
-    :download.rEFInd
+:download.rEFInd
     cd /d "%bindir%"
         if not exist rEFInd mkdir rEFInd
-        7za x "wget.7z" -o"%tmp%" -aoa -y >nul
+        7z x "wget.7z" -o"%tmp%" -aoa -y >nul
     cd /d "%tmp%"
-        echo.
         :: download the last rEFInd
         set "sourcelink=https://sourceforge.net/projects/refind/files/latest/download"
         wget -q --show-progress -O refind-bin.zip %sourcelink%
         :: extract data
         if not exist "refind-bin" (
             if exist "refind-bin.zip" (
-                7za x "refind-bin.zip" -o"%tmp%" -y >nul
+                7z x "refind-bin.zip" -o"%tmp%" -y >nul
                 del "refind-bin.zip" /s /q /f >nul
             )
         )
@@ -2798,30 +2788,10 @@ exit /b 0
     
     :: store refind to archive
     cd /d "%bindir%"
-        7za a refind.7z rEFInd\ -sdel >nul
+        7z a refind.7z rEFInd\ -sdel >nul
         if exist "rEFInd" rd /s /q "rEFInd" >nul
-    
-    :option.rEFInd
-    set "rtheme=Universe"
-    :: preparing file...
-    if not exist rEFInd_themes mkdir rEFInd_themes
-    cd /d "%tmp%"
-        7za x "%bindir%\refind.7z" -o"%tmp%" -aoa -y >nul
-        7za x "%bindir%\rEFInd_themes\%rtheme%.7z" -o"rEFInd_themes" -aoa -y >nul
-    :: make option
-    call :colortool
-    echo.
-    echo ----------------------------------------------------------------------
-    echo %_lang0603_%
-    echo %_lang0604_%
-    echo ----------------------------------------------------------------------
-    echo.
-    choice /c 12 /cs /n /m "%_lang0605_% [ ? ] > "
-        if errorlevel 2 goto :MultibootOS.rEFInd
-        if errorlevel 1 goto :MultibootUSB.rEFInd
-    
-    :MultibootUSB.rEFInd
-    if "%installed%"=="false" goto :option.rEFInd
+exit /b 0
+:install.rEFInd
     :: detected USB
     wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" >nul
         if not errorlevel 1 (goto :Removable.rEFInd) else (goto :External.rEFInd)
@@ -2847,8 +2817,51 @@ exit /b 0
     :installrEFInd
     set "source=%tmp%\rEFInd"
     partassist /hd:%disk% /whide:%refindpart% /src:%source% /dest:EFI\BOOT
-    goto :EasyUEFI.rEFInd
+exit /b 0
+:rEFIndinstaller
+    call :colortool
+    for /f "tokens=4 delims=\" %%b in ('wmic os get name') do set "harddisk=%%b"
+        if defined harddisk set /a "harddisk=%harddisk:~8,1%"
+    for /f "tokens=2" %%b in (
+        'wmic path Win32_diskpartition get type ^, diskindex ^| find /i "%harddisk%"'
+        ) do set "GPT=%%b"
+        if /i "%GPT%" NEQ "GPT:" (
+            color 0e & echo. & echo %_lang0001_%
+            echo %_lang0002_%
+            set "structure=MBR"
+            timeout /t 15 >nul
+        )
     
+    :refind
+    call :rEFIndinterface
+    choice /c ynb /cs /n /m "%_lang0600_% > "
+        if errorlevel 3 goto :extra.main
+        if errorlevel 2 goto :option.rEFInd
+        if errorlevel 1 call :download.rEFInd
+    
+    :option.rEFInd
+    set "rtheme=Universe"
+    :: preparing file...
+    if not exist rEFInd_themes mkdir rEFInd_themes
+    cd /d "%tmp%"
+        7z x "%bindir%\refind.7z" -o"%tmp%" -aoa -y >nul
+        7z x "%bindir%\rEFInd_themes\%rtheme%.7z" -o"rEFInd_themes" -aoa -y >nul
+    :: make option
+    call :colortool
+    echo.
+    echo ----------------------------------------------------------------------
+    echo %_lang0603_%
+    echo %_lang0604_%
+    echo ----------------------------------------------------------------------
+    echo.
+    choice /c 12 /cs /n /m "%_lang0605_% [ ? ] > "
+        if errorlevel 2 goto :MultibootOS.rEFInd
+        if errorlevel 1 goto :MultibootUSB.rEFInd
+    
+    :MultibootUSB.rEFInd
+    if "%installed%"=="false" goto :option.rEFInd
+    call :install.rEFInd
+    goto :EasyUEFI.rEFInd
     :MultibootOS.rEFInd
     if "%structure%"=="MBR" (
         call :colortool
@@ -2870,7 +2883,7 @@ exit /b 0
     goto :EasyUEFI.rEFInd
     
     :EasyUEFI.rEFInd
-    7za x "%bindir%\extra-modules\EasyUEFI.7z" -o"%tmp%" -y >nul
+    7z x "%bindir%\extra-modules\EasyUEFI.7z" -o"%tmp%" -y >nul
     call :rEFIndinterface
     echo.
     choice /c yn /cs /n /m "%_lang0611_%"
