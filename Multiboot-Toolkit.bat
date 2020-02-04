@@ -38,7 +38,7 @@ echo %_lang0018_%
 echo %_lang0019_%
 echo =====================================================================
 echo.
-choice /c 123b /cs /n /m "%_lang0020_%"
+choice /c 123q /cs /n /m "%_lang0020_%"
     if errorlevel 4 call :license
     if errorlevel 3 timeout /t 1 >nul & goto :extraFeatures
     if errorlevel 2 timeout /t 1 >nul & goto :moduleInstaller
@@ -61,7 +61,7 @@ call :list.disk
 
 echo.
 set /p disk= %_lang0101_%
-    if "%disk%"=="b" goto :mainMenu
+    if "%disk%"=="q" goto :mainMenu
 call :checkdisktype
     if "%virtualdisk%"=="true"  call :rEFInd.part      & goto :External
     if "%harddisk%"=="true"     call :harddisk.warning & goto :bootableCreator
@@ -285,14 +285,8 @@ call :multibootscan
     echo Speak.Speak "Then press any key to continue..."
 )
 :: move module to the source folder
-if exist "%bindir%\Special_ISO" (
-    cd /d "%bindir%\Special_ISO"
-        if exist "*.iso" move /y "*.iso" "%curpath%" >nul
-)
-if exist "%bindir%\ISO_Extract" (
-    cd /d "%bindir%\ISO_Extract"
-        if exist "*.iso" move /y "*.iso" "%curpath%" >nul
-)
+call :moveISO Special_ISO
+call :moveISO ISO_Extract
 
 if exist "X:\" call :check.letter X:
 
@@ -341,18 +335,8 @@ cd /d "%bindir%"
         cd /d "%bindir%"
     )
 :: move all iso to temp folder
-cd /d "%bindir%"
-    for /f "delims=" %%f in (iso_extract.list) do (
-        cd /d "%curpath%"
-            if exist "*%%f*.iso" move /y "*%%f*.iso" "%bindir%\ISO_Extract" >nul
-        cd /d "%bindir%"
-    )
-cd /d "%bindir%"
-    for /f "delims=" %%f in (specialiso.list) do (
-        cd /d "%curpath%"
-            if exist "*%%f*" move /y "*%%f*" "%bindir%\Special_ISO" >nul
-        cd /d "%bindir%"
-    )
+call :moveISOTemp ISO_Extract iso_extract.list
+call :moveISOTemp Special_ISO specialiso.list
 
 :: check iso extract type 
 cd /d "%bindir%\ISO_Extract"
@@ -562,8 +546,8 @@ cd /d "%curpath%"
     )
 :: return iso file to modules folder
 cd /d "%bindir%"
-    if exist "ISO_Extract\*.iso" (move /y "ISO_Extract\*.iso" "%curpath%" >nul)
-    if exist "Special_ISO\*.iso" (move /y "Special_ISO\*.iso" "%curpath%" >nul)
+    if not exist Special_ISO mkdir Special_ISO
+    if not exist ISO_Extract mkdir ISO_Extract
 
 for /f "tokens=*" %%i in ('dir /s /a /b "%ducky%\BOOT\namelist\temp"') do set /a tsize+=%%~zi
     if defined tsize (move /y "%ducky%\BOOT\namelist\temp\*.*" "%ducky%\BOOT\namelist\" >nul)
@@ -571,12 +555,8 @@ for /f "tokens=*" %%i in ('dir /s /a /b "%ducky%\BOOT\namelist\temp"') do set /a
 
 :: update config for Grub2
 if not exist "%ducky%\EFI\BOOT\usb.gpt" (
-    cd /d "%ducky%\BOOT"
-        for /f "tokens=*" %%b in (lang) do set "lang=%%b"
-    cd /d "%ducky%\BOOT\grub\themes"
-        for /f "tokens=*" %%b in (theme) do set "gtheme=%%b"
-    cd /d "%bindir%\config"
-        call "main.bat"
+    call :gather.info
+    call "%bindir%\config\main.bat"
 )
 
 cd /d "%bindir%"
@@ -790,6 +770,7 @@ exit /b 0
     :: change language
     call :colortool
     call language.bat
+    goto :mainMenu
 exit /b 0
 
 
@@ -1204,7 +1185,7 @@ exit /b 0
         if errorlevel 1 set "installmodules=y"
         if errorlevel 2 set "installmodules=n"
     echo.
-    choice /c ynb /cs /n /m "%_lang0115_%"
+    choice /c ynq /cs /n /m "%_lang0115_%"
         if errorlevel 1 set "secureboot=y"
         if errorlevel 2 set "secureboot=n"
         if errorlevel 3 goto :rEFInd.ask
@@ -1555,8 +1536,22 @@ exit /b 0
 exit /b 0
 
 
+:moveISO
+    if exist "%bindir%\%~1" (
+        cd /d "%bindir%\%~1"
+            if exist "*.iso" move /y "*.iso" "%curpath%" >nul
+    )
+exit /b 0
 
 
+:moveISOTemp
+    cd /d "%bindir%"
+        for /f "delims=" %%f in (%~2) do (
+            cd /d "%curpath%"
+                if exist "*%%f*.iso" move /y "*%%f*.iso" "%bindir%\%~1" >nul
+            cd /d "%bindir%"
+        )
+exit /b 0
 
 
 
@@ -1582,6 +1577,7 @@ exit /b 0
     cd /d "%bindir%"
 exit /b 0
 
+
 :changelanguage
     call :colortool
     echo.
@@ -1591,15 +1587,13 @@ exit /b 0
     echo        [ 3 ] = Turkish                [ 4 ] = Simplified Chinese      
     echo ======================================================================
     echo.
-    set mylang=1
-    set /P mylang= %_lang0016_%
-    if "%mylang%"=="1" set "lang=English" & goto :continue.lang
-    if "%mylang%"=="2" set "lang=Vietnam" & goto :continue.lang
-    if "%mylang%"=="3" set "lang=Turkish" & goto :continue.lang
-    if "%mylang%"=="4" set "lang=SimplifiedChinese" & goto :continue.lang
-    if "%mylang%"=="b" goto :extra.main
-    color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :changelanguage
-    
+    choice /c 1234q /cs /n /m "%_lang0016_%"
+        if errorlevel 5 goto :extra.main
+        if errorlevel 4 set "lang=SimplifiedChinese" & goto :continue.lang
+        if errorlevel 3 set "lang=Turkish" & goto :continue.lang
+        if errorlevel 2 set "lang=Vietnam" & goto :continue.lang
+        if errorlevel 1 set "lang=English" & goto :continue.lang
+
     :continue.lang
     echo.
     echo %_lang0014_%
@@ -1613,6 +1607,7 @@ exit /b 0
         >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
     call :clean.bye
 exit /b 0
+
 
 :sortgrub2menu
     call :colortool
@@ -1645,6 +1640,7 @@ exit /b 0
         call "main.bat"
         call :clean.bye
 exit /b 0
+
 
 :grub2theme
     call :colortool
@@ -1705,7 +1701,7 @@ exit /b 0
     if "%ask%"=="38" (set "gtheme=Tela"            & goto :continue.gtheme)
     if "%ask%"=="39" (set "gtheme=Ubuntu-lucid"    & goto :continue.gtheme)
     if "%ask%"=="40" (set "gtheme=Vimix"           & goto :continue.gtheme)
-    if "%ask%"=="b"  goto :extra.main
+    if "%ask%"=="q"  goto :extra.main
     color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :grub2theme
     
     :continue.gtheme
@@ -1720,6 +1716,7 @@ exit /b 0
         call "%bindir%\config\main.bat"
         call :clean.bye
 exit /b 0
+
 
 :rEFIndtheme
     call :colortool
@@ -1784,7 +1781,7 @@ exit /b 0
     if "%ask%"=="42" set "rtheme=Underground"    & goto :continue.rtheme
     if "%ask%"=="43" set "rtheme=Universe"       & goto :continue.rtheme
     if "%ask%"=="44" set "rtheme=Woody"          & goto :continue.rtheme
-    if "%ask%"=="b"  goto :extra.main
+    if "%ask%"=="q"  goto :extra.main
     color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :rEFIndtheme
 
     :continue.rtheme
@@ -1838,12 +1835,13 @@ exit /b 0
     call :clean.bye
 exit /b 0
 
+
 :easeconvertdisk
     call :colortool
     partassist /list
     echo.
     set /p disk= %_lang0101_%
-        if "%disk%"=="b" goto :extra.main
+        if "%disk%"=="q" goto :extra.main
     call :checkdisktype
         if "%virtualdisk%"=="true" goto :option.convert
         if "%harddisk%"=="true" (
@@ -1915,6 +1913,7 @@ exit /b 0
     goto :mainMenu
 exit /b 0
 
+
 :editWinPEbootmanager
     call :colortool
     echo.
@@ -1922,7 +1921,7 @@ exit /b 0
     echo                 --------------------------------------
     echo.
     cd /d "%bindir%"
-    choice /c ynb /cs /n /m "%_lang0800_%"
+    choice /c ynq /cs /n /m "%_lang0800_%"
         if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :option.pe
         if errorlevel 1 call :bcdautomenu
@@ -1986,6 +1985,7 @@ exit /b 0
     call :colortool
     goto :extra.main
 exit /b 0
+
 
 :bcdautomenu
     mode con lines=100 cols=70
@@ -2086,6 +2086,7 @@ exit /b 0
     echo.
 exit /b 0
 
+
 :create.entry
     set "Object={7619dcc8-fafe-11d9-b411-000476eba25f}"
     bcdedit /store %source% /copy {default} /d "%menutitle%" > %tmp%\tmpuuid.txt
@@ -2095,6 +2096,7 @@ exit /b 0
     bcdedit /store %source% /set %identifier% osdevice ramdisk=[%ducky%]%bootfile%,%Object% >nul
     timeout /t 1 >nul
 exit /b 0
+
 
 :editwinsetupfromUSB
     call :colortool
@@ -2112,7 +2114,7 @@ exit /b 0
     set /P mode= "^*              [ 1 ] Legacy mode - [ 2 ] UEFI mode ^> "
     if "%mode%"=="1" goto :legacy.winsetup
     if "%mode%"=="2" goto :uefi.winsetup
-    if "%mode%"=="b" goto :extra.main
+    if "%mode%"=="q" goto :extra.main
     color 0e & echo. & echo ^>^>  Invalid Input. & timeout /t 15 >nul & goto :option.winsetup
     
     :legacy.winsetup
@@ -2123,6 +2125,7 @@ exit /b 0
     bootice /edit_bcd /easymode /file=%ducky%\EFI\MICROSOFT\Boot\bcd
     call :clean.bye
 exit /b 0
+
 
 :fixbootloader
     call :colortool
@@ -2162,7 +2165,7 @@ exit /b 0
     :grub.fix
     if "%GPT%"=="true" goto :grub2.fix
     echo.
-    choice /c ynb /cs /n /m "%_lang0837_%"
+    choice /c ynq /cs /n /m "%_lang0837_%"
         if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :grub2.fix
         if errorlevel 1 call :download.grub4dos
@@ -2198,6 +2201,7 @@ exit /b 0
     call :clean.bye
 exit /b 0
 
+
 :download.grub4dos
     cd /d "%tmp%"
         wget -q -O g4dtemp.log  http://grub4dos.chenall.net >nul
@@ -2220,6 +2224,7 @@ exit /b 0
         del /s /q "%tmp%\grub4dos.7z" >nul
 exit /b 0
 
+
 :download.grub2
     cd /d "%tmp%"
         if exist "grub" rd /s /q "grub" >nul
@@ -2240,6 +2245,7 @@ exit /b 0
     cd /d "%bindir%"
 exit /b 0
 
+
 :download.grubfm
     cd /d "%bindir%"
         7z x "wget.7z" -o"%tmp%" -aoa -y >nul
@@ -2259,8 +2265,17 @@ exit /b 0
 exit /b 0
 :grub2-filemanager
     cls
+    echo                     ___            _      __
+    echo                   / _ \_ __ _   _^| ^|__  / _^|_ __ ___
+    echo                  / /_\/ '__^| ^| ^| ^| '_ \^| ^|_^| '_ ` _ \
+    echo                 / /_\\^| ^|  ^| ^|_^| ^| ^|_) ^|  _^| ^| ^| ^| ^| ^|
+    echo                 \____/^|_^|   \__,_^|_.__/^|_^| ^|_^| ^|_^| ^|_^|
+    echo                                                  A1ive
     echo.
-    choice /c 12b /cs /n /m "*          [ 1 ] Origin build  -  [ 2 ] Source Script  > "
+    echo ^                         [ 1 ] Origin build
+    echo ^                         [ 2 ] Source Script
+    echo.
+    choice /c 12q /cs /n /m "%_lang0020_%"
         if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :grubfm-script
         if errorlevel 1 goto :grubfm-build
@@ -2312,6 +2327,7 @@ exit /b 0
             call :clean.bye
 exit /b 0
 
+
 :setdefaultboot
     call :colortool
     cd /d "%bindir%\secureboot\EFI\Boot\backup"
@@ -2339,7 +2355,7 @@ exit /b 0
         if "%mode%"=="2" set "option=Secure_Grub2"  & goto :checkdisk.default
         if "%mode%"=="3" set "option=rEFInd"        & goto :checkdisk.default
         if "%mode%"=="4" set "option=Grub2"         & goto :checkdisk.default
-        if "%mode%"=="b" goto :extra.main
+        if "%mode%"=="q" goto :extra.main
         color 0e & echo. & echo %_lang0104_% & timeout /t 15 >nul & goto :option.default
     
     :checkdisk.default
@@ -2415,6 +2431,7 @@ exit /b 0
     call :clean.bye
 exit /b 0
 
+
 :updatemultiboot
     :: Preparing files...
     call :colortool
@@ -2430,7 +2447,7 @@ exit /b 0
     echo.          [ 3 ] Download and Update all bootloader and data
     echo ---------------------------------------------------------------------
     echo.
-    choice /c 123b /cs /n /m "#   Choose your option [ ? ] > "
+    choice /c 123q /cs /n /m "#   Choose your option [ ? ] > "
         if errorlevel 4 goto :extra.main
         if errorlevel 3 goto :updateOnline
         if errorlevel 2 goto :updateOffline
@@ -2468,7 +2485,7 @@ exit /b 0
     cd /d "%bindir%"
         syslinux --force --directory /BOOT/syslinux %ducky% %ducky%\BOOT\syslinux\syslinux.bin
 
-    call :install.clover
+    call :install.clover skip
     :: install grub2 Bootloader
     cd /d "%bindir%"
         echo.
@@ -2491,6 +2508,7 @@ exit /b 0
         timeout /t 2 >nul
         call :clean.bye
 exit /b 0
+
 
 :OneFileLinux
     call :colortool
@@ -2518,6 +2536,7 @@ exit /b 0
         call :clean.bye
 exit /b 0
 
+
 :NTFSdriveprotect
     call :colortool
         7z x "driveprotect.7z" -o"%tmp%" -aos -y >nul
@@ -2530,6 +2549,7 @@ exit /b 0
         start %DriveProtect%
         exit
 exit /b 0
+
 
 :qemuboottester
     call :colortool
@@ -2546,6 +2566,7 @@ exit /b 0
         start qemuboottester.exe
         exit
 exit /b 0
+
 
 :get.cloverversion
     for /f delims^=^"^ tokens^=2  %%a in (
@@ -2625,7 +2646,7 @@ exit /b 0
         7z x "clover.7z" -o"%ducky%\EFI\CLOVER\" -aoa -y >nul
     cd /d "%tmp%\rEFInd_themes\%rtheme%\icons"
         xcopy "cloverx64.png" "%ducky%\EFI\CLOVER\" /s /z /y /q >nul
-    echo %_lang0715_%
+    if "%~1" neq "skip" echo %_lang0715_%
     timeout /t 2 >nul
 exit /b 0
 :cloverinstaller
@@ -2650,7 +2671,7 @@ exit /b 0
     :clover
     cls 
     call :cloverinterface
-    choice /c ynb /cs /n /m "%_lang0700_% > "
+    choice /c ynq /cs /n /m "%_lang0700_% > "
         if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :cloverconfig
         if errorlevel 1 call :download.clover
@@ -2749,6 +2770,7 @@ exit /b 0
     echo.
 exit /b 0
 
+
 :download.rEFInd
     cd /d "%bindir%"
         if not exist rEFInd mkdir rEFInd
@@ -2834,7 +2856,7 @@ exit /b 0
     
     :refind
     call :rEFIndinterface
-    choice /c ynb /cs /n /m "%_lang0600_% > "
+    choice /c ynq /cs /n /m "%_lang0600_% > "
         if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :option.rEFInd
         if errorlevel 1 call :download.rEFInd
