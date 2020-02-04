@@ -38,8 +38,9 @@ echo %_lang0018_%
 echo %_lang0019_%
 echo =====================================================================
 echo.
-choice /c 123q /cs /n /m "%_lang0020_%"
-    if errorlevel 4 call :license
+choice /c 1234q /cs /n /m "%_lang0020_%"
+    if errorlevel 5 call :license
+    if errorlevel 4 timeout /t 1 >nul & goto :qemuboottester
     if errorlevel 3 timeout /t 1 >nul & goto :extraFeatures
     if errorlevel 2 timeout /t 1 >nul & goto :moduleInstaller
     if errorlevel 1 timeout /t 1 >nul & goto :bootableCreator
@@ -234,9 +235,7 @@ cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
     call :rEFInd.icons X:
     echo.
     echo %_lang0113_% %gtheme%
-    7z x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
-    7z x "%bindir%\grub2_themes\icons.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
-    call "%bindir%\config\main.bat"
+    call :install.gtheme
 cd /d "%bindir%\secureboot\EFI\Microsoft\Boot"
     call :bcdautoset bcd
 :: install secure boot file
@@ -275,6 +274,7 @@ set "curpath=%~dp0Modules"
 
 call :colortool
 call :multibootscan
+call :gather.info
 
 
 :modules.main
@@ -285,8 +285,8 @@ call :multibootscan
     echo Speak.Speak "Then press any key to continue..."
 )
 :: move module to the source folder
-call :moveISO Special_ISO
-call :moveISO ISO_Extract
+call :moveISO specialiso
+call :moveISO isoextract
 
 if exist "X:\" call :check.letter X:
 
@@ -304,23 +304,17 @@ echo %_lang0201_% %ducky%
 echo ======================================================================
 if not exist "%ducky%\PortableApps" call :PortableAppsPlatform
 echo.
-echo %_lang0202_%
 cd /d "%tmp%"
-    call :speech modules.vbs
+    echo %_lang0202_%
+    call :speechOn modules.vbs
     echo %_lang0203_% & timeout /t 300 >nul
-    taskkill /f /im wscript.exe /t /fi "status eq running">nul
-    del /s /q modules.vbs >nul
+    call :speechOff modules.vbs
     call :check.empty
 
 :modules.continue
-cd /d "%ducky%\BOOT"
-    if not exist "secureboot" set "secureboot=n" & goto :modules.progress
-    for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
-
-:modules.progress
 cd /d "%bindir%"
-    if not exist Special_ISO mkdir Special_ISO
-    if not exist ISO_Extract mkdir ISO_Extract
+    if not exist specialiso mkdir specialiso
+    if not exist isoextract mkdir isoextract
 
 :: create all modules namelist
 if not exist "%ducky%\BOOT\namelist\temp" mkdir "%ducky%\BOOT\namelist\temp"
@@ -329,22 +323,18 @@ for /f "tokens=*" %%i in ('dir /a:-d /b "%curpath%"') do (
 )
 :: rename all modules namelist
 cd /d "%bindir%"
-    for /f "delims=" %%f in (iso.list, iso_extract.list, specialiso.list, wim.list) do (
+    for /f "delims=" %%f in (iso.list, isoextract.list, specialiso.list, wim.list) do (
         cd /d "%ducky%\BOOT\namelist\temp"
             if exist "*%%f*" ren "*%%f*" "%%f" >nul
         cd /d "%bindir%"
     )
 :: move all iso to temp folder
-call :moveISOTemp ISO_Extract iso_extract.list
-call :moveISOTemp Special_ISO specialiso.list
+call :moveISOTemp isoextract
+call :moveISOTemp specialiso
 
-:: check iso extract type 
-cd /d "%bindir%\ISO_Extract"
-    for /f "delims=" %%f in (%bindir%\iso_extract.list) do (
-            if exist "*%%f*.iso" goto :modules.extract
-    )
-    goto :modules.specialiso
-:modules.extract
+:: check iso extract type
+call :checkISO isoextract modules.specialiso
+
 cd /d "%bindir%"
     7z x "wincdemu.7z" -o"%tmp%" -aoa -y >nul
     wincdemu /install
@@ -374,13 +364,9 @@ cd /d "%ducky%\BOOT\namelist\temp"
 :modules.specialiso
 :: disabled iso linux run on fat32 partition (hidden partition)
 if exist "%ducky%\EFI\BOOT\usb.gpt" goto :modules.populariso
-:: check special iso type 
-cd /d "%bindir%\Special_ISO"
-    for /f "delims=" %%f in (%bindir%\specialiso.list) do (
-        if exist "*%%f*.iso" goto :modules.specialiso-go
-    )
-    goto :modules.populariso
-:modules.specialiso-go
+:: check special iso type
+call :checkISO specialiso modules.populariso
+
 cd /d "%ducky%\BOOT"
     for /f "tokens=*" %%b in (esp) do set "esp=%%b"
     set /a "esp=%esp%+0"
@@ -390,12 +376,12 @@ cd /d "%ducky%\BOOT"
     )
     if "%secureboot%"=="n" (set rpart=0) else (set rpart=1)
 call :colortool
-    for /f "tokens=*" %%x in ('dir /s /a /b "Special_ISO"') do set /a "size+=%%~zx"
+    for /f "tokens=*" %%x in ('dir /s /a /b "specialiso"') do set /a "size+=%%~zx"
     set /a "size=%size%/1024/1024"
-    set "source=%bindir%\Special_ISO"
+    set "source=%bindir%\specialiso"
 
 if %size% LEQ %esp% (
-    if exist "%bindir%\Special_ISO\*.iso" (
+    if exist "%bindir%\specialiso\*.iso" (
         cls & echo. & echo %_lang0204_%
         timeout /t 2 >nul
         partassist /hd:%disk% /whide:%rpart% /src:%source% /dest:ISO
@@ -546,22 +532,19 @@ cd /d "%curpath%"
     )
 :: return iso file to modules folder
 cd /d "%bindir%"
-    if not exist Special_ISO mkdir Special_ISO
-    if not exist ISO_Extract mkdir ISO_Extract
+    call :moveISO specialiso
+    call :moveISO isoextract
 
 for /f "tokens=*" %%i in ('dir /s /a /b "%ducky%\BOOT\namelist\temp"') do set /a tsize+=%%~zi
     if defined tsize (move /y "%ducky%\BOOT\namelist\temp\*.*" "%ducky%\BOOT\namelist\" >nul)
     rd /s /q "%ducky%\BOOT\namelist\temp"
 
 :: update config for Grub2
-if not exist "%ducky%\EFI\BOOT\usb.gpt" (
-    call :gather.info
-    call "%bindir%\config\main.bat"
-)
+call "%bindir%\config\main.bat"
 
 cd /d "%bindir%"
-    rd /s /q Special_ISO >nul
-    rd /s /q ISO_Extract >nul
+    rd /s /q specialiso >nul
+    rd /s /q isoextract >nul
 
 call :clean.bye
 
@@ -754,7 +737,7 @@ exit /b 0
     echo ^  ------------------------------------------------------------------
     echo ^  Ha Son, Tayfun Akkoyun, anhdv, lethimaivi, A1ive, Hoang Duch2, ...
     echo ^  ------------------------------------------------------------------
-    call :speech welcome.vbs
+    call :speechOn welcome.vbs
     echo.
     echo ^  [ 1 ] = English  [ 2 ] = Vietnam  [ 3 ] = Turkish  [ 4 ] = Chinese
     echo.
@@ -764,8 +747,7 @@ exit /b 0
         if errorlevel 3 set "lang=Turkish"
         if errorlevel 4 set "lang=SimplifiedChinese"
         if errorlevel 5 set "lang=autodetect"
-    taskkill /f /im wscript.exe /t /fi "status eq running">nul
-    del /s /q welcome.vbs >nul
+    call :speechOff welcome.vbs
     call :partassist.init
     :: change language
     call :colortool
@@ -855,9 +837,9 @@ exit /b 0
         echo.
         echo %_lang0012_%
         echo %_lang0013_%
-        call :speech thanks.vbs
+        call :speechOn thanks.vbs
         timeout /t 3 >nul
-        del /s /q thanks.vbs >nul
+        call :speechOff thanks.vbs
         exit
 exit /b 0
 
@@ -1349,10 +1331,7 @@ exit /b 0
         :: install grub2 theme
         echo.
         echo %_lang0113_% %gtheme%
-        7z x "%bindir%\grub2_themes\%gtheme%.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
-        7z x "%bindir%\grub2_themes\icons.7z" -o"X:\BOOT\grub\themes\" -aoa -y >nul
-        :: make grub2 config
-        call "%bindir%\config\main.bat"
+        call :install.gtheme
     cd /d "X:\EFI\Microsoft\Boot"
         :: setup WIM path in BCD store for UEFI mode
         call :bcdautoset bcd
@@ -1374,8 +1353,14 @@ exit /b 0
 exit /b 0
 
 
-:speech
+:speechOn
     if exist "%systemroot%\SysWOW64\Speech\SpeechUX\sapi.cpl" start %~1
+exit /b 0
+
+
+:speechOff
+    taskkill /f /im wscript.exe /t /fi "status eq running">nul
+    del /s /q "%tmp%\%~1" >nul
 exit /b 0
 
 
@@ -1411,12 +1396,11 @@ exit /b 0
             echo Set Speak=CreateObject^("sapi.spvoice"^)
             echo Speak.Speak "Multiboot Drive Found"
         )
-        call :speech identify.vbs
+        call :speechOn identify.vbs
     call :colortool
         echo. & echo ^>^> Multiboot Drive Found ^^^^
         timeout /t 2 >nul
-    :: get disk number from drive label
-        del /s /q "%tmp%\identify.vbs" >nul
+        call :speechOff identify.vbs
     :offline.scan
     call :partassist.init
 exit /b 0
@@ -1438,7 +1422,7 @@ exit /b 0
     )
     cd /d "%bindir%"
         set "module=false"
-        for /f "delims=" %%f in (iso.list, iso_extract.list, specialiso.list, wim.list) do (
+        for /f "delims=" %%f in (iso.list, isoextract.list, specialiso.list, wim.list) do (
             cd /d "%curpath%"
                 if exist "*%%f*" set "module=true"
             cd /d "%bindir%"
@@ -1456,7 +1440,7 @@ exit /b 0
 :iso.extract
     if exist "%~1" if not exist "%ducky%\ISO_Extract\%~2\*.*" (
         set "modulename=%~2"
-        for /f "tokens=*" %%b in (%~1) do set "isopath=%bindir%\ISO_Extract\%%b"
+        for /f "tokens=*" %%b in (%~1) do set "isopath=%bindir%\isoextract\%%b"
         call :iso.mount & goto :extract
     )
 exit /b 0
@@ -1524,15 +1508,44 @@ exit /b 0
 
 :PortableAppsPlatform
     echo.
-    choice /c yn /cs /n /m "%_lang0223_%"
+    choice /c ynq /cs /n /m "%_lang0223_%"
         if errorlevel 1 set "portable=true"
         if errorlevel 2 set "portable=false"
+        if errorlevel 3 goto :mainMenu
         if "%portable%"=="true" (
-            cd /d "%bindir%"
-                7z x "PortableApps.7z" -o"%ducky%\" -aoa -y >nul
-                echo %_lang0012_%
-                timeout /t 2 >nul
+            choice /c yn /cs /n /m ">> ---> Download the last PortableApps.com Platform? [ y/n ] > "
+                if errorlevel 2 goto :PortableAppsExtract
+                if errorlevel 1 call :download.portableapps
+                :PortableAppsExtract
+                cd /d "%bindir%"
+                    7z x "PortableApps.7z" -o"%ducky%\" -aoa -y >nul
+                    echo %_lang0012_%
+                    timeout /t 2 >nul
         )
+exit /b 0
+:get.portablePlatform
+    set "sourcelink=https://portableapps.com/download"
+    wget.exe -q -O portable.log %sourcelink% >nul
+    for /f "tokens=3,* delims=_" %%a in (
+        'type portable.log ^| findstr /i "PortableApps.com_Platform_Setup_.*.paf.exe" ^| find /n /v "" ^| find "[1]"'
+    ) do set "ver=%%b"
+    set "ver=%ver:~0,6%"
+exit /b 0
+:download.portableapps
+    cd /d "%bindir%"
+        if not exist PortableApps mkdir PortableApps
+        7z x "wget.7z" -o"%tmp%" -aoa -y >nul
+        7z x "PortableApps.7z" -o"PortableApps" -aoa -y >nul
+    cd /d "%tmp%"
+        call :get.portablePlatform >nul 2>&1
+        set "sourcelink=https://portableapps.com/redirect/?a=PortableApps.comPlatform^&s^=s^&d^=pa^&f^=PortableApps.com_Platform_Setup_%ver%.paf.exe"
+        wget -q --show-progress -O Platform_%ver%.paf.exe %sourcelink%
+        set "list=PortableApps Start.exe"
+        7z x "Platform_*.paf.exe" -o"%bindir%\PortableApps" %list% -r -y >nul
+        del "Platform_%ver%.paf.exe" /s /q /f >nul
+    cd /d "%bindir%"
+        7z a PortableApps.7z .\PortableApps\* -sdel >nul
+        if exist "PortableApps" (rd /s /q "PortableApps" >nul)
 exit /b 0
 
 
@@ -1546,12 +1559,24 @@ exit /b 0
 
 :moveISOTemp
     cd /d "%bindir%"
-        for /f "delims=" %%f in (%~2) do (
+        for /f "delims=" %%f in (%~1.list) do (
             cd /d "%curpath%"
                 if exist "*%%f*.iso" move /y "*%%f*.iso" "%bindir%\%~1" >nul
             cd /d "%bindir%"
         )
 exit /b 0
+
+
+:checkISO
+    cd /d "%bindir%\%~1"
+        for /f "delims=" %%f in (%bindir%\%~1.list) do (
+            if exist "*%%f*.iso" goto :modules.go
+        )
+        goto :%~2
+    :modules.go
+exit /b 0
+
+
 
 
 
@@ -1569,6 +1594,8 @@ exit /b 0
         )
         if exist secureboot (
             for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
+        ) else (
+            set "secureboot=n"
         )
     if exist %ducky% cd /d "%ducky%\BOOT\GRUB\themes\"
         if exist theme (
@@ -1707,11 +1734,7 @@ exit /b 0
     :continue.gtheme
     cd /d "%ducky%\BOOT\grub\themes"
         if exist "%curtheme%" rmdir /s /q "%curtheme%" >nul
-        if not exist "%gtheme%" (
-            7z x "%bindir%\grub2_themes\%gtheme%.7z" -aoa -y >nul
-            7z x "%bindir%\grub2_themes\icons.7z" -aoa -y >nul
-            7z x "%bindir%\grub2font.7z" -o"%gtheme%" -aoa -y >nul
-        )
+        if not exist "%gtheme%" call :install.gtheme
         >"%ducky%\BOOT\grub\themes\theme" (echo %gtheme%)
         call "%bindir%\config\main.bat"
         call :clean.bye
@@ -1836,6 +1859,14 @@ exit /b 0
 exit /b 0
 
 
+:install.gtheme
+    7z x "%bindir%\grub2_themes\%gtheme%.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y >nul
+    7z x "%bindir%\grub2_themes\icons.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y >nul
+    7z x "%bindir%\grub2font.7z" -o"%ducky%\BOOT\grub\themes\%gtheme%" -aoa -y >nul
+    call "%bindir%\config\main.bat"
+exit /b 0
+
+
 :easeconvertdisk
     call :colortool
     partassist /list
@@ -1870,7 +1901,7 @@ exit /b 0
             echo Speak.Speak "Press 2 to Initialize a disk as MBR"
             echo WScript.Sleep 2
         )
-        call :speech warning.vbs
+        call :speechOn warning.vbs
     
     echo.
     echo %_lang0813_%
@@ -1886,8 +1917,7 @@ exit /b 0
         if errorlevel 1 set "option=1"
         if errorlevel 2 set "option=2"
         :: do not change the errorlevel order in the two lines above
-        taskkill /f /im wscript.exe /t /fi "status eq running">nul
-        del /s /q "%tmp%\warning.vbs" >nul
+        call :speechOff warning.vbs
     
     echo.
     choice /c yn /cs /n /m "%_lang0818_%"
@@ -2292,13 +2322,14 @@ exit /b 0
         echo ^> Downloading grub2-filemanager...
         cd /d "%bindir%\extra-modules"
             7z x "%bindir%\curl.7z" -o"%tmp%" -aos -y >nul
-            "%tmp%\curl\curl.exe" -L -s -o master.zip https://github.com/a1ive/grub2-filemanager/archive/master.zip
-            7z x "%bindir%\extra-modules\master.zip" -o"%bindir%\extra-modules\" -y >nul
-            del "master.zip" /s /q /f >nul
-        cd /d "%bindir%\extra-modules\grub2-filemanager-master\boot\
+            set "link=https://github.com/a1ive/grub2-filemanager/archive/lua.zip"
+            "%tmp%\curl\curl.exe" -L -s -o grubfm.zip %link%
+            7z x "%bindir%\extra-modules\grubfm.zip" -o"%bindir%\extra-modules\" -y >nul
+            del "grubfm.zip" /s /q /f >nul
+        cd /d "%bindir%\extra-modules\grub2-filemanager-lua\boot\
             xcopy "grub" "%bindir%\extra-modules\grub2-filemanager\" /e /y /q >nul
         cd /d "%bindir%\extra-modules\"
-            rmdir "grub2-filemanager-master" /s /q >nul
+            rmdir "grub2-filemanager-lua" /s /q >nul
 
         echo.
         echo ^> Setting grub2-filemanager config...
@@ -2349,16 +2380,14 @@ exit /b 0
     echo  %_lang0903_%
     echo  %_lang0904_%
     echo ---------------------------------------------------------------------
-    set "mode=3"
-    set /P mode= "%_lang0905_% > "
-        if "%mode%"=="1" set "option=Secure_rEFInd" & goto :checkdisk.default
-        if "%mode%"=="2" set "option=Secure_Grub2"  & goto :checkdisk.default
-        if "%mode%"=="3" set "option=rEFInd"        & goto :checkdisk.default
-        if "%mode%"=="4" set "option=Grub2"         & goto :checkdisk.default
-        if "%mode%"=="q" goto :extra.main
-        color 0e & echo. & echo %_lang0104_% & timeout /t 15 >nul & goto :option.default
+    echo.
+    choice /c 1234q /cs /n /m "%_lang0905_% > "
+        if errorlevel 5 timeout /t 1 >nul & goto :extra.main
+        if errorlevel 4 timeout /t 1 >nul & set "option=Grub2"
+        if errorlevel 3 timeout /t 1 >nul & set "option=rEFInd"
+        if errorlevel 2 timeout /t 1 >nul & set "option=Secure_Grub2"
+        if errorlevel 1 timeout /t 1 >nul & set "option=Secure_rEFInd"
     
-    :checkdisk.default
     call :checkdisktype
         if "%virtualdisk%"=="true"  goto :external.default
         if "%harddisk%"=="true"     goto :option.default
@@ -2496,8 +2525,7 @@ exit /b 0
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
         call :rEFInd.icons %ducky%
     cd /d "%bindir%"
-        7z x "%bindir%\grub2_themes\%gtheme%.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y >nul
-        7z x "%bindir%\grub2_themes\icons.7z" -o"%ducky%\BOOT\grub\themes\" -aoa -y >nul
+        call :install.gtheme
     cd /d "%ducky%\EFI\Microsoft\Boot"
         call :bcdautoset bcd
     call :install.rEFInd
