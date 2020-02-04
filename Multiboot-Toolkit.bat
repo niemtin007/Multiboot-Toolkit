@@ -323,7 +323,7 @@ for /f "tokens=*" %%i in ('dir /a:-d /b "%curpath%"') do (
 )
 :: rename all modules namelist
 cd /d "%bindir%"
-    for /f "delims=" %%f in (iso.list, isoextract.list, specialiso.list, wim.list) do (
+    for /f "delims=" %%f in (isoextract.list) do (
         cd /d "%ducky%\BOOT\namelist\temp"
             if exist "*%%f*" ren "*%%f*" "%%f" >nul
         cd /d "%bindir%"
@@ -338,6 +338,7 @@ call :checkISO isoextract modules.specialiso
 cd /d "%bindir%"
     7z x "wincdemu.7z" -o"%tmp%" -aoa -y >nul
     wincdemu /install
+:extract.list
 cd /d "%ducky%\BOOT\namelist\temp"
     call :iso.extract aomei , AOMEI-Backup
     call :iso.extract android , Android-x86
@@ -839,7 +840,7 @@ exit /b 0
         echo %_lang0013_%
         call :speechOn thanks.vbs
         timeout /t 3 >nul
-        call :speechOff thanks.vbs
+        del /s /q thanks.vbs >nul
         exit
 exit /b 0
 
@@ -1441,7 +1442,7 @@ exit /b 0
     if exist "%~1" if not exist "%ducky%\ISO_Extract\%~2\*.*" (
         set "modulename=%~2"
         for /f "tokens=*" %%b in (%~1) do set "isopath=%bindir%\isoextract\%%b"
-        call :iso.mount & goto :extract
+        call :iso.mount
     )
 exit /b 0
 
@@ -1502,7 +1503,7 @@ exit /b 0
         )
 :iso.unmount
     wincdemu /unmount X:
-    cls
+    cls & goto :extract.list
 exit /b 0
 
 
