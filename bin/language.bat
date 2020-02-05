@@ -4,76 +4,53 @@
 :: The batch file is written by niemtin007.
 :: Thank you for using Multiboot Toolkit.
 
-if exist "%ducky%\BOOT\lang" (
-    for /f "delims=" %%b in (%ducky%\BOOT\lang) do set "lang=%%b"
-)
+if "%lang%"=="English" goto :lang.en
+if "%lang%"=="Vietnam" goto :lang.vn
+if "%lang%"=="Turkish" goto :lang.tr
+if "%lang%"=="SimplifiedChinese" goto :lang.tw
 
-if "%lang%"=="English" (
+:: auto detect system language
+for /f "tokens=3 delims= " %%b in (
+    'reg query "hklm\system\controlset001\control\nls\language" /v Installlanguage'
+) do set "langnum=%%b"
+    if "%langnum%"=="0400" set "lang=Vietnam" & goto :lang.vn
+    if "%langnum%"=="041F" set "lang=Turkish" & goto :lang.tr
+    if "%langnum%"=="0804" set "lang=SimplifiedChinese" & goto :lang.tw
+                           :: set default English for other system languages
+                           set "lang=English" & goto :lang.en
+
+
+:lang.en
     set "langfm=en_US"
     set "langpa=en"
     set "langcode=9"
     goto :English
-)
-if "%lang%"=="Vietnam" (
+exit /b 0
+
+:lang.vn
     set "langfm=vi_VN"
     set "langpa=en"
     set "langcode=9"
     rem set "langpa=vn"
     rem set "langcode=42"
     goto :Vietnam
-)
-rem don't use "::" to comment in "()"
-if "%lang%"=="Turkish" (
+exit /b 0
+
+:lang.tr
     set "langfm=tr_TR"
     set "langpa=en"
     set "langcode=9"
     rem set "langpa=tr"
     rem set "langcode=31"
     goto :Turkish
-)
-if "%lang%"=="SimplifiedChinese" (
+exit /b 0
+
+:lang.tw
     set "langfm=zh_CN"
     set "langpa=tw"
     set "langcode=999"
     goto :SimplifiedChinese
-)
-
-:: auto detect system language
-for /f "tokens=3 delims= " %%b in (
-    'reg query "hklm\system\controlset001\control\nls\language" /v Installlanguage'
-) do set "langnum=%%b"
-    if "%langnum%"=="0409" (
-        set "lang=English"
-        set "langfm=en_US"
-        set "langpa=en"
-        set "langcode=9"
-        goto :English
-    )
-    if "%langnum%"=="0400" (
-        set "lang=Vietnam"
-        set "langfm=vi_VN"
-        set "langpa=en"
-        set "langcode=9"
-        :: set "langpa=vn"
-        :: set "langcode=42"
-        goto :Vietnam
-    )
-    if "%langnum%"=="041F" (
-        set "lang=Turkish"
-        set "langfm=tr_TR"
-        set "langpa=en"
-        set "langcode=9"
-        :: set "langpa=tr"
-        :: set "langcode=31"
-        goto :Turkish
-    )
-    if "%langnum%"=="0804" (
-        set "lang=SimplifiedChinese"
-        set "langfm=zh_CN"
-        set "langpa=tw"
-        set "langcode=999"
-        goto :SimplifiedChinese
-    )
+exit /b 0
 
 
 :English

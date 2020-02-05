@@ -1374,7 +1374,6 @@ exit /b 0
 
 :multibootscan
     cls
-    call language.bat
     call :scan.label MULTIBOOT
     call :check.author %ducky%
         if "%installed%"=="true" (
@@ -1515,13 +1514,10 @@ exit /b 0
         if errorlevel 3 goto :mainMenu
         if "%portable%"=="true" (
             choice /c yn /cs /n /m ">> ---> Download the last PortableApps.com Platform? [ y/n ] > "
-                if errorlevel 2 goto :PortableAppsExtract
-                if errorlevel 1 call :download.portableapps
-                :PortableAppsExtract
-                cd /d "%bindir%"
-                    7z x "PortableApps.7z" -o"%ducky%\" -aoa -y >nul
-                    echo %_lang0012_%
-                    timeout /t 2 >nul
+                if errorlevel 2 call :PortableAppsExtract
+                if errorlevel 1 call :download.portableapps & call :PortableAppsExtract
+                echo %_lang0012_%
+                timeout /t 2 >nul
         )
 exit /b 0
 :get.portablePlatform
@@ -1547,6 +1543,10 @@ exit /b 0
     cd /d "%bindir%"
         7z a PortableApps.7z .\PortableApps\* -sdel >nul
         if exist "PortableApps" (rd /s /q "PortableApps" >nul)
+exit /b 0
+:PortableAppsExtract
+    cd /d "%bindir%"
+        7z x "PortableApps.7z" -o"%ducky%\" -aoa -y >nul
 exit /b 0
 
 
@@ -2489,11 +2489,13 @@ exit /b 0
     call :download.rEFInd
     call :download.grub2 skip
     call :download.grubfm skip
+    call :download.portableapps
     call :download.grub4dos skip
 
     :updateOffline
     cd /d "%bindir%"
         echo. & echo ^>^> Updating data...
+        call :PortableAppsExtract
         7z x "data.7z" -o"%ducky%\" -aoa -y >nul
         xcopy /y "version" "%ducky%\EFI\BOOT\" >nul
     cd /d "%bindir%"
