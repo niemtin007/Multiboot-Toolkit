@@ -1402,7 +1402,22 @@ exit /b 0
         timeout /t 2 >nul
         call :speechOff identify.vbs
     :offline.scan
+    call :check.protected
     call :partassist.init
+exit /b 0
+
+
+:check.protected
+    cd /d "%ducky%"
+        >disk.protect echo true
+        if not exist disk.protect (
+            call :colortool
+            echo.
+            echo ^>^> Please Stop Protection on your device.
+            call :NTFSdriveprotect loop
+        ) else (
+            del /s /q disk.protect >nul
+        )
 exit /b 0
 
 
@@ -2569,15 +2584,16 @@ exit /b 0
 
 
 :NTFSdriveprotect
-    call :colortool
+    cd /d "%bindir%"
         7z x "driveprotect.7z" -o"%tmp%" -aos -y >nul
         if "%processor_architecture%" == "x86" (
-            set DriveProtect=driveprotect.exe
+            set "DriveProtect=driveprotect.exe"
         ) else (
-            set DriveProtect=driveprotectx64.exe
+            set "DriveProtect=driveprotectx64.exe"
         )
     cd /d "%tmp%\driveprotect"
-        start %DriveProtect%
+        start /i /wait %DriveProtect%
+        if "%~1"=="loop" goto :multibootscan
         exit
 exit /b 0
 

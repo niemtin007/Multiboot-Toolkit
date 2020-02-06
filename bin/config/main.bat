@@ -258,7 +258,7 @@ goto :eof
 
     echo.
     echo if [ -e "/EFI/BOOT/grubfmx64.efi" ]; then
-    echo    menuentry "%_config0115_% - official build" --class refind {
+    echo    menuentry "%_config0115_% - full" --class refind {
     echo        echo "%_config0126_%"
     echo        if [ "${grub_platform}" == "pc" ]; then
     echo           linux /EFI/BOOT/loadfm
@@ -268,7 +268,7 @@ goto :eof
     echo        fi
     echo    }
     echo else
-    echo    menuentry "%_config0115_% - source script" --class refind {
+    echo    menuentry "%_config0115_% - lite" --class refind {
     echo        echo "%_config0126_%"
     echo        configfile ${prefix}/init.sh
     echo    }
