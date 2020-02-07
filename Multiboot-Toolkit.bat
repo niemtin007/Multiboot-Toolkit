@@ -84,6 +84,7 @@ if "%secureboot%"=="n" goto :usbmultibootdata
 :: create ESP partition
 call :colortool
 partassist /hd:%disk% /cre /pri /size:50 /fs:fat32 /label:M-ESP /letter:X
+call :fix.filesystem
 partassist /move:X /right:auto /align
 call :unhide.partition 0
 call :pushdata.ESP
@@ -102,13 +103,13 @@ call :count.partition
     :: the disk is an unallocated
     if not defined partcount goto :Setup
     :: set multiboot data partition size
-    set /a GB=0
     echo.
+    set /a GB=0
     set /p GB= %_lang0106_%
     set /a GB=%GB%+0
     :: check the character of the number
     echo %esp%| findstr /r "^[1-9][0-9]*$">nul
-    if not "%errorlevel%"=="0" goto :External
+        if not "%errorlevel%"=="0" goto :External
     :: sum size of the esp partition
     set /a MB=(%GB%*1024+%esp%)
     :: check the installed status and give instruction
@@ -139,7 +140,7 @@ if "%installed%"=="true" if "%disk%"=="%diskscan%" (
     goto :delete
 )
 :continue
-if exist X:\ chkdsk X: /f
+call :fix.filesystem
 partassist /hd:%disk% /setletter:0 /letter:auto
 :: only resize partition for new size setting or new installing
 if "%online%"=="true" if not "%GB%"=="0" (
@@ -404,10 +405,12 @@ if %size% LEQ %esp% (
 call :colortool
 echo.
 echo %_lang0209_%
-for /f "delims=" %%f in (iso.list) do (
-    if not exist "%ducky%\ISO\*%%f*.iso" (
-        if exist "%curpath%\*%%f*.iso" (
-            robocopy "%curpath%" "%ducky%\ISO" *%%f*.iso /njh /njs /nc /ns
+for /f "tokens=*" %%b in ('dir /a /b "%curpath%\*.iso"') do (
+    if not exist "%ducky%\ISO\%%b" (
+        for /f "delims=" %%f in (iso.list) do (
+            if exist "%curpath%\*%%f*.iso" (
+                robocopy "%curpath%" "%ducky%\ISO" %%b /njh /njs /nc /ns
+            )
         )
     )
 )
@@ -559,7 +562,6 @@ call :clean.bye
 
 :extraFeatures
 
-set "title=Extra Features"
 set "curdir=%~dp0"
 
 call :colortool
@@ -568,6 +570,7 @@ call :gather.info
 
 
 :extra.main
+set "title=Extra Features"
 call :colortool
 echo.
 echo =====================================================================
@@ -994,6 +997,13 @@ exit /b 0
 exit /b 0
 
 
+:fix.filesystem
+    :: automatically fix file system error to keep data safety
+    :: use it before using the "/resize" and "/move" of partassist
+    if exist X:\ chkdsk /f X: >nul
+exit /b 0
+
+
 :clean.disk
     (
         echo select disk %disk%
@@ -1360,7 +1370,9 @@ exit /b 0
 
 
 :speechOff
-    taskkill /f /im wscript.exe /t /fi "status eq running">nul
+    if not "%~2"=="nonstop" (
+        taskkill /f /im wscript.exe /t /fi "status eq running">nul
+    )
     del /s /q "%tmp%\%~1" >nul
 exit /b 0
 
@@ -1399,25 +1411,27 @@ exit /b 0
         call :speechOn identify.vbs
     call :colortool
         echo. & echo ^>^> Multiboot Drive Found ^^^^
-        timeout /t 2 >nul
-        call :speechOff identify.vbs
+        timeout /t 1 >nul
+        call :speechOff identify.vbs nonstop
+        call :check.protected
     :offline.scan
-    call :check.protected
     call :partassist.init
 exit /b 0
 
 
 :check.protected
-    cd /d "%ducky%"
-        >disk.protect echo true
-        if not exist disk.protect (
-            call :colortool
-            echo.
-            echo ^>^> Please Stop Protection on your device.
-            call :NTFSdriveprotect loop
-        ) else (
-            del /s /q disk.protect >nul
-        )
+    if exist "%ducky%" (
+        cd /d "%ducky%"
+            >disk.protect echo true
+            if not exist disk.protect (
+                call :colortool
+                echo.
+                echo ^>^> Please Stop Protection on your device.
+                call :NTFSdriveprotect loop
+            ) else (
+                del /s /q disk.protect >nul
+            )
+    )
 exit /b 0
 
 
@@ -1622,6 +1636,7 @@ exit /b 0
 
 
 :changelanguage
+    set "title=%_lang0833_%"
     call :colortool
     echo.
     echo ^> Current Language is %lang%
@@ -1653,6 +1668,7 @@ exit /b 0
 
 
 :sortgrub2menu
+    set "title=%_lang0836_%"
     call :colortool
     echo                   _    ____  
     echo   __ _ _ __ _   _^| ^|__^|___ \  a. %_config0115_%
@@ -1686,6 +1702,7 @@ exit /b 0
 
 
 :grub2theme
+    set "title=%_lang0821_%"
     call :colortool
     set "curtheme=%gtheme%"
     echo.
@@ -1758,6 +1775,7 @@ exit /b 0
 
 
 :rEFIndtheme
+    set "title=%_lang0822_%"
     call :colortool
     echo.
     echo %_lang0400_% %rtheme%
@@ -1884,6 +1902,7 @@ exit /b 0
 
 
 :easeconvertdisk
+    set "title=%_lang0831_%"
     call :colortool
     partassist /list
     echo.
@@ -1961,6 +1980,7 @@ exit /b 0
 
 
 :editWinPEbootmanager
+    set "title=%_lang0826_%"
     call :colortool
     echo.
     echo            ^	^>^> MINI WINDOWS BOOT MANAGER EDITOR ^<^<
@@ -2145,6 +2165,7 @@ exit /b 0
 
 
 :editwinsetupfromUSB
+    set "title=%_lang0827_%"
     call :colortool
     if not exist "%ducky%\WINSETUP\" (
         color 0e & echo.
@@ -2174,6 +2195,7 @@ exit /b 0
 
 
 :fixbootloader
+    set "title=%_lang0829_%"
     call :colortool
     call :check.partitiontable
     echo                  ------------------------------------
@@ -2310,7 +2332,8 @@ exit /b 0
         wget.exe -q --show-progress -O grubfm-%ver%.7z %url%
 exit /b 0
 :grub2-filemanager
-    cls
+    set "title=%_lang0828_%"
+    call :colortool
     echo                     ___            _      __
     echo                   / _ \_ __ _   _^| ^|__  / _^|_ __ ___
     echo                  / /_\/ '__^| ^| ^| ^| '_ \^| ^|_^| '_ ` _ \
@@ -2318,8 +2341,8 @@ exit /b 0
     echo                 \____/^|_^|   \__,_^|_.__/^|_^| ^|_^| ^|_^| ^|_^|
     echo                                                  A1ive
     echo.
-    echo ^                         [ 1 ] Origin build
-    echo ^                         [ 2 ] Source Script
+    echo ^                      [ 1 ] Origin build ^(full^)
+    echo ^                      [ 2 ] Source Script ^(lite^)
     echo.
     choice /c 12q /cs /n /m "%_lang0020_%"
         if errorlevel 3 goto :extra.main
@@ -2376,6 +2399,7 @@ exit /b 0
 
 
 :setdefaultboot
+    set "title=%_lang0825_%"
     call :colortool
     cd /d "%bindir%\secureboot\EFI\Boot\backup"
         if not exist Grub2 mkdir Grub2
@@ -2478,7 +2502,7 @@ exit /b 0
 
 
 :updatemultiboot
-    :: Preparing files...
+    set "title=%_lang0835_%"
     call :colortool
     echo.
     cd /d "%bindir%"
@@ -2557,6 +2581,7 @@ exit /b 0
 
 
 :OneFileLinux
+    set "title=%_lang0830_%"
     call :colortool
     echo.
     cd /d "%bindir%"
@@ -2697,6 +2722,7 @@ exit /b 0
     timeout /t 2 >nul
 exit /b 0
 :cloverinstaller
+    set "title=%_lang0823_%"
     call :colortool
     if "%PROCESSOR_ARCHITECTURE%"=="x86" (
         set gdisk=gdisk32.exe
@@ -2888,6 +2914,7 @@ exit /b 0
     partassist /hd:%disk% /whide:%refindpart% /src:%source% /dest:EFI\BOOT
 exit /b 0
 :rEFIndinstaller
+    set "title=%_lang0824_%"
     call :colortool
     for /f "tokens=4 delims=\" %%b in ('wmic os get name') do set "harddisk=%%b"
         if defined harddisk set /a "harddisk=%harddisk:~8,1%"
