@@ -12,10 +12,11 @@ cd /d "%ducky%\BOOT\grub"
     >"main.cfg" (
         echo.
         echo # Load grub2 modules
-        echo set modlist='font jpeg png regexp'
+        echo cat --set=modlist ${prefix}/insmod.lst
         echo for module in $modlist; do
         echo     insmod $module
         echo done
+        echo export enable_progress_indicator=0
         echo.
         echo if loadfont unicode ; then
         echo     if keystatus --shift ; then true ; else

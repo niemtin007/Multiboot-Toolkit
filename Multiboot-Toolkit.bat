@@ -1095,8 +1095,8 @@ exit /b 0
     )
     :: install grub2 for EFI mode
     cd /d "%tmp%\grub2"
-        grub-install --target=x86_64-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
-        grub-install --target=i386-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=part_gpt --removable
+        grub-install --target=x86_64-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=progress --removable
+        grub-install --target=i386-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=progress --removable
     cd /d "%ducky%\EFI\BOOT\backup"
         if not exist Grub2 mkdir Grub2
     cd /d "V:\EFI\BOOT"
