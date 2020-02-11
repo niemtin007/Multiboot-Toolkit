@@ -409,7 +409,12 @@ for /f "tokens=*" %%b in ('dir /a /b "%curpath%\*.iso"') do (
     if not exist "%ducky%\ISO\%%b" (
         for /f "delims=" %%f in (iso.list) do (
             if exist "%curpath%\*%%f*.iso" (
-                robocopy "%curpath%" "%ducky%\ISO" %%b /njh /njs /nc /ns
+                echo %%b | findstr /i /c:"%%f" 1>nul
+                    if errorlevel 1 (
+                        echo false >nul
+                    ) else (
+                        robocopy "%curpath%" "%ducky%\ISO" %%b /njh /njs /nc /ns
+                    )
             )
         )
     )
