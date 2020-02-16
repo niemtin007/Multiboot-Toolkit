@@ -12,7 +12,7 @@ cd /d "%ducky%\BOOT\grub"
     >"main.cfg" (
         echo.
         echo # Load grub2 modules
-        echo cat --set=modlist ${prefix}/insmod.lst
+        echo set modlist='font jpeg png regexp'
         echo for module in $modlist; do
         echo     insmod $module
         echo done

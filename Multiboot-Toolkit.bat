@@ -151,17 +151,7 @@ if "%online%"=="false" (
 )
 
 :Setup
-if "%secureboot%"=="n" (
-    set /a rpart=0
-    set /a mpart=1
-    set /a offset=%esp%+8
-    goto :esp2
-) else (
-    set /a rpart=1
-    set /a mpart=2
-    set /a offset=%esp%+58
-    goto :esp1
-)
+call :set.partnum esp2 esp1
 :esp1
 :: Create ESP Partition
 call :colortool
@@ -373,9 +363,6 @@ cd /d "%ducky%\BOOT"
     for /f "tokens=*" %%b in (esp) do set "esp=%%b"
     set /a "esp=%esp%+0"
     set /a "size=0"
-    if exist secureboot (
-        for /f "tokens=*" %%b in (secureboot) do set "secureboot=%%b"
-    )
     if "%secureboot%"=="n" (set rpart=0) else (set rpart=1)
 call :colortool
     for /f "tokens=*" %%x in ('dir /s /a /b "specialiso"') do set /a "size+=%%~zx"
@@ -891,7 +878,8 @@ exit /b 0
 
 
 :scan.label
-    set online=false
+    set "ducky="
+    set "online=false"
     :: get drive letter from label
     for /f %%b in (
         'wmic volume get driveletter^, label ^| findstr /i "%~1"'
@@ -953,6 +941,7 @@ exit /b 0
     :: check.harddisk
     wmic diskdrive get name, mediatype | find /i "Fixed hard disk media" | find /i "\\.\physicaldrive%disk%" >nul
         if not errorlevel 1 set "harddisk=true"
+        if "%virtualdisk%"=="true" set "harddisk=false"
     :: check.usbdisk
     wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" >nul
         if not errorlevel 1 set "usb=true"
@@ -968,6 +957,34 @@ exit /b 0
     for /f "tokens=3 delims=#" %%b in (
         'wmic partition get name ^| findstr /i "#%disk%,"'
         ) do set "partcount=%%b"
+exit /b 0
+
+
+:set.partnum
+    if "%usb%"=="true" if "%secureboot%"=="n" (
+        set /a rpart=1
+        goto :%~1
+    ) 
+    if "%usb%"=="true" if "%secureboot%"=="y" (
+        set /a rpart=2
+        set /a mpart=1
+        set /a spart=1
+        goto :%~2
+    )
+    
+    if "%secureboot%"=="n" (
+        set /a rpart=0
+        set /a mpart=1
+        set /a offset=%esp%+8
+        goto :%~1
+    ) 
+    if "%secureboot%"=="y" (
+        set /a rpart=1
+        set /a mpart=0
+        set /a spart=0
+        set /a offset=%esp%+58
+        goto :%~2
+    )
 exit /b 0
 
 
@@ -1666,7 +1683,7 @@ exit /b 0
         call language.bat
     cd /d "%bindir%\config"
         call "main.bat"
-    :: setting language for grub2 file manager
+        :: setting language for grub2 file manager
         >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
     call :clean.bye
 exit /b 0
@@ -1847,6 +1864,15 @@ exit /b 0
     color 0e & echo. & echo %_lang0003_% & timeout /t 15 >nul & goto :rEFIndtheme
 
     :continue.rtheme
+    call :checkdisktype
+        if "%harddisk%"=="true" (
+            echo.
+            echo ^>^> Hard Disk detected, auto quit...
+            timeout /t 3 >nul & exit
+        )
+        call :set.partnum install.rtheme install.rtheme
+
+    :install.rtheme
     cd /d "%tmp%"
         if not exist rEFInd_themes mkdir rEFInd_themes
     cd /d "%bindir%"
@@ -1859,40 +1885,13 @@ exit /b 0
             xcopy "cloverx64.png" "%ducky%\EFI\CLOVER\" /e /z /r /y /q >nul
         )
         call :rEFInd.icons %ducky%
-        call :checkdisktype
-            if "%virtualdisk%"=="true"  goto :external.rtheme
-            if "%harddisk%"=="true"     exit
-            if "%usb%"=="true"          goto :removable.rtheme
-            if "%externaldisk%"=="true" goto :external.rtheme
-    
-    :removable.rtheme
-    if "%secureboot%"=="n" (
-        set refindpart=1
-        goto :install.rtheme
-    ) else (
-        set refindpart=2
-        set securepart=1
-        goto :install.rtheme
-    )
-    
-    :external.rtheme
-    if "%secureboot%"=="n" (
-        set refindpart=0
-        goto :install.rtheme
-    ) else (
-        set refindpart=1
-        set securepart=0
-        goto :install.rtheme
-    )
-
-    :install.rtheme
     :: Install rEFind theme
     set "source=%tmp%\rEFInd_themes\%rtheme%"
-    partassist /hd:%disk% /whide:%refindpart% /src:%source% /dest:EFI\BOOT\themes
+    partassist /hd:%disk% /whide:%rpart% /src:%source% /dest:EFI\BOOT\themes
     :: Copy icon to secure boot partition
     set "source=%tmp%\rEFInd_themes\%rtheme%\icons\others"
     if not "%secureboot%"=="n" (
-        partassist /hd:%disk% /whide:%securepart% /src:%source% /dest:EFI\BOOT
+        partassist /hd:%disk% /whide:%spart% /src:%source% /dest:EFI\BOOT
     )
     call :clean.bye
 exit /b 0
@@ -1952,6 +1951,8 @@ exit /b 0
     echo %_lang0816_%
     echo %_lang0817_%
     echo ---------------------------------------------------------------------
+    echo.
+    echo ^>  Disk %disk% was selected.
     echo.
     choice /c 12 /cs /n /m "*  %_lang0905_% [ ? ] = "
         if errorlevel 1 set "option=1"
@@ -2013,31 +2014,8 @@ exit /b 0
     
     :uefi3264bit
     call :checkdisktype
-        if "%virtualdisk%"=="true"  goto :external.pe
-        if "%harddisk%"=="true"     goto :external.pe
-        if "%usb%"=="true"          goto :removable.pe
-        if "%externaldisk%"=="true" goto :external.pe
-    
-    :removable.pe
-    if "%secureboot%"=="n" (
-        set refindpart=1
-        goto :installbcd.pe
-    ) else (
-        set refindpart=2
-        set securepart=1
-        goto :installbcd.pe
-    )
-    
-    :external.pe
-    if "%secureboot%"=="n" (
-        set refindpart=0
-        goto :installbcd.pe
-    ) else (
-        set refindpart=1
-        set securepart=0
-        goto :installbcd.pe
-    )
-    
+        call :set.partnum installbcd.pe installbcd.pe
+
     :installbcd.pe
     :: open Configuration BCD file...
     if "%secureboot%"=="n" (
@@ -2051,7 +2029,7 @@ exit /b 0
     :: copy Configuration BCD file to the destination...
     if not "%secureboot%"=="n" (
         call :bcdautoset bcd
-        partassist /hd:%disk% /whide:%securepart% /src:%source% /dest:EFI\Microsoft\Boot
+        partassist /hd:%disk% /whide:%spart% /src:%source% /dest:EFI\Microsoft\Boot
     )
     call :colortool
     goto :extra.main
@@ -2245,11 +2223,18 @@ exit /b 0
     
     :grub2.fix
     echo.
-    choice /c yn /cs /n /m "%_lang0503_%"
+    choice /c ynq /cs /n /m "%_lang0503_%"
+        if errorlevel 3 goto :fixbootloader
         if errorlevel 2 goto :config.fix
-        if errorlevel 1 cd /d "%bindir%"
+        if errorlevel 1 set "installgrub2=true"
 
-        call :download.grub2
+        if "%installgrub2%"=="true" (
+            choice /c ynq /cs /n /m "> Download the last build from A1ive?        [ y/n ] > "
+                if errorlevel 1 set "downloadgrub2=true"
+                if errorlevel 2 set "downloadgrub2=false"
+                if errorlevel 3 goto :fixbootloader
+        )
+        if "%downloadgrub2%"=="true" call :download.grub2
         echo %_lang0504_%
         call :grub2installer MULTIBOOT >nul 2>&1
 
@@ -2270,7 +2255,11 @@ exit /b 0
     cd /d "%bindir%\extra-modules"
         7z x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
         >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
-    
+    :: update default efi boot
+    set "option=Grub2"
+    if "%installgrub2%"=="true" if exist "%ducky%\EFI\BOOT\WindowsGrub2" (
+        goto :install.defaultboot
+    )
     call :clean.bye
 exit /b 0
 
@@ -2406,17 +2395,6 @@ exit /b 0
 :setdefaultboot
     set "title=%_lang0825_%"
     call :colortool
-    cd /d "%bindir%\secureboot\EFI\Boot\backup"
-        if not exist Grub2 mkdir Grub2
-    cd /d "%ducky%\BOOT"
-        if not exist "secureboot" goto :option.default
-        set "Grub2=%bindir%\secureboot\EFI\Boot\backup\Grub2"
-        set "rEFInd=%bindir%\secureboot\EFI\Boot\backup\rEFInd"
-        set "WinPE=%bindir%\secureboot\EFI\Boot\backup\WinPE"
-    cd /d "%ducky%\EFI\BOOT\backup"
-        if exist Grub2 copy Grub2 %Grub2% /y >nul
-    
-    :option.default
     echo.
     echo      %_lang0900_%
     echo ---------------------------------------------------------------------
@@ -2432,72 +2410,61 @@ exit /b 0
         if errorlevel 3 timeout /t 1 >nul & set "option=rEFInd"
         if errorlevel 2 timeout /t 1 >nul & set "option=Secure_Grub2"
         if errorlevel 1 timeout /t 1 >nul & set "option=Secure_rEFInd"
-    
+
+    :install.defaultboot
+    cd /d "%bindir%\secureboot\EFI\Boot\backup"
+        if not exist Grub2 mkdir Grub2
+    cd /d "%ducky%\BOOT"
+        if not exist "secureboot" goto :setdefaultboot
+        set "Grub2=%bindir%\secureboot\EFI\Boot\backup\Grub2"
+        set "rEFInd=%bindir%\secureboot\EFI\Boot\backup\rEFInd"
+        set "WinPE=%bindir%\secureboot\EFI\Boot\backup\WinPE"
+    cd /d "%ducky%\EFI\BOOT\backup"
+        if exist Grub2 copy Grub2 %Grub2% /y >nul
+
     call :checkdisktype
-        if "%virtualdisk%"=="true"  goto :external.default
-        if "%harddisk%"=="true"     goto :option.default
-        if "%usb%"=="true"          goto :removable.default
-        if "%externaldisk%"=="true" goto :external.default
-    
-    :removable.default
-    if "%secureboot%"=="n" (
-        set refindpart=1
-        goto :nonsecure.default
-    ) else (
-        set refindpart=2
-        set securepart=1
-        goto :secure.default
-    )
-    
-    :external.default
-    if "%secureboot%"=="n" (
-        set refindpart=0
-        goto :nonsecure.default
-    ) else (
-        set refindpart=1
-        set securepart=0
-        goto :secure.default
-    )
+        if "%harddisk%"=="true" goto :setdefaultboot
+        call :set.partnum nonsecure.default secure.default
     
     :nonsecure.default
-    if "%option%"=="Secure_rEFInd" cls & goto :option.default
-    if "%option%"=="Secure_Grub2"  cls & goto :option.default
+    if "%option%"=="Secure_rEFInd" cls & goto :setdefaultboot
+    if "%option%"=="Secure_Grub2"  cls & goto :setdefaultboot
     if "%option%"=="rEFInd" (
-        partassist /hd:%disk% /whide:%refindpart% /src:%rEFInd% /dest:\EFI\BOOT
+        partassist /hd:%disk% /whide:%rpart% /src:%rEFInd% /dest:\EFI\BOOT
     )
     if "%option%"=="Grub2" (
-        partassist /hd:%disk% /whide:%refindpart% /src:%Grub2% /dest:\EFI\BOOT
+        partassist /hd:%disk% /whide:%rpart% /src:%Grub2% /dest:\EFI\BOOT
         >"%ducky%\EFI\BOOT\WindowsGrub2" (echo true)
     )
     call :clean.bye
     
     :secure.default
     if "%option%"=="Secure_rEFInd" (
-        partassist /hd:%disk% /whide:%securepart% /src:%WinPE% /dest:\EFI\BOOT
-        partassist /hd:%disk% /whide:%refindpart% /src:%rEFInd% /dest:\EFI\BOOT
+        partassist /hd:%disk% /whide:%spart% /src:%WinPE% /dest:\EFI\BOOT
+        partassist /hd:%disk% /whide:%rpart% /src:%rEFInd% /dest:\EFI\BOOT
         cd /d "%ducky%\EFI\BOOT\"
             if exist bootx64.efi  del bootx64.efi  /s /f /q >nul
             if exist bootia32.efi del bootia32.efi /s /f /q >nul
     )
     if "%option%"=="Secure_Grub2" (
-        partassist /hd:%disk% /whide:%securepart% /src:%WinPE% /dest:\EFI\BOOT
-        partassist /hd:%disk% /whide:%refindpart% /src:%Grub2% /dest:\EFI\BOOT
+        partassist /hd:%disk% /whide:%spart% /src:%WinPE% /dest:\EFI\BOOT
+        partassist /hd:%disk% /whide:%rpart% /src:%Grub2% /dest:\EFI\BOOT
     )
     if "%option%"=="rEFInd" (
-        partassist /hd:%disk% /unhide:%securepart%
-        partassist /hd:%disk% /setletter:%securepart% /letter:X
+        partassist /hd:%disk% /unhide:%spart%
+        partassist /hd:%disk% /setletter:%spart% /letter:X
         cd /d "X:\EFI\BOOT\"
             if exist bootx64.efi   del bootx64.efi   /s /f /q >nul
             if exist bootia32.efi  del bootia32.efi  /s /f /q >nul
             if exist winpeia32.efi del winpeia32.efi /s /f /q >nul
             if exist winpex64.efi  del winpex64.efi  /s /f /q >nul
-        partassist /hd:%disk% /hide:%securepart%
-        partassist /hd:%disk% /whide:%refindpart% /src:%rEFInd% /dest:\EFI\BOOT
+        partassist /hd:%disk% /hide:%spart%
+        partassist /hd:%disk% /whide:%rpart% /src:%rEFInd% /dest:\EFI\BOOT
         cd /d "%bindir%"
             xcopy "secureboot" "%ducky%\" /e /g /h /r /y /q >nul
     )
     if "%option%"=="Grub2" (
-        partassist /hd:%disk% /whide:%securepart% /src:%Grub2% /dest:\EFI\BOOT
+        partassist /hd:%disk% /whide:%spart% /src:%Grub2% /dest:\EFI\BOOT
         cd /d "%bindir%"
             xcopy "secureboot" "%ducky%\" /e /g /h /r /y /q >nul
             >"%ducky%\EFI\BOOT\WindowsGrub2" (echo true)
@@ -2892,31 +2859,12 @@ exit /b 0
         if exist "rEFInd" rd /s /q "rEFInd" >nul
 exit /b 0
 :install.rEFInd
-    :: detected USB
-    wmic diskdrive get name, mediatype | find /i "Removable Media" | find /i "\\.\physicaldrive%disk%" >nul
-        if not errorlevel 1 (goto :Removable.rEFInd) else (goto :External.rEFInd)
-        :Removable.rEFInd
-        if "%secureboot%"=="n" (
-            set refindpart=1
-            goto :installrEFInd
-        ) else (
-            set refindpart=2
-            set securepart=1
-            goto :installrEFInd
-        )
-        :External.rEFInd
-        if "%secureboot%"=="n" (
-            set refindpart=0
-            goto :installrEFInd
-        ) else (
-            set refindpart=1
-            set securepart=0
-            goto :installrEFInd
-        )
+    call :checkdisktype
+        call :set.partnum installrEFInd installrEFInd
     
     :installrEFInd
     set "source=%tmp%\rEFInd"
-    partassist /hd:%disk% /whide:%refindpart% /src:%source% /dest:EFI\BOOT
+    partassist /hd:%disk% /whide:%rpart% /src:%source% /dest:EFI\BOOT
 exit /b 0
 :rEFIndinstaller
     set "title=%_lang0824_%"
