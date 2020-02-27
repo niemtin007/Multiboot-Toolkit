@@ -168,7 +168,7 @@ call :pushdata.rEFInd
 partassist /hd:%disk% /hide:%rpart%
 :: Create Multiboot Data Partition
 call :colortool
-call :check.partitiontable
+call :check.diskInfo
 if "%GPT%"=="true" (
     partassist /hd:%disk% /cre /pri /size:auto /offset:%offset% /fs:ntfs /act /align /label:MULTIBOOT /letter:X
 ) else (
@@ -193,17 +193,17 @@ call :scan.label MULTIBOOT
     >"X:\BOOT\esp"               (echo %esp%)
     >"X:\BOOT\lang"              (echo %lang%)
     >"X:\BOOT\secureboot"        (echo %secureboot%)
-    xcopy "version" "X:\EFI\BOOT\" >nul
     if "%virtualdisk%"=="true" (
         >"X:\BOOT\virtualdisk" (echo true)
     )
+    xcopy "version" "X:\EFI\BOOT\" >nul
 cd /d "%bindir%\config\bcd"
     xcopy "B84" "X:\BOOT\bootmgr\" /e /g /h /r /y /q >nul
 cd /d "%bindir%\secureboot\BOOT"
     xcopy "boot.sdi" "X:\BOOT\"    /e /g /h /r /y /q >nul
 cd /d "%bindir%"
     :: install grub4dos
-    xcopy "extra-modules\grub4dos\grldr" "X:\" /e /g /h /r /y /q >nul
+    call :grub4dosinstaller X:
     :: install wincdemu to mount iso files
     7z x "wincdemu.7z" -o"X:\ISO\" -aoa -y >nul
     :: install Syslinux Bootloader
@@ -214,8 +214,7 @@ cd /d "%bindir%"
     echo.
     echo %_lang0116_%
     call :grub2installer MULTIBOOT >nul 2>&1
-    7z x "extra-modules\grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y >nul
-    >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
+    call :install.grubfm
     :: install language
     echo.
     echo %_lang0112_% %lang%
@@ -363,12 +362,14 @@ cd /d "%ducky%\BOOT"
     for /f "tokens=*" %%b in (esp) do set "esp=%%b"
     set /a "esp=%esp%+0"
     set /a "size=0"
-    if "%secureboot%"=="n" (set rpart=0) else (set rpart=1)
 call :colortool
     for /f "tokens=*" %%x in ('dir /s /a /b "specialiso"') do set /a "size+=%%~zx"
     set /a "size=%size%/1024/1024"
     set "source=%bindir%\specialiso"
 
+call :set.partnum install.speiso install.speiso
+
+:install.speiso
 if %size% LEQ %esp% (
     if exist "%bindir%\specialiso\*.iso" (
         cls & echo. & echo %_lang0204_%
@@ -760,11 +761,7 @@ exit /b 0
         7z x "partassist.7z" -o"%tmp%" -aos -y >nul
         path=%path%;%bindir%;%tmp%;%tmp%\partassist
     :: begin preparing file
-    cd /d "%tmp%"
-        if not exist rEFInd_themes mkdir rEFInd_themes
-    call :colortool
-        7z x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
-        7z x "refind.7z" -o"%tmp%" -aoa -y >nul
+    call :extract.rEFInd
     cd /d "%tmp%\partassist"
         if "%processor_architecture%"=="x86" (
             SetupGreen32 -i >nul
@@ -840,7 +837,7 @@ exit /b 0
 exit /b 0
 
 
-:check.partitiontable
+:check.diskInfo
     set GPT=false
     for /f "tokens=4,5,8" %%b in (
         'echo list disk ^| diskpart ^| find /i "Disk %disk%"'
@@ -1008,7 +1005,7 @@ exit /b 0
     echo Loading, please wait...
     cd /d "%bindir%"
         call :checkdisktype
-        if "%usb%"=="true" call :check.partitiontable
+        if "%usb%"=="true" call :check.diskInfo
     :: display USB GPT information for partassist
     cls & partassist /list
     if "%usb%"=="true" if "%GPT%"=="true" (
@@ -1082,6 +1079,14 @@ exit /b 0
     copy "winsetupx64.png" "%~1\EFI\BOOT\winsetupfmia32.png" >nul
     copy "xorbootx64.png" "%~1\EFI\BOOT\xorbootx64.png" >nul
     xcopy "others" "%~1\EFI\BOOT\" /e /g /h /r /y /q >nul
+exit /b 0
+
+
+:grub4dosinstaller
+    cd /d "%bindir%\extra-modules\grub4dos"
+        xcopy "grldr" "%~1\" /e /g /h /r /y /q >nul
+        xcopy "grub.exe" "%~1\BOOT\grub" /e /g /h /r /y /q >nul
+    cd /d "%bindir%"
 exit /b 0
 
 
@@ -1355,8 +1360,7 @@ exit /b 0
             call :grub2installer MULTIBOOT legacydisable >nul 2>&1
         )
         :: install grub2 file manager
-        7z x "extra-modules\grub2-filemanager.7z" -o"X:\BOOT\grub\" -aoa -y >nul
-        >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
+        call :install.grubfm
         :: install language
         echo.
         echo %_lang0112_% %lang%
@@ -1395,7 +1399,7 @@ exit /b 0
     if not "%~2"=="nonstop" (
         taskkill /f /im wscript.exe /t /fi "status eq running">nul
     )
-    del /s /q "%tmp%\%~1" >nul
+    if exist "%tmp%\%~1" del /s /q "%tmp%\%~1" >nul
 exit /b 0
 
 
@@ -1791,7 +1795,6 @@ exit /b 0
         if exist "%curtheme%" rmdir /s /q "%curtheme%" >nul
         if not exist "%gtheme%" call :install.gtheme
         >"%ducky%\BOOT\grub\themes\theme" (echo %gtheme%)
-        call "%bindir%\config\main.bat"
         call :clean.bye
 exit /b 0
 
@@ -1815,7 +1818,7 @@ exit /b 0
     echo 11 = ClassicMacOS 22 = GameOfThrones 33 = Neon       44 = Woody      
     echo =====================================================================
     echo.
-    set /P ask= %_lang0401_%
+    set /p ask= %_lang0401_%
     if "%ask%"=="1"  set "rtheme=Apocalypse"     & goto :continue.rtheme
     if "%ask%"=="2"  set "rtheme=BGM"            & goto :continue.rtheme
     if "%ask%"=="3"  set "rtheme=BGM256"         & goto :continue.rtheme
@@ -1873,11 +1876,7 @@ exit /b 0
         call :set.partnum install.rtheme install.rtheme
 
     :install.rtheme
-    cd /d "%tmp%"
-        if not exist rEFInd_themes mkdir rEFInd_themes
-    cd /d "%bindir%"
-        call :colortool
-        7z x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
+    call :extract.rEFInd
     cd /d "%tmp%\rEFInd_themes\%rtheme%\icons"
         >"%ducky%\BOOT\rEFInd" (echo %rtheme%)
         echo. & echo %_lang0402_%
@@ -2180,7 +2179,7 @@ exit /b 0
 :fixbootloader
     set "title=%_lang0829_%"
     call :colortool
-    call :check.partitiontable
+    call :check.diskInfo
     echo                  ------------------------------------
     echo                    __ _        _                 _   
     echo                   / _^(___  __ ^| ^|__   ___   ___ ^| ^|_ 
@@ -2317,13 +2316,17 @@ exit /b 0
         for /f "tokens=1,6 delims=/" %%a in (
             'type grubfm.log ^| findstr /i "releases/tag.*.</a>" ^| find /n /v "" ^| find "[1]"'
         ) do set "ver=%%b"
-        set "ver=%ver:~8,6%"
+        set "ver=%ver:~0,10%"
         set "url=https://github.com/a1ive/grub2-filemanager/releases/download/%ver%/grubfm-%langfm%.7z"
         if not "%~1"=="skip" (
             echo.
             echo ^> Downloading grub2-filemanager %ver%...
         )
         wget.exe -q --show-progress -O grubfm-%ver%.7z %url%
+exit /b 0
+:install.grubfm
+    7z x "%bindir%\extra-modules\grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
+    >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
 exit /b 0
 :grub2-filemanager
     set "title=%_lang0828_%"
@@ -2513,9 +2516,7 @@ exit /b 0
         7z x "wincdemu.7z" -o"%ducky%\ISO\" -aoa -y >nul
     cd /d "%bindir%\secureboot\BOOT"
         xcopy "boot.sdi" "%ducky%\BOOT\" /e /g /h /r /y /q >nul
-    cd /d "%bindir%\extra-modules"
-        xcopy "grub4dos\grldr" "%ducky%\" /e /g /h /r /y /q >nul
-        xcopy "grub4dos\grub.exe" "%ducky%\BOOT\grub" /e /g /h /r /y /q >nul
+        call :grub4dosinstaller %ducky%
     cd /d "%tmp%"
         set "list=grubfmia32.efi grubfmx64.efi grubfm.iso"
         if exist "grubfm*.*" (
@@ -2696,22 +2697,7 @@ exit /b 0
 :cloverinstaller
     set "title=%_lang0823_%"
     call :colortool
-    if "%PROCESSOR_ARCHITECTURE%"=="x86" (
-        set gdisk=gdisk32.exe
-        ) else (
-        set gdisk=gdisk64.exe
-    )
-    for /f "tokens=4 delims=\" %%b in ('wmic os get name') do set "harddisk=%%b"
-        if defined harddisk set /a "harddisk=%harddisk:~8,1%"
-    for /f "tokens=2" %%b in (
-        'wmic path Win32_diskpartition get type ^, diskindex ^| find /i "%harddisk%"'
-        ) do set "GPT=%%b"
-        if /i "%GPT%" NEQ "GPT:" (
-            color 0e & echo. & echo %_lang0001_%
-            echo %_lang0002_%
-            set structure=MBR
-            timeout /t 15 >nul
-        )
+    call :check.systemInfo
     
     :clover
     cls 
@@ -2858,6 +2844,13 @@ exit /b 0
         7z a refind.7z rEFInd\ -sdel >nul
         if exist "rEFInd" rd /s /q "rEFInd" >nul
 exit /b 0
+:extract.rEFInd
+    cd /d "%tmp%"
+        if not exist rEFInd_themes mkdir rEFInd_themes
+    call :colortool
+        7z x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
+        7z x "refind.7z" -o"%tmp%" -aoa -y >nul
+exit /b 0
 :install.rEFInd
     call :checkdisktype
         call :set.partnum installrEFInd installrEFInd
@@ -2869,17 +2862,7 @@ exit /b 0
 :rEFIndinstaller
     set "title=%_lang0824_%"
     call :colortool
-    for /f "tokens=4 delims=\" %%b in ('wmic os get name') do set "harddisk=%%b"
-        if defined harddisk set /a "harddisk=%harddisk:~8,1%"
-    for /f "tokens=2" %%b in (
-        'wmic path Win32_diskpartition get type ^, diskindex ^| find /i "%harddisk%"'
-        ) do set "GPT=%%b"
-        if /i "%GPT%" NEQ "GPT:" (
-            color 0e & echo. & echo %_lang0001_%
-            echo %_lang0002_%
-            set "structure=MBR"
-            timeout /t 15 >nul
-        )
+    call :check.systemInfo
     
     :refind
     call :rEFIndinterface
@@ -2891,10 +2874,7 @@ exit /b 0
     :option.rEFInd
     set "rtheme=Universe"
     :: preparing file...
-    if not exist rEFInd_themes mkdir rEFInd_themes
-    cd /d "%tmp%"
-        7z x "%bindir%\refind.7z" -o"%tmp%" -aoa -y >nul
-        7z x "%bindir%\rEFInd_themes\%rtheme%.7z" -o"rEFInd_themes" -aoa -y >nul
+    call :extract.rEFInd
     :: make option
     call :colortool
     echo.
@@ -2950,4 +2930,19 @@ exit /b 0
     echo                          ^> rEFInd Installer ^<                       
     echo ----------------------------------------------------------------------
     echo.
+exit /b 0
+
+
+:check.systemInfo
+    for /f "tokens=4 delims=\" %%b in ('wmic os get name') do set "harddisk=%%b"
+        if defined harddisk set /a "harddisk=%harddisk:~8,1%"
+    for /f "tokens=2" %%b in (
+        'wmic path Win32_diskpartition get type ^, diskindex ^| find /i "%harddisk%"'
+        ) do set "GPT=%%b"
+        if /i "%GPT%" NEQ "GPT:" (
+            color 0e & echo. & echo %_lang0001_%
+            echo %_lang0002_%
+            set structure=MBR
+            timeout /t 15 >nul
+        )
 exit /b 0
