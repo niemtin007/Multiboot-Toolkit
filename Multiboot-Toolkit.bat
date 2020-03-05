@@ -2313,10 +2313,9 @@ exit /b 0
     cd /d "%tmp%"
         set "sourcelink=https://github.com/a1ive/grub2-filemanager/releases"
         wget.exe -q -O grubfm.log %sourcelink% >nul
-        for /f "tokens=1,6 delims=/" %%a in (
+        for /f tokens^=1^,6^ delims^=/^" %%a in (
             'type grubfm.log ^| findstr /i "releases/tag.*.</a>" ^| find /n /v "" ^| find "[1]"'
         ) do set "ver=%%b"
-        set "ver=%ver:~0,10%"
         set "url=https://github.com/a1ive/grub2-filemanager/releases/download/%ver%/grubfm-%langfm%.7z"
         if not "%~1"=="skip" (
             echo.
