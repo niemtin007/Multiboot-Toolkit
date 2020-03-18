@@ -18,10 +18,7 @@ if not exist "bin" (
 ) else (
     call :permissions
     call :colortool
-    call language.bat
-    if exist "X:\" (
-        call :check.letter X: return
-    )
+    call :get.freeDrive
     call :license
 )
 
@@ -74,16 +71,17 @@ call :checkdisktype
 :: prepare partitions space for removable Media
 call :colortool
 call :clean.disk
+call :get.freeDrive
 :: create rEFInd partition
 call :colortool
-partassist /hd:%disk% /cre /pri /size:%esp% /end /fs:fat32 /align /label:rEFInd /letter:X
+partassist /hd:%disk% /cre /pri /size:%esp% /end /fs:fat32 /align /label:rEFInd /letter:%freedrive%
 call :unhide.partition 0
 call :pushdata.rEFInd
 partassist /hd:%disk% /hide:0
 if "%secureboot%"=="n" goto :usbmultibootdata
 :: create ESP partition
 call :colortool
-partassist /hd:%disk% /cre /pri /size:50 /fs:fat32 /label:M-ESP /letter:X
+partassist /hd:%disk% /cre /pri /size:50 /fs:fat32 /label:M-ESP /letter:%freedrive%
 call :fix.filesystem
 partassist /move:X /right:auto /align
 call :unhide.partition 0
@@ -92,7 +90,7 @@ partassist /hd:%disk% /hide:0
 :usbmultibootdata
 :: create Multiboot data partition
 call :colortool
-partassist /hd:%disk% /cre /pri /size:auto /fs:ntfs /act /align /label:MULTIBOOT /letter:X
+partassist /hd:%disk% /cre /pri /size:auto /fs:ntfs /act /align /label:MULTIBOOT /letter:%freedrive%
 call :unhide.partition 0
 goto :extractdata
 
@@ -129,8 +127,8 @@ call :count.partition
     if not defined partcount goto :Setup
 :: delete all multiboot partition without data loss
 partassist /hd:%disk% /unhide:0
-partassist /hd:%disk% /setletter:0 /letter:X
-call :check.author X:
+partassist /hd:%disk% /setletter:0 /letter:%freedrive%
+call :check.author %freedrive%:
 :: this code not perfect
 :: {case-1} if a partition file system isn't windows type may be deleted
 :: {case-2} data will lose if the user copied the EFI folder into a 
@@ -151,18 +149,19 @@ if "%online%"=="false" (
 )
 
 :Setup
+call :get.freeDrive
 call :set.partnum esp2 esp1
 :esp1
 :: Create ESP Partition
 call :colortool
-partassist /hd:%disk% /cre /pri /size:50 /fs:fat32 /act /align /label:M-ESP /letter:X
+partassist /hd:%disk% /cre /pri /size:50 /fs:fat32 /act /align /label:M-ESP /letter:%freedrive%
 call :unhide.partition 0
 call :pushdata.ESP
 partassist /hd:%disk% /hide:0
 :esp2
 :: Create rEFInd partition
 call :colortool
-partassist /hd:%disk% /cre /pri /size:%esp% /fs:fat32 /act /align /label:rEFInd /letter:X
+partassist /hd:%disk% /cre /pri /size:%esp% /fs:fat32 /act /align /label:rEFInd /letter:%freedrive%
 call :unhide.partition %rpart%
 call :pushdata.rEFInd
 partassist /hd:%disk% /hide:%rpart%
@@ -170,44 +169,44 @@ partassist /hd:%disk% /hide:%rpart%
 call :colortool
 call :check.diskInfo
 if "%GPT%"=="true" (
-    partassist /hd:%disk% /cre /pri /size:auto /offset:%offset% /fs:ntfs /act /align /label:MULTIBOOT /letter:X
+    partassist /hd:%disk% /cre /pri /size:auto /offset:%offset% /fs:ntfs /act /align /label:MULTIBOOT /letter:%freedrive%
 ) else (
-    partassist /hd:%disk% /cre /pri /size:auto /fs:ntfs /act /align /label:MULTIBOOT /letter:X
+    partassist /hd:%disk% /cre /pri /size:auto /fs:ntfs /act /align /label:MULTIBOOT /letter:%freedrive%
 )
 call :unhide.partition %mpart%
 
 :extractdata
 call :colortool
 call :scan.label MULTIBOOT
-    if "%ducky%"=="X:" (
-        7z x "data.7z" -o"X:\" -aoa -y
+    if "%ducky%"=="%freedrive%:" (
+        7z x "data.7z" -o"%ducky%\" -aoa -y
     ) else (
         call :colortool
         echo. & echo %_lang0110_% & timeout /t 7 >nul
         :: change data partition label to DATA
         label %ducky% DATA & goto :extractdata
     )
-    >"X:\EFI\BOOT\mark"          (echo niemtin007)
-    >"X:\BOOT\rEFInd"            (echo %rtheme%)
-    >"X:\BOOT\grub\themes\theme" (echo %gtheme%)
-    >"X:\BOOT\esp"               (echo %esp%)
-    >"X:\BOOT\lang"              (echo %lang%)
-    >"X:\BOOT\secureboot"        (echo %secureboot%)
+    >"%ducky%\EFI\BOOT\mark"          (echo niemtin007)
+    >"%ducky%\BOOT\rEFInd"            (echo %rtheme%)
+    >"%ducky%\BOOT\grub\themes\theme" (echo %gtheme%)
+    >"%ducky%\BOOT\esp"               (echo %esp%)
+    >"%ducky%\BOOT\lang"              (echo %lang%)
+    >"%ducky%\BOOT\secureboot"        (echo %secureboot%)
     if "%virtualdisk%"=="true" (
-        >"X:\BOOT\virtualdisk" (echo true)
+        >"%ducky%\BOOT\virtualdisk" (echo true)
     )
-    xcopy "version" "X:\EFI\BOOT\" >nul
+    xcopy "version" "%ducky%\EFI\BOOT\" >nul
 cd /d "%bindir%\config\bcd"
-    xcopy "B84" "X:\BOOT\bootmgr\" /e /g /h /r /y /q >nul
+    xcopy "B84" "%ducky%\BOOT\bootmgr\" /e /g /h /r /y /q >nul
 cd /d "%bindir%\secureboot\BOOT"
-    xcopy "boot.sdi" "X:\BOOT\"    /e /g /h /r /y /q >nul
+    xcopy "boot.sdi" "%ducky%\BOOT\"    /e /g /h /r /y /q >nul
 cd /d "%bindir%"
     :: install grub4dos
-    call :grub4dosinstaller X:
+    call :grub4dosinstaller %ducky%
     :: install wincdemu to mount iso files
-    7z x "wincdemu.7z" -o"X:\ISO\" -aoa -y >nul
+    7z x "wincdemu.7z" -o"%ducky%\ISO\" -aoa -y >nul
     :: install Syslinux Bootloader
-    syslinux --force --directory /BOOT/syslinux X: X:\BOOT\syslinux\syslinux.bin
+    syslinux --force --directory /BOOT/syslinux %ducky% %ducky%\BOOT\syslinux\syslinux.bin
     :: install grub2 Bootloader
     call :colortool
     if "%GPT%"=="true" call :gdisk
@@ -222,7 +221,7 @@ cd /d "%bindir%"
 cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
     echo.
     echo %_lang0111_% %rtheme%
-    call :rEFInd.icons X:
+    call :rEFInd.icons %ducky%
     echo.
     echo %_lang0113_% %gtheme%
     call :install.gtheme
@@ -232,17 +231,14 @@ cd /d "%bindir%\secureboot\EFI\Microsoft\Boot"
 set "source=%bindir%\secureboot"
 if "%secureboot%"=="n" (
     call :pushdata.secure
-    call :check.letter %ducky%
 )
 :: push secure boot files for USB
 if "%secureboot%"=="y" if "%usb%"=="true" (
     partassist /hd:%disk% /whide:1 /src:%source%
-    call :check.letter %ducky% >nul
 )
 :: push secure boot files for HDD/SSD
 if "%secureboot%"=="y" if "%usb%"=="false" (
     partassist /hd:%disk% /whide:0 /src:%source%
-    call :check.letter %ducky% >nul
 )
 :: start modules installer
 if "%installmodules%"=="y" call :moduleInstaller
@@ -278,7 +274,7 @@ call :gather.info
 call :moveISO specialiso
 call :moveISO isoextract
 
-if exist "X:\" call :check.letter X:
+call :get.freeDrive
 
 if "%installmodules%"=="y" (
     call :check.empty
@@ -852,13 +848,19 @@ exit /b 0
 exit /b 0
 
 
+:get.freeDrive
+    set "freedrive="
+    :: http://wiki.uniformserver.com/index.php/Batch_files:_First_Free_Drive#Final_Solution
+    for %%a in (Z Y X W V U T S R Q P O N M L K J I H G F E D C) do (
+        cd %%a: 1>>nul 2>&1 & if errorlevel 1 set freedrive=%%a
+    )
+exit /b 0
+
+
 :check.letter
     echo.
     echo %_lang0123_%
-    :: http://wiki.uniformserver.com/index.php/Batch_files:_First_Free_Drive#Final_Solution
-    for %%a in (z y x w v u t s r q p o n m l k j i h g f e d c) do (
-        cd %%a: 1>>nul 2>&1 & if errorlevel 1 set freedrive=%%a
-    )
+    call :get.freeDrive
     :: get volume number instead of specifying a drive letter for missing drive letter case
     for /f "tokens=2" %%b in (
         'echo list volume ^| diskpart ^| find /i "MULTIBOOT"'
@@ -870,7 +872,6 @@ exit /b 0
         echo select volume %volume%
         echo assign letter=%freedrive%
     ) | diskpart >nul
-    if "%~2"=="return" call "Multiboot-Toolkit.bat"
 exit /b 0
 
 
@@ -986,9 +987,9 @@ exit /b 0
 
 
 :unhide.partition
-    if not exist "X:\" (
+    if not exist "%freedrive%:\" (
         partassist /hd:%disk% /unhide:%~1
-        partassist /hd:%disk% /setletter:%~1 /letter:X
+        partassist /hd:%disk% /setletter:%~1 /letter:%freedrive%
         goto :unhide.partition
     )
 exit /b 0
@@ -1019,7 +1020,7 @@ exit /b 0
 :fix.filesystem
     :: automatically fix file system error to keep data safety
     :: use it before using the "/resize" and "/move" of partassist
-    if exist X:\ chkdsk /f X: >nul
+    if exist %freedrive%:\ chkdsk /f %freedrive%: >nul
 exit /b 0
 
 
@@ -1040,32 +1041,32 @@ exit /b 0
 
 
 :pushdata.ESP
-    cd /d "X:\"
-        mkdir "X:\EFI\BOOT\"
-        >"X:\EFI\BOOT\mark" (echo niemtin007)
+    cd /d "%freedrive%:\"
+        mkdir "%freedrive%:\EFI\BOOT\"
+        >"%freedrive%:\EFI\BOOT\mark" (echo niemtin007)
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-        xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q >nul
+        xcopy "others" "%freedrive%:\EFI\BOOT\" /e /g /h /r /y /q >nul
 exit /b 0
 
 
 :pushdata.rEFInd
-    cd /d "X:\"
-        mkdir "X:\ISO\"
-        mkdir "X:\EFI\BOOT\themes\"
-        >"X:\EFI\BOOT\mark" (echo niemtin007)
+    cd /d "%freedrive%:\"
+        mkdir "%freedrive%:\ISO\"
+        mkdir "%freedrive%:\EFI\BOOT\themes\"
+        >"%freedrive%:\EFI\BOOT\mark" (echo niemtin007)
     cd /d "%tmp%"
-        xcopy "rEfind" "X:\EFI\BOOT\" /e /g /h /r /y /q >nul
+        xcopy "rEfind" "%freedrive%:\EFI\BOOT\" /e /g /h /r /y /q >nul
     cd /d "%tmp%\rEfind_themes"
-        xcopy "%rtheme%" "X:\EFI\BOOT\themes\" /e /g /h /r /y /q >nul
+        xcopy "%rtheme%" "%freedrive%:\EFI\BOOT\themes\" /e /g /h /r /y /q >nul
 exit /b 0
 
 
 :pushdata.secure
-    >"X:\BOOT\secureboot" (echo n)
+    >"%ducky%\BOOT\secureboot" (echo n)
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
-        xcopy "others" "X:\EFI\BOOT\" /e /g /h /r /y /q >nul
+        xcopy "others" "%ducky%\EFI\BOOT\" /e /g /h /r /y /q >nul
     cd /d "%bindir%"
-        xcopy "secureboot" "X:\" /e /g /h /r /y /q >nul
+        xcopy "secureboot" "%ducky%\" /e /g /h /r /y /q >nul
 exit /b 0
 
 
@@ -1092,8 +1093,8 @@ exit /b 0
 
 :grub2installer
     cd /d "%bindir%"
+        call :get.freeDrive
         7z x "grub2.7z" -o"%tmp%" -aos -y >nul
-        if exist "V:\" call :check.letter V:
     :: create vhd disk
     cd /d "%tmp%"
         if exist "Grub2.vhd" del /s /q "Grub2.vhd" >nul
@@ -1102,7 +1103,7 @@ exit /b 0
             echo attach vdisk
             echo create partition primary
             echo format fs=fat32 label="Grub2"
-            echo assign letter=v
+            echo assign letter=%freedrive%
         ) | diskpart
     :: install grub2 for Legacy BIOS mode
     if not "%~2"=="legacydisable" (
@@ -1117,11 +1118,11 @@ exit /b 0
     )
     :: install grub2 for EFI mode
     cd /d "%tmp%\grub2"
-        grub-install --target=x86_64-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=progress --removable
-        grub-install --target=i386-efi --efi-directory=V:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=progress --removable
+        grub-install --target=x86_64-efi --efi-directory=%freedrive%:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=progress --removable
+        grub-install --target=i386-efi --efi-directory=%freedrive%:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=progress --removable
     cd /d "%ducky%\EFI\BOOT\backup"
         if not exist Grub2 mkdir Grub2
-    cd /d "V:\EFI\BOOT"
+    cd /d "%freedrive%:\EFI\BOOT"
         :: copy to multiboot data partition
         copy "BOOTIA32.EFI" "%ducky%\EFI\BOOT\grubia32.efi" /y >nul
         copy "BOOTX64.EFI"  "%ducky%\EFI\BOOT\grubx64.efi"  /y >nul
@@ -1296,15 +1297,15 @@ exit /b 0
         echo convert gpt
         echo create partition primary size=50
         echo format quick fs=fat label="ESP"
-        echo assign letter=X
+        echo assign letter=%freedrive%
         echo exit
     ) | diskpart >nul
     :: push files into the ESP partition
     call :pushdata.rEFInd
     :: remove drive letter
     (
-        echo select volume X
-        echo remove letter X
+        echo select volume %freedrive%
+        echo remove letter %freedrive%
         echo exit
     ) | diskpart >nul
     :: create MULTIBOOT partition
@@ -1313,7 +1314,7 @@ exit /b 0
         echo create partition primary
         echo format quick fs=ntfs label="MULTIBOOT"
         echo shrink desired=8
-        echo assign letter=X
+        echo assign letter=%freedrive%
         echo exit
     ) | diskpart >nul
     :: create BIOS Boot Partition for Legacy BIOS Mode
@@ -1329,27 +1330,27 @@ exit /b 0
     )
     :: recheck data partition
     call :scan.label MULTIBOOT
-    if not "%ducky%"=="X:" (
+    if not "%ducky%"=="%freedrive%:" (
         call :colortool
         echo. & echo %_lang0110_% & timeout /t 15 >nul & exit
     )
     :: installing data
     echo.
     echo %_lang0122_%
-    cd /d "X:\"
+    cd /d "%ducky%"
         for %%b in (APPS BOOT\grub\themes EFI\BOOT ISO WIM) do mkdir %%b
         >"BOOT\lang"              (echo %lang%)
         >"EFI\BOOT\mark"          (echo niemtin007)
         >"BOOT\grub\themes\theme" (echo %gtheme%)
         >"EFI\BOOT\usb.gpt"       (echo USB GPT Bootable Disk)
     cd /d "%bindir%"
-        xcopy "secureboot" "X:\" /e /g /h /r /y /q >nul
+        xcopy "secureboot" "%ducky%\" /e /g /h /r /y /q >nul
         set "file=Autorun.inf usb.ico B64 XORBOOT grub"
         set "efi=gdisk.efi OneFileLinux.efi winsetupia32.efi winsetupx64.efi xorbootx64.efi"
         if "%usblegacy%"=="true" (
-            7z x "data.7z" -o"X:\" -aoa -y >nul
+            7z x "data.7z" -o"%ducky%\" -aoa -y >nul
         ) else (
-            7z x "data.7z" -o"X:\" %file% %efi% -r >nul
+            7z x "data.7z" -o"%ducky%\" %file% %efi% -r >nul
         )
         :: install grub2 bootloader
         echo.
@@ -1369,12 +1370,12 @@ exit /b 0
         echo.
         echo %_lang0113_% %gtheme%
         call :install.gtheme
-    cd /d "X:\EFI\Microsoft\Boot"
+    cd /d "%ducky%\EFI\Microsoft\Boot"
         :: setup WIM path in BCD store for UEFI mode
         call :bcdautoset bcd
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
         :: install icons for rEFInd Boot Manager
-        call :rEFInd.icons X:
+        call :rEFInd.icons %ducky%
         :: normalize drive letter
         call :check.letter
     :: specifies that the ESP does not receive a drive letter by default
@@ -1503,12 +1504,12 @@ exit /b 0
 
 :iso.mount
     call :colortool
-    wincdemu "%isopath%" X: /wait
+    wincdemu "%isopath%" %freedrive%: /wait
     cls
     echo.
     echo ^>^> %modulename% %_lang0015_%
     echo.
-    cd /d "X:\"
+    cd /d "%freedrive%:\"
         if "%modulename%"=="AOMEI-Backup" (
             copy "sources\boot.wim" "%ducky%\WIM\aomeibackup.wim" /y >nul
             mkdir "%ducky%\ISO_Extract\%modulename%\"
@@ -1517,9 +1518,9 @@ exit /b 0
         )
         if "%modulename%"=="anhdvPE" (
             :: xcopy "APPS" "%ducky%\APPS\" /e /g /h /r /y
-            robocopy "X:\APPS" "%ducky%\APPS" /njh /njs /nc /ns
+            robocopy "%freedrive%:\APPS" "%ducky%\APPS" /njh /njs /nc /ns
             :: xcopy "WIM" "%ducky%\WIM\" /e /g /h /r /y
-            robocopy "X:\WIM" "%ducky%\WIM" /njh /njs /nc /ns
+            robocopy "%freedrive%:\WIM" "%ducky%\WIM" /njh /njs /nc /ns
             mkdir "%ducky%\ISO_Extract\%modulename%\"
             >"%ducky%\ISO_Extract\%modulename%\Author.txt" (echo Dang Van Anh)
             goto :iso.unmount
@@ -1551,12 +1552,12 @@ exit /b 0
         )
     cd /d "%bindir%"
         for /f "delims=" %%f in (copy.list) do (
-            if exist "X:\%%f" (
-                xcopy /s "X:\%%f" "%ducky%\ISO_Extract\%modulename%\"
+            if exist "%freedrive%:\%%f" (
+                xcopy /s "%freedrive%:\%%f" "%ducky%\ISO_Extract\%modulename%\"
             )
         )
 :iso.unmount
-    wincdemu /unmount X:
+    wincdemu /unmount %freedrive%:
     cls & goto :extract.list
 exit /b 0
 
@@ -2453,9 +2454,10 @@ exit /b 0
         partassist /hd:%disk% /whide:%rpart% /src:%Grub2% /dest:\EFI\BOOT
     )
     if "%option%"=="rEFInd" (
+        call :get.freeDrive
         partassist /hd:%disk% /unhide:%spart%
-        partassist /hd:%disk% /setletter:%spart% /letter:X
-        cd /d "X:\EFI\BOOT\"
+        partassist /hd:%disk% /setletter:%spart% /letter:%freedrive%
+        cd /d "%freedrive%:\EFI\BOOT\"
             if exist bootx64.efi   del bootx64.efi   /s /f /q >nul
             if exist bootia32.efi  del bootia32.efi  /s /f /q >nul
             if exist winpeia32.efi del winpeia32.efi /s /f /q >nul
