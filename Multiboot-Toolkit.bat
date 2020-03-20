@@ -83,7 +83,7 @@ if "%secureboot%"=="n" goto :usbmultibootdata
 call :colortool
 partassist /hd:%disk% /cre /pri /size:50 /fs:fat32 /label:M-ESP /letter:%freedrive%
 call :fix.filesystem
-partassist /move:X /right:auto /align
+partassist /move:%freedrive% /right:auto /align
 call :unhide.partition 0
 call :pushdata.ESP
 partassist /hd:%disk% /hide:0
@@ -1376,8 +1376,6 @@ exit /b 0
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
         :: install icons for rEFInd Boot Manager
         call :rEFInd.icons %ducky%
-        :: normalize drive letter
-        call :check.letter
     :: specifies that the ESP does not receive a drive letter by default
     (
         echo select disk %disk%
