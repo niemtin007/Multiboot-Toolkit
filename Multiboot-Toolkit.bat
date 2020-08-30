@@ -6,18 +6,16 @@
 
 cd /d "%~dp0"
 set "bindir=%~dp0bin"
-set "rtheme=Leather"
+set "rtheme=Glassy"
 set "gtheme=CyberSecurity"
 set "title=License"
 if not exist Modules mkdir Modules
 
 if not exist "bin" (
-    call :colortool
     echo. & echo ^>^> Warning: Missing Files
     timeout /t 15 >nul & exit
 ) else (
     call :permissions
-    call :colortool
     call :get.freeDrive
     call :license
 )
@@ -809,7 +807,7 @@ exit /b 0
         )
     cd /d "%tmp%"
         :: clean up the trash and exit
-        set "dlist=colortool curl driveprotect gdisk grub2 partassist rEFInd rEFInd_themes"
+        set "dlist=colortool curl driveprotect gdisk grub2 partassist CLOVER rEFInd rEFInd_themes"
         for %%d in (%dlist%) do (
             if exist "%%d" rmdir "%%d" /s /q >nul
         )
@@ -2612,11 +2610,23 @@ exit /b 0
 exit /b 0
 
 
-:get.cloverversion
-    for /f delims^=^"^ tokens^=2  %%a in (
-        'type "clover.log" ^| findstr /i "<tr.*.lzma" ^| find /n /v "" ^| find "[1]"'
-        ) do (set "name=%%a")
+:cloverinterface
+    echo.
+    echo        _                       _           _        _ _           
+    echo    ___^| ^| _____   _____ _ __  ^(_^)_ __  ___^| ^|_ __ _^| ^| ^| ___ _ __ 
+    echo   / __^| ^|/ _ \ \ / / _ \ '__^| ^| ^| '_ \/ __^| __/ _` ^| ^| ^|/ _ \ '__^|
+    echo  ^| ^(__^| ^| ^(_^) \ V /  __/ ^|    ^| ^| ^| ^| \__ \ ^|^| ^(_^| ^| ^| ^|  __/ ^|   
+    echo   \___^|_^|\___/ \_/ \___^|_^|    ^|_^|_^| ^|_^|___/\__\__,_^|_^|_^|\___^|_^|   
+    echo. 
+    echo.
 exit /b 0
+
+:get.cloverversion
+    for /f tokens^=1^,6^ delims^=/^" %%a in (
+        'type clover.log ^| findstr /i "releases/tag.*.</a>" ^| find /n /v "" ^| find "[1]"'
+    ) do set "ver=%%b"
+exit /b 0
+
 :download.clover
     cd /d "%bindir%"
         if exist "clover" rd /s /q "clover" >nul
@@ -2626,24 +2636,22 @@ exit /b 0
     :: get clover iso file
     cd /d "%tmp%"
         :: get the lastest version name
-        set "sourcelink=https://sourceforge.net/projects/cloverefiboot/files/Bootable_ISO/"
+        set "sourcelink=https://github.com/CloverHackyColor/CloverBootloader/releases"
         wget -q -O "clover.log" %sourcelink%
         call :get.cloverversion >nul 2>&1
         :: download clover
         if not "%~1"=="skip" (
-            cls & call :cloverinterface
-            echo ^>^> downloading %name%...
+            echo.
+            echo ^> Downloading Clover Boot Manager v%ver%...
         )
-        set "sourcelink=https://sourceforge.net/projects/cloverefiboot/files/Bootable_ISO/%name%/download"
-        wget -q --show-progress -O "%name%" %sourcelink%
+        set "url=%sourcelink%/download/%ver%/Clover-%ver%-X64.iso.7z"
+        wget -q --show-progress -O Clover-%ver%-X64.iso.7z %url%
         del "clover.log" /s /q /f >nul
         :: extract clover iso
-        if exist "*CloverISO*.tar.lzma" (
-            7z x "*CloverISO*.tar.lzma" -o"%tmp%" -y >nul
-            del "*CloverISO*.tar.lzma" /s /q /f >nul
-            7z x "*CloverISO*.tar" -o"%tmp%" -y >nul
-            del "*CloverISO*.tar" /s /q /f >nul
-            7z x "*Clover-*.iso" -o"%tmp%" EFI -r -y >nul
+        if exist "*Clover*.iso.7z" (
+            7z x "*Clover*.iso.7z" -o"%tmp%" -y >nul
+            del "*Clover*.iso.7z" /s /q /f >nul
+            7z x "*Clover*.iso" -o"%tmp%" EFI -r -y >nul
         )
     :: delete non-necessary file
     if exist "%tmp%\EFI\CLOVER" (
@@ -2659,26 +2667,22 @@ exit /b 0
             ren CLOVERX64.efi cloverx64.efi
     )
     xcopy "%tmp%\EFI\CLOVER" "%bindir%\Clover" /s /z /y /q >nul
-    :: make config for clover
-    call "%bindir%\config\clover.conf.bat"
     :: use rEFInd driver for clover
     7z x "%bindir%\refind.7z" -o"%tmp%" -aoa -y >nul
     if exist "%tmp%\rEFInd\drivers_x64" (
-        xcopy "%tmp%\rEFInd\drivers_x64" "%bindir%\clover\drivers64UEFI" /s /z /y /q >nul
+        xcopy "%tmp%\rEFInd\drivers_x64" "%bindir%\clover\drivers\UEFI" /s /z /y /q >nul
     )
     
     cd /d "%tmp%"
         if exist "EFI" (rd /s /q "EFI")
-        if exist "clover.iso" (del /s /q "clover.iso" >nul)
-    
-    :: cd /d "%tmp%" & del "%tmp%\*.*" /s /q /f >nul
-    :: for /d %%i in ("%tmp%\*.*") do rmdir "%%i" /s /q >nul
+        if exist "clover*.iso" (del /s /q "clover*.iso" >nul)
     
     :: store clover to archive
     cd /d "%bindir%"
         7z a clover.7z .\clover\* -sdel >nul
         if exist "clover" (rd /s /q "clover" >nul)
 exit /b 0
+
 :install.clover
     echo.
     echo %_lang0712_%
@@ -2693,6 +2697,7 @@ exit /b 0
     if "%~1" neq "skip" echo %_lang0715_%
     timeout /t 2 >nul
 exit /b 0
+
 :cloverinstaller
     set "title=%_lang0823_%"
     call :colortool
@@ -2707,10 +2712,8 @@ exit /b 0
         if errorlevel 1 call :download.clover
 
     :cloverconfig
-    call :colortool
     if "%structure%"=="MBR" goto :option.clover
-    cls 
-    call :cloverinterface
+    echo.
     choice /c yn /cs /n /m "%_lang0702_% > "
         if errorlevel 2 goto :option.clover
         if errorlevel 1 goto :gdisk.clover
@@ -2752,7 +2755,7 @@ exit /b 0
     if "%installed%"=="false" goto :option.clover
     call :colortool
     call :install.clover
-    goto :EasyUEFI.clover
+    call :clean.bye
     
     :MultibootOS.clover
     if "%structure%"=="MBR" (
@@ -2762,44 +2765,41 @@ exit /b 0
     echo.
     choice /c yn /cs /n /m "%_lang0714_%"
         if errorlevel 2 goto :option.clover
-        if errorlevel 1 call :colortool
+        if errorlevel 1 echo.
     :: installing Clover to ESP
-    mountvol s: /s
-    cd /d "%tmp%"
-        mkdir CLOVER
-        7z x "%bindir%\clover.7z" -o"%tmp%\CLOVER\" -aoa -y >nul
-        xcopy "%tmp%\CLOVER" "s:\EFI\CLOVER\" /e /y /q >nul
-        if exist "%curdir%\config.plist" (
-            xcopy "%curdir%\config.plist" "s:\EFI\CLOVER\" /e /y /q >nul
+    mountvol S: /d >nul
+    mountvol S: /s
+    cd /d "%bindir%"
+        7z x "clover.7z" -o"S:\EFI\CLOVER\" -aoa -y >nul
+    cd /d "%~dp0Modules"
+        if exist "config.plist" (
+            xcopy "config.plist" "S:\EFI\CLOVER\" /e /y /q >nul
         )
     timeout /t 2 >nul
-    mountvol s: /d
+    mountvol S: /d
+    :: Add Cloverx64.efi to the UEFI NVRAM entries
+    echo ^>  Creating "Clover Boot Manager" entry to the UEFI NVRAM...
+    bcdedit /set "{bootmgr}" path \EFI\CLOVER\cloverx64.efi >nul
+    bcdedit /set "{bootmgr}" description "Clover Boot Manager" >nul
     echo.
-    echo %_lang0715_%
-    timeout /t 2 >nul
-    goto :EasyUEFI.clover
-    
-    :EasyUEFI.clover
-    cls
-    call :cloverinterface
-    7z x "%bindir%\extra-modules\EasyUEFI.7z" -o"%tmp%" -y >nul
-    echo.
-    choice /c yn /cs /n /m "%_lang0716_%"
-        if errorlevel 2 call :clean.bye
-        if errorlevel 1 (
-            cd /d "%tmp%\EasyUEFI"
-                start EasyUEFIPortable.exe
-                call :clean.bye
-        )
-exit /b 0
-:cloverinterface
-    echo.
-    echo ----------------------------------------------------------------------
-    echo                          ^> Clover Installer ^<                       
-    echo ----------------------------------------------------------------------
-    echo.
+    echo ^>  Use bootice to view/edit the boot entries management
+    echo ^>  Choose "UEFI" ^>^> "Edit boot entries"
+    cd /d "%bindir%" & bootice
+    call :clean.bye
 exit /b 0
 
+
+:rEFIndinterface
+    call :colortool
+    echo.
+    echo             __ _           _    _           _        _ _           
+    echo   _ __ ___ / _^(_^)_ __   __^| ^|  ^(_^)_ __  ___^| ^|_ __ _^| ^| ^| ___ _ __ 
+    echo  ^| '__/ _ \ ^|_^| ^| '_ \ / _` ^|  ^| ^| '_ \/ __^| __/ _` ^| ^| ^|/ _ \ '__^|
+    echo  ^| ^| ^|  __/  _^| ^| ^| ^| ^| ^(_^| ^|  ^| ^| ^| ^| \__ \ ^|^| ^(_^| ^| ^| ^|  __/ ^|   
+    echo  ^|_^|  \___^|_^| ^|_^|_^| ^|_^|\__,_^|  ^|_^|_^| ^|_^|___/\__\__,_^|_^|_^|\___^|_^|   
+    echo.
+    echo.
+exit /b 0
 
 :download.rEFInd
     cd /d "%bindir%"
@@ -2843,6 +2843,7 @@ exit /b 0
         7z a refind.7z rEFInd\ -sdel >nul
         if exist "rEFInd" rd /s /q "rEFInd" >nul
 exit /b 0
+
 :extract.rEFInd
     cd /d "%tmp%"
         if not exist rEFInd_themes mkdir rEFInd_themes
@@ -2850,14 +2851,15 @@ exit /b 0
         7z x "rEFInd_themes\%rtheme%.7z" -o"%tmp%\rEFInd_themes" -aoa -y >nul
         7z x "refind.7z" -o"%tmp%" -aoa -y >nul
 exit /b 0
+
 :install.rEFInd
     call :checkdisktype
-        call :set.partnum installrEFInd installrEFInd
-    
+    call :set.partnum installrEFInd installrEFInd
     :installrEFInd
     set "source=%tmp%\rEFInd"
     partassist /hd:%disk% /whide:%rpart% /src:%source% /dest:EFI\BOOT
 exit /b 0
+
 :rEFIndinstaller
     set "title=%_lang0824_%"
     call :colortool
@@ -2871,7 +2873,6 @@ exit /b 0
         if errorlevel 1 call :download.rEFInd
     
     :option.rEFInd
-    set "rtheme=Universe"
     :: preparing file...
     call :extract.rEFInd
     :: make option
@@ -2889,7 +2890,8 @@ exit /b 0
     :MultibootUSB.rEFInd
     if "%installed%"=="false" goto :option.rEFInd
     call :install.rEFInd
-    goto :EasyUEFI.rEFInd
+    call :clean.bye
+
     :MultibootOS.rEFInd
     if "%structure%"=="MBR" (
         call :colortool
@@ -2898,37 +2900,23 @@ exit /b 0
     echo.
     choice /c yn /cs /n /m "%_lang0609_%"
         if errorlevel 2 goto :option.rEFInd
-        if errorlevel 1 call :colortool
-    mountvol s: /s
+        if errorlevel 1 echo.
+    mountvol S: /d >nul
+    mountvol S: /s
     cd /d "%tmp%"
-        xcopy "rEFInd" "s:\EFI\refind\" /e /y /q >nul
-        xcopy "rEFInd_themes\%rtheme%" "s:\EFI\rEFInd\themes" /e /y /q >nul
+        xcopy "rEFInd" "S:\EFI\rEFInd\" /e /y /q >nul
+        xcopy "rEFInd_themes\%rtheme%" "S:\EFI\rEFInd\themes\" /e /y /q >nul
         timeout /t 2 >nul
-    mountvol s: /d
+    mountvol S: /d
+    :: Add rEFIndx64.efi to the UEFI NVRAM entries
+    echo ^>  Creating "rEFInd Boot Manager" entry to the UEFI NVRAM...
+    bcdedit /set "{bootmgr}" path \EFI\rEFInd\bootx64.efi >nul
+    bcdedit /set "{bootmgr}" description "rEFInd Boot Manager" >nul
     echo.
-    echo %_lang0610_%
-    timeout /t 2 >nul
-    goto :EasyUEFI.rEFInd
-    
-    :EasyUEFI.rEFInd
-    7z x "%bindir%\extra-modules\EasyUEFI.7z" -o"%tmp%" -y >nul
-    call :rEFIndinterface
-    echo.
-    choice /c yn /cs /n /m "%_lang0611_%"
-        if errorlevel 2 call :clean.bye
-        if errorlevel 1 (
-            cd /d "%tmp%\EasyUEFI"
-                start EasyUEFIPortable.exe
-                call :clean.bye
-        )
-exit /b 0
-:rEFIndinterface
-    call :colortool
-    echo.
-    echo ----------------------------------------------------------------------
-    echo                          ^> rEFInd Installer ^<                       
-    echo ----------------------------------------------------------------------
-    echo.
+    echo ^>  Use bootice to view/edit the boot entries management
+    echo ^>  Choose "UEFI" ^>^> "Edit boot entries"
+    cd /d "%bindir%" & bootice
+    call :clean.bye
 exit /b 0
 
 
