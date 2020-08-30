@@ -678,26 +678,24 @@ exit /b 0
 
 
 :permissions
-    call :colortool
-    
     ver | findstr /i "6\.1\." >nul
         if %errorlevel% equ 0 set "windows=7"
         if not "%windows%"=="7" chcp 65001 >nul
     
-    set randname=%random%%random%%random%%random%%random%
-    md "%windir%\%randname%" 2>nul
-    if %errorlevel%==0 goto :permissions.end
-    if %errorlevel%==1 (
-        echo. & echo ^>^> Please use right click - Run as administrator
-        color 4f & timeout /t 15 >nul
-        Set admin=fail
-        goto permissions.end
-    )
-    goto :permissions
-    
-    :permissions.end
-    rd "%windir%\%randname%" 2>nul
-    if "%admin%"=="fail" exit
+    :: BatchGotAdmin (Run as Admin code starts)
+    cd /d "%temp%"
+    :: Check for permissions
+    >nul 2>&1 "%SYSTEMROOT%\system32\cacls.exe" "%SYSTEMROOT%\system32\config\system"
+    :: If error flag set, we do not have admin.
+    if '%errorlevel%' NEQ '0' (goto UACPrompt) else (goto gotAdmin)
+    :UACPrompt
+        echo Set UAC = CreateObject^("Shell.Application"^) > getadmin.vbs
+        echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> getadmin.vbs
+        getadmin.vbs
+        exit
+    :gotAdmin
+        if exist getadmin.vbs del getadmin.vbs
+    :: BatchGotAdmin (Run as Admin code ends)
 exit /b 0
 
 
