@@ -48,7 +48,7 @@ cd /d "%ducky%\BOOT\grub"
         echo export locale_dir drive_label binpath isopath
         echo.
         echo search.fs_label M-ESP edir
-        echo search.fs_label rEFInd rdir
+        echo search.fs_label REFIND rdir
         echo search.fs_label MULTIBOOT mdir
         echo export edir rdir mdir
         echo.

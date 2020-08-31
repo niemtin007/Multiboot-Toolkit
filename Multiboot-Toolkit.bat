@@ -72,14 +72,14 @@ call :clean.disk
 call :get.freeDrive
 :: create rEFInd partition
 call :colortool
-partassist /hd:%disk% /cre /pri /size:%esp% /end /fs:fat32 /align /label:rEFInd /letter:%freedrive%
+partassist /hd:%disk% /cre /pri /size:%esp% /end /fs:fat32 /align /label:REFIND /letter:%freedrive%
 call :unhide.partition 0
 call :pushdata.rEFInd
 partassist /hd:%disk% /hide:0
 if "%secureboot%"=="n" goto :usbmultibootdata
 :: create ESP partition
 call :colortool
-partassist /hd:%disk% /cre /pri /size:50 /fs:fat32 /label:M-ESP /letter:%freedrive%
+call :create.epart
 call :fix.filesystem
 partassist /move:%freedrive% /right:auto /align
 call :unhide.partition 0
@@ -88,7 +88,7 @@ partassist /hd:%disk% /hide:0
 :usbmultibootdata
 :: create Multiboot data partition
 call :colortool
-partassist /hd:%disk% /cre /pri /size:auto /fs:ntfs /act /align /label:MULTIBOOT /letter:%freedrive%
+call :create.mpart
 call :unhide.partition 0
 goto :extractdata
 
@@ -152,14 +152,14 @@ call :set.partnum esp2 esp1
 :esp1
 :: Create ESP Partition
 call :colortool
-partassist /hd:%disk% /cre /pri /size:50 /fs:fat32 /act /align /label:M-ESP /letter:%freedrive%
+call :create.epart
 call :unhide.partition 0
 call :pushdata.ESP
 partassist /hd:%disk% /hide:0
 :esp2
 :: Create rEFInd partition
 call :colortool
-partassist /hd:%disk% /cre /pri /size:%esp% /fs:fat32 /act /align /label:rEFInd /letter:%freedrive%
+call :create.rpart
 call :unhide.partition %rpart%
 call :pushdata.rEFInd
 partassist /hd:%disk% /hide:%rpart%
@@ -1025,6 +1025,46 @@ exit /b 0
         echo select disk %disk%
         echo clean
         echo convert mbr
+        echo exit
+    ) | diskpart >nul
+exit /b 0
+
+
+:create.rpart
+    echo.
+    echo ^> Creating rEFInd partition...
+    (
+        echo select disk %disk%
+        echo create partition primary size=%esp%
+        echo format quick fs=fat32 label="rEFInd"
+        echo assign letter=%freedrive%
+        echo exit
+    ) | diskpart >nul
+exit /b 0
+
+
+:create.epart
+    echo.
+    echo ^> Creating ESP Partition...
+    (
+        echo select disk %disk%
+        echo create partition primary size=50
+        echo format quick fs=fat32 label="M-ESP"
+        echo assign letter=%freedrive%
+        echo exit
+    ) | diskpart >nul
+exit /b 0
+
+
+:create.mpart
+    echo.
+    echo ^> Creating Multiboot data partition...
+    (
+        echo select disk %disk%
+        echo create partition primary
+        echo format quick fs=ntfs label="MULTIBOOT"
+        echo assign letter=%freedrive%
+        echo active
         echo exit
     ) | diskpart >nul
 exit /b 0
@@ -1902,7 +1942,7 @@ exit /b 0
 :easeconvertdisk
     set "title=%_lang0831_%"
     call :colortool
-    partassist /list
+    call :list.disk
     echo.
     set /p disk= %_lang0101_%
         if "%disk%"=="q" goto :extra.main
