@@ -125,6 +125,7 @@ call :count.partition
     if not defined partcount goto :Setup
 :: delete all multiboot partition without data loss
 partassist /hd:%disk% /unhide:0
+call :get.freeDrive
 partassist /hd:%disk% /setletter:0 /letter:%freedrive%
 call :check.author %freedrive%:
 :: this code not perfect
@@ -910,7 +911,7 @@ exit /b 0
     )
     if "%author%"=="niemtin007" (
         if "%label%"=="M-ESP "     set installed=true
-        if "%label%"=="rEFInd "    set installed=true
+        if "%label%"=="REFIND "    set installed=true
         if "%label%"=="MULTIBOOT " set installed=true
     ) else (
         if "%label%"=="BBP"        set installed=true
