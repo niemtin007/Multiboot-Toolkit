@@ -66,8 +66,11 @@ call :checkdisktype
     color 0e & echo. & echo %_lang0104_% & timeout /t 15 >nul & goto :bootableCreator
 
 :removable
-:: prepare partitions space for removable Media
 call :colortool
+:: prepare partitions space for removable Media
+echo.
+echo ^> Cleaning disk...
+call :clean.disk
 call :clean.disk
 call :get.freeDrive
 :: create rEFInd partition
@@ -75,16 +78,15 @@ call :colortool
 partassist /hd:%disk% /cre /pri /size:%esp% /end /fs:fat32 /align /label:REFIND /letter:%freedrive%
 call :unhide.partition 0
 call :pushdata.rEFInd
-partassist /hd:%disk% /hide:0
+mountvol %freedrive%: /p
 if "%secureboot%"=="n" goto :usbmultibootdata
 :: create ESP partition
 call :colortool
-call :create.epart
-call :fix.filesystem
+partassist /hd:%disk% /cre /pri /size:50 /fs:fat32 /label:M-ESP /letter:%freedrive%
 partassist /move:%freedrive% /right:auto /align
 call :unhide.partition 0
 call :pushdata.ESP
-partassist /hd:%disk% /hide:0
+mountvol %freedrive%: /p
 :usbmultibootdata
 :: create Multiboot data partition
 call :colortool
@@ -156,14 +158,14 @@ call :colortool
 call :create.epart
 call :unhide.partition 0
 call :pushdata.ESP
-partassist /hd:%disk% /hide:0
+mountvol %freedrive%: /p
 :esp2
 :: Create rEFInd partition
 call :colortool
 call :create.rpart
 call :unhide.partition %rpart%
 call :pushdata.rEFInd
-partassist /hd:%disk% /hide:%rpart%
+mountvol %freedrive%: /p
 :: Create Multiboot Data Partition
 call :colortool
 call :check.diskInfo
@@ -227,17 +229,13 @@ cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
 cd /d "%bindir%\secureboot\EFI\Microsoft\Boot"
     call :bcdautoset bcd
 :: install secure boot file
-set "source=%bindir%\secureboot"
-if "%secureboot%"=="n" (
-    call :pushdata.secure
-)
-:: push secure boot files for USB
-if "%secureboot%"=="y" if "%usb%"=="true" (
-    partassist /hd:%disk% /whide:1 /src:%source%
-)
-:: push secure boot files for HDD/SSD
-if "%secureboot%"=="y" if "%usb%"=="false" (
-    partassist /hd:%disk% /whide:0 /src:%source%
+if "%secureboot%"=="n" call :pushdata.secure
+if "%secureboot%"=="y" call :get.path epath M-ESP
+if "%secureboot%"=="y" (
+    cd /d "%bindir%"
+        call :copy.hidden "secureboot" "%epath%" >nul 2>&1
+    cd /d "%bindir%\secureboot\EFI\Boot"
+        xcopy "backup" "%ducky%\EFI\Boot\backup\" /e /g /h /r /y /q >nul
 )
 :: start modules installer
 if "%installmodules%"=="y" call :moduleInstaller
@@ -360,17 +358,14 @@ cd /d "%ducky%\BOOT"
 call :colortool
     for /f "tokens=*" %%x in ('dir /s /a /b "specialiso"') do set /a "size+=%%~zx"
     set /a "size=%size%/1024/1024"
-    set "source=%bindir%\specialiso"
-
-call :set.partnum install.speiso install.speiso
 
 :install.speiso
+call :get.path rpath REFIND
 if %size% LEQ %esp% (
     if exist "%bindir%\specialiso\*.iso" (
-        cls & echo. & echo %_lang0204_%
-        timeout /t 2 >nul
-        partassist /hd:%disk% /whide:%rpart% /src:%source% /dest:ISO
-        timeout /t 3 >nul
+        cls & echo. & echo %_lang0204_% & echo.
+        cd /d "%bindir%"
+            call :copy.hidden "specialiso" "%rpath%\ISO"
     )
 ) else (
     call :colortool
@@ -845,6 +840,29 @@ exit /b 0
 exit /b 0
 
 
+:get.path
+    :: find and use volume id instead of drive letter for a hidden partition
+    for /f %%b in (
+        'wmic volume get label^, id ^| findstr %~2'
+        ) do set "tpath=%%b"
+    if exist "%tpath%\EFI\BOOT\mark" (
+        for /f "tokens=*" %%b in (%tpath%\EFI\BOOT\mark) do set "author=%%b"
+    )
+    if not "%author%"=="niemtin007" echo %~2 not found! & pause >nul & exit
+    set "%~1=%tpath%"
+exit /b 0
+
+
+:copy.hidden
+    :: copy file/folder to hidden partition using volume id
+    copy %~1 %~2 /y
+    for /f "tokens=*" %%i in ('dir /a:d /b "%~1"') do (
+        if not exist %~2\%%i md %~2\%%i
+        call :copy.hidden %~1\%%i %~2\%%i
+    )
+exit /b 0
+
+
 :get.freeDrive
     set "freedrive="
     :: http://wiki.uniformserver.com/index.php/Batch_files:_First_Free_Drive#Final_Solution
@@ -1017,7 +1035,7 @@ exit /b 0
 :fix.filesystem
     :: automatically fix file system error to keep data safety
     :: use it before using the "/resize" and "/move" of partassist
-    if exist %freedrive%:\ chkdsk /f %freedrive%: >nul
+    if exist %freedrive%:\ chkdsk /f %freedrive%:
 exit /b 0
 
 
@@ -1037,7 +1055,7 @@ exit /b 0
     (
         echo select disk %disk%
         echo create partition primary size=%esp%
-        echo format quick fs=fat32 label="rEFInd"
+        echo format quick fs=fat32 label="REFIND"
         echo assign letter=%freedrive%
         echo exit
     ) | diskpart >nul
@@ -1188,6 +1206,7 @@ exit /b 0
         ) else (
             set gdisk=gdisk64.exe
         )
+    :: create a BIOS Boot Partition
     cd /d "%tmp%\gdisk"
         (
             echo n
@@ -1552,9 +1571,7 @@ exit /b 0
             goto :iso.unmount
         )
         if "%modulename%"=="anhdvPE" (
-            :: xcopy "APPS" "%ducky%\APPS\" /e /g /h /r /y
             robocopy "%freedrive%:\APPS" "%ducky%\APPS" /njh /njs /nc /ns
-            :: xcopy "WIM" "%ducky%\WIM\" /e /g /h /r /y
             robocopy "%freedrive%:\WIM" "%ducky%\WIM" /njh /njs /nc /ns
             mkdir "%ducky%\ISO_Extract\%modulename%\"
             >"%ducky%\ISO_Extract\%modulename%\Author.txt" (echo Dang Van Anh)
@@ -1611,6 +1628,7 @@ exit /b 0
                 timeout /t 2 >nul
         )
 exit /b 0
+
 :get.portablePlatform
     set "sourcelink=https://portableapps.com/download"
     wget.exe -q -O portable.log %sourcelink% >nul
@@ -1619,6 +1637,7 @@ exit /b 0
     ) do set "ver=%%b"
     set "ver=%ver:~0,6%"
 exit /b 0
+
 :download.portableapps
     cd /d "%bindir%"
         if not exist PortableApps mkdir PortableApps
@@ -1635,6 +1654,7 @@ exit /b 0
         7z a PortableApps.7z .\PortableApps\* -sdel >nul
         if exist "PortableApps" (rd /s /q "PortableApps" >nul)
 exit /b 0
+
 :PortableAppsExtract
     cd /d "%bindir%"
         7z x "PortableApps.7z" -o"%ducky%\" -aoa -y >nul
@@ -1921,12 +1941,17 @@ exit /b 0
         )
         call :rEFInd.icons %ducky%
     :: Install rEFind theme
-    set "source=%tmp%\rEFInd_themes\%rtheme%"
-    partassist /hd:%disk% /whide:%rpart% /src:%source% /dest:EFI\BOOT\themes
+    echo.
+    echo ^>^> Installing rEFind theme...
+    echo.
+    call :get.path rpath REFIND
+    cd /d "%tmp%\rEFInd_themes"
+        call :copy.hidden "%rtheme%" "%rpath%\EFI\BOOT\themes"
     :: Copy icon to secure boot partition
-    set "source=%tmp%\rEFInd_themes\%rtheme%\icons\others"
     if not "%secureboot%"=="n" (
-        partassist /hd:%disk% /whide:%spart% /src:%source% /dest:EFI\BOOT
+        call :get.path spath M-ESP
+        cd /d "%tmp%\rEFInd_themes\%rtheme%\icons"
+            call :copy.hidden "others" "%spath%\EFI\BOOT"
     )
     call :clean.bye
 exit /b 0
@@ -2048,10 +2073,6 @@ exit /b 0
     call :clean.bye
     
     :uefi3264bit
-    call :checkdisktype
-        call :set.partnum installbcd.pe installbcd.pe
-
-    :installbcd.pe
     :: open Configuration BCD file...
     if "%secureboot%"=="n" (
         set "source=%ducky%\EFI\Microsoft\Boot\bcd"
@@ -2062,9 +2083,10 @@ exit /b 0
     echo ^*               Source^: %source%
     "%bindir%\bootice.exe" /edit_bcd /easymode /file="%source%"
     :: copy Configuration BCD file to the destination...
-    if not "%secureboot%"=="n" (
-        call :bcdautoset bcd
-        partassist /hd:%disk% /whide:%spart% /src:%source% /dest:EFI\Microsoft\Boot
+    if "%secureboot%"=="y" call :bcdautoset bcd
+    if "%secureboot%"=="y" call :get.path epath M-ESP
+    if "%secureboot%"=="y" (
+        call :copy.hidden "%source%" "%epath%\EFI\Microsoft\Boot" >nul 2>&1
     )
     call :colortool
     goto :extra.main
@@ -2359,10 +2381,12 @@ exit /b 0
         )
         wget.exe -q --show-progress -O grubfm-%ver%.7z %url%
 exit /b 0
+
 :install.grubfm
     7z x "%bindir%\extra-modules\grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
     >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
 exit /b 0
+
 :grub2-filemanager
     set "title=%_lang0828_%"
     call :colortool
@@ -2457,9 +2481,11 @@ exit /b 0
         set "Grub2=%bindir%\secureboot\EFI\Boot\backup\Grub2"
         set "rEFInd=%bindir%\secureboot\EFI\Boot\backup\rEFInd"
         set "WinPE=%bindir%\secureboot\EFI\Boot\backup\WinPE"
-    cd /d "%ducky%\EFI\BOOT\backup"
-        if exist Grub2 copy Grub2 %Grub2% /y >nul
-
+    if exist "%ducky%\EFI\BOOT\backup\Grub2" (
+        cd /d "%ducky%\EFI\BOOT\backup"
+            if exist Grub2 copy Grub2 %Grub2% /y >nul
+    )
+    echo.
     call :checkdisktype
         if "%harddisk%"=="true" goto :setdefaultboot
         call :set.partnum nonsecure.default secure.default
@@ -2467,47 +2493,45 @@ exit /b 0
     :nonsecure.default
     if "%option%"=="Secure_rEFInd" cls & goto :setdefaultboot
     if "%option%"=="Secure_Grub2"  cls & goto :setdefaultboot
+    call :get.path rpath REFIND
     if "%option%"=="rEFInd" (
-        partassist /hd:%disk% /whide:%rpart% /src:%rEFInd% /dest:\EFI\BOOT
+        call :copy.hidden %rEFInd% "%rpath%\EFI\BOOT"
     )
     if "%option%"=="Grub2" (
-        partassist /hd:%disk% /whide:%rpart% /src:%Grub2% /dest:\EFI\BOOT
+        call :copy.hidden %Grub2% "%rpath%\EFI\BOOT"
         >"%ducky%\EFI\BOOT\WindowsGrub2" (echo true)
     )
+    timeout /t 1 >nul
     call :clean.bye
     
     :secure.default
+    call :get.path rpath REFIND
+    call :get.path epath M-ESP
     if "%option%"=="Secure_rEFInd" (
-        partassist /hd:%disk% /whide:%spart% /src:%WinPE% /dest:\EFI\BOOT
-        partassist /hd:%disk% /whide:%rpart% /src:%rEFInd% /dest:\EFI\BOOT
+        call :copy.hidden %WinPE% "%epath%\EFI\BOOT"
+        call :copy.hidden %rEFInd% "%rpath%\EFI\BOOT"
         cd /d "%ducky%\EFI\BOOT\"
-            if exist bootx64.efi  del bootx64.efi  /s /f /q >nul
-            if exist bootia32.efi del bootia32.efi /s /f /q >nul
+            if exist bootx64.efi  del bootx64.efi  /s /f
+            if exist bootia32.efi del bootia32.efi /s /f
     )
     if "%option%"=="Secure_Grub2" (
-        partassist /hd:%disk% /whide:%spart% /src:%WinPE% /dest:\EFI\BOOT
-        partassist /hd:%disk% /whide:%rpart% /src:%Grub2% /dest:\EFI\BOOT
+        call :copy.hidden %WinPE% "%epath%\EFI\BOOT"
+        call :copy.hidden %Grub2% "%rpath%\EFI\BOOT"
     )
     if "%option%"=="rEFInd" (
-        call :get.freeDrive
-        partassist /hd:%disk% /unhide:%spart%
-        partassist /hd:%disk% /setletter:%spart% /letter:%freedrive%
-        cd /d "%freedrive%:\EFI\BOOT\"
-            if exist bootx64.efi   del bootx64.efi   /s /f /q >nul
-            if exist bootia32.efi  del bootia32.efi  /s /f /q >nul
-            if exist winpeia32.efi del winpeia32.efi /s /f /q >nul
-            if exist winpex64.efi  del winpex64.efi  /s /f /q >nul
-        partassist /hd:%disk% /hide:%spart%
-        partassist /hd:%disk% /whide:%rpart% /src:%rEFInd% /dest:\EFI\BOOT
+        if exist "%epath%\EFI\BOOT\*x64.efi" del "%epath%\EFI\BOOT\*x64.efi"
+        if exist "%epath%\EFI\BOOT\*ia32.efi" del "%epath%\EFI\BOOT\*ia32.efi"
+        call :copy.hidden %rEFInd% "%rpath%\EFI\BOOT"
         cd /d "%bindir%"
-            xcopy "secureboot" "%ducky%\" /e /g /h /r /y /q >nul
+            xcopy "secureboot" "%ducky%\" /e /g /h /r /y
     )
     if "%option%"=="Grub2" (
-        partassist /hd:%disk% /whide:%spart% /src:%Grub2% /dest:\EFI\BOOT
+        call :copy.hidden %Grub2% "%epath%\EFI\BOOT"
         cd /d "%bindir%"
-            xcopy "secureboot" "%ducky%\" /e /g /h /r /y /q >nul
+            xcopy "secureboot" "%ducky%\" /e /g /h /r /y
             >"%ducky%\EFI\BOOT\WindowsGrub2" (echo true)
     )
+    timeout /t 1 >nul
     call :clean.bye
 exit /b 0
 
@@ -2817,13 +2841,7 @@ exit /b 0
     timeout /t 2 >nul
     mountvol S: /d
     :: Add Cloverx64.efi to the UEFI NVRAM entries
-    echo ^>  Creating "Clover Boot Manager" entry to the UEFI NVRAM...
-    bcdedit /set "{bootmgr}" path \EFI\CLOVER\cloverx64.efi >nul
-    bcdedit /set "{bootmgr}" description "Clover Boot Manager" >nul
-    echo.
-    echo ^>  Use bootice to view/edit the boot entries management
-    echo ^>  Choose "UEFI" ^>^> "Edit boot entries"
-    cd /d "%bindir%" & bootice
+    call :add.entry "Clover Boot Manager" "\EFI\CLOVER\cloverx64.efi"
     call :clean.bye
 exit /b 0
 
@@ -2892,11 +2910,9 @@ exit /b 0
 exit /b 0
 
 :install.rEFInd
-    call :checkdisktype
-    call :set.partnum installrEFInd installrEFInd
-    :installrEFInd
-    set "source=%tmp%\rEFInd"
-    partassist /hd:%disk% /whide:%rpart% /src:%source% /dest:EFI\BOOT
+    call :get.path rpath REFIND
+    cd /d "%tmp%"
+        call :copy.hidden "rEFInd" "%rpath%\EFI\BOOT" >nul 2>&1
 exit /b 0
 
 :rEFIndinstaller
@@ -2948,14 +2964,19 @@ exit /b 0
         timeout /t 2 >nul
     mountvol S: /d
     :: Add rEFIndx64.efi to the UEFI NVRAM entries
-    echo ^>  Creating "rEFInd Boot Manager" entry to the UEFI NVRAM...
-    bcdedit /set "{bootmgr}" path \EFI\rEFInd\bootx64.efi >nul
-    bcdedit /set "{bootmgr}" description "rEFInd Boot Manager" >nul
+    call :add.entry "rEFInd Boot Manager" "\EFI\rEFInd\bootx64.efi"
+    call :clean.bye
+exit /b 0
+
+
+:add.entry
+    echo ^>  Creating %~1 entry to the UEFI NVRAM...
+    bcdedit /set "{bootmgr}" path %~2 >nul
+    bcdedit /set "{bootmgr}" description %~1 >nul
     echo.
     echo ^>  Use bootice to view/edit the boot entries management
     echo ^>  Choose "UEFI" ^>^> "Edit boot entries"
     cd /d "%bindir%" & bootice
-    call :clean.bye
 exit /b 0
 
 
