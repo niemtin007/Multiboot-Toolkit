@@ -78,7 +78,7 @@ call :colortool
 partassist /hd:%disk% /cre /pri /size:%esp% /end /fs:fat32 /align /label:REFIND /letter:%freedrive%
 call :unhide.partition 0
 call :pushdata.rEFInd
-mountvol %freedrive%: /p
+mountvol %freedrive%: /d
 if "%secureboot%"=="n" goto :usbmultibootdata
 :: create ESP partition
 call :colortool
@@ -86,7 +86,7 @@ partassist /hd:%disk% /cre /pri /size:50 /fs:fat32 /label:M-ESP /letter:%freedri
 partassist /move:%freedrive% /right:auto /align
 call :unhide.partition 0
 call :pushdata.ESP
-mountvol %freedrive%: /p
+mountvol %freedrive%: /d
 :usbmultibootdata
 :: create Multiboot data partition
 call :colortool
@@ -158,14 +158,14 @@ call :colortool
 call :create.epart
 call :unhide.partition 0
 call :pushdata.ESP
-mountvol %freedrive%: /p
+mountvol %freedrive%: /d
 :esp2
 :: Create rEFInd partition
 call :colortool
 call :create.rpart
 call :unhide.partition %rpart%
 call :pushdata.rEFInd
-mountvol %freedrive%: /p
+mountvol %freedrive%: /d
 :: Create Multiboot Data Partition
 call :colortool
 call :check.diskInfo
@@ -240,6 +240,8 @@ if "%secureboot%"=="y" (
 :: start modules installer
 if "%installmodules%"=="y" call :moduleInstaller
 
+mountvol %ducky%: /d
+call :check.letter
 call :clean.bye
 
 
