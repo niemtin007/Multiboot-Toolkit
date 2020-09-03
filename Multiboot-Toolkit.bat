@@ -213,7 +213,7 @@ cd /d "%bindir%"
     if "%GPT%"=="true" call :gdisk
     echo.
     echo %_lang0116_%
-    call :grub2installer MULTIBOOT >nul 2>&1
+    call :grub2installer MULTIBOOT
     call :install.grubfm
     :: install language
     echo.
@@ -240,7 +240,7 @@ if "%secureboot%"=="y" (
 :: start modules installer
 if "%installmodules%"=="y" call :moduleInstaller
 
-mountvol %ducky%: /d
+mountvol %ducky% /d
 call :check.letter
 call :clean.bye
 
@@ -1150,52 +1150,35 @@ exit /b 0
 
 :grub2installer
     cd /d "%bindir%"
-        call :get.freeDrive
         7z x "grub2.7z" -o"%tmp%" -aos -y >nul
-    :: create vhd disk
-    cd /d "%tmp%"
-        if exist "Grub2.vhd" del /s /q "Grub2.vhd" >nul
-        (
-            echo create vdisk file="%tmp%\Grub2.vhd" maximum=50 type=expandable
-            echo attach vdisk
-            echo create partition primary
-            echo format fs=fat32 label="Grub2"
-            echo assign letter=%freedrive%
-        ) | diskpart
     :: install grub2 for Legacy BIOS mode
     if not "%~2"=="legacydisable" (
-        move /y "%ducky%\BOOT\grub\*.lst" "%ducky%\BOOT" >nul
+        echo ^   installing for i386-pc platform.
         cd /d "%tmp%\grub2"
-            grub-install --target=i386-pc --force --boot-directory=%ducky%\BOOT \\.\physicaldrive%disk%
-        move /y "%ducky%\BOOT\*.lst" "%ducky%\BOOT\grub" >nul
+            grub-install --target=i386-pc --force --boot-directory=%ducky%\BOOT \\.\physicaldrive%disk% >nul 2>&1
         cd /d "%tmp%\grub2\i386-pc"
-            copy "lnxboot.img" "%ducky%\BOOT\grub\i386-pc" /y >nul
+            copy "lnxboot.img" "%ducky%\BOOT\grub\i386-pc" >nul
         cd /d "%ducky%\BOOT\grub\i386-pc"
-            copy /b lnxboot.img+Core.img g2ldr
+            copy /b lnxboot.img+Core.img g2ldr >nul
     )
     :: install grub2 for EFI mode
     cd /d "%tmp%\grub2"
-        grub-install --target=x86_64-efi --efi-directory=%freedrive%:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=progress --removable
-        grub-install --target=i386-efi --efi-directory=%freedrive%:\ --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=progress --removable
-    cd /d "%ducky%\EFI\BOOT\backup"
-        if not exist Grub2 mkdir Grub2
-    cd /d "%freedrive%:\EFI\BOOT"
+        call :get.path rpath REFIND
+        echo ^   installing for i386-efi platform.
+        grub-install --target=i386-efi --efi-directory=%rpath% --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=progress --removable >nul 2>&1
+        echo ^   installing for x86_64-efi platform.
+        grub-install --target=x86_64-efi --efi-directory=%rpath% --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=progress --removable >nul 2>&1
         :: copy to multiboot data partition
-        copy "BOOTIA32.EFI" "%ducky%\EFI\BOOT\grubia32.efi" /y >nul
-        copy "BOOTX64.EFI"  "%ducky%\EFI\BOOT\grubx64.efi"  /y >nul
-        copy "grub.efi"     "%ducky%\EFI\BOOT\grub.efi"     /y >nul
-        :: make backup
-        copy "BOOTIA32.EFI" "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootia32.efi" /y >nul
-        copy "BOOTX64.EFI"  "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootx64.efi"  /y >nul
+        copy "%rpath%\EFI\BOOT\BOOTX64.EFI"  "%ducky%\EFI\BOOT\grubx64.efi"  /y >nul
+        copy "%rpath%\EFI\BOOT\BOOTIA32.EFI" "%ducky%\EFI\BOOT\grubia32.efi" /y >nul
+        copy "%rpath%\EFI\BOOT\grub.efi"     "%ducky%\EFI\BOOT\grub.efi"     /y >nul
+    :: make backup
+    cd /d "%ducky%\EFI\BOOT"
+        copy "grubx64.efi"  "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootx64.efi"  /y >nul
+        copy "grubia32.efi" "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootia32.efi" /y >nul
         copy "grub.efi"     "%bindir%\secureboot\EFI\Boot\backup\Grub2\grub.efi"     /y >nul
     cd /d "%bindir%\secureboot\EFI\Boot\backup"
-        copy "Grub2" "%ducky%\EFI\BOOT\backup\Grub2" /y >nul
-    cd /d "%tmp%"
-        (
-            echo select vdisk file="%tmp%\Grub2.vhd"
-            echo detach vdisk
-        ) | diskpart
-        del /s /q "Grub2.vhd" >nul
+        xcopy "Grub2" "%ducky%\EFI\BOOT\backup\Grub2\" /y >nul
     cd /d "%bindir%"
 exit /b 0
 
@@ -1414,9 +1397,9 @@ exit /b 0
         echo.
         echo %_lang0116_%
         if "%usblegacy%"=="true" (
-            call :grub2installer MULTIBOOT >nul 2>&1
+            call :grub2installer MULTIBOOT
         ) else (
-            call :grub2installer MULTIBOOT legacydisable >nul 2>&1
+            call :grub2installer MULTIBOOT legacydisable
         )
         :: install grub2 file manager
         call :install.grubfm
@@ -2295,7 +2278,7 @@ exit /b 0
         )
         if "%downloadgrub2%"=="true" call :download.grub2
         echo %_lang0504_%
-        call :grub2installer MULTIBOOT >nul 2>&1
+        call :grub2installer MULTIBOOT
 
     :config.fix
     cd /d "%bindir%\config\"
@@ -2590,13 +2573,13 @@ exit /b 0
     :: install Syslinux Bootloader
     cd /d "%bindir%"
         syslinux --force --directory /BOOT/syslinux %ducky% %ducky%\BOOT\syslinux\syslinux.bin
-
+    
     call :install.clover skip
     :: install grub2 Bootloader
     cd /d "%bindir%"
         echo.
         echo %_lang0116_%
-        call :grub2installer MULTIBOOT >nul 2>&1
+        call :grub2installer MULTIBOOT
     cd /d "%bindir%"
         7z x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
     cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
