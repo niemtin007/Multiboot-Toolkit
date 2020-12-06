@@ -349,7 +349,9 @@ cd /d "%ducky%\BOOT\namelist\temp"
 
 :modules.specialiso
 :: disabled iso linux run on fat32 partition (hidden partition)
-if exist "%ducky%\EFI\BOOT\usb.gpt" goto :modules.populariso
+call :check.diskInfo
+call :checkdisktype
+    if "%usb%"=="true" if "%GPT%"=="true" goto :modules.populariso
 :: check special iso type
 call :checkISO specialiso modules.populariso
 
@@ -575,7 +577,6 @@ echo.
 :: a b c d e f g h i j  k  l  m  n  o  p  q
 :: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
 :: ----------------------------------------------
-if exist "%ducky%\EFI\Boot\usb.gpt" goto :usb.gpt
 if "%installed%"=="true"  goto :extra.online
 if "%installed%"=="false" goto :extra.offline
 
@@ -607,19 +608,6 @@ choice /c cdhknq /cs /n /m "%_lang0020_%"
     if errorlevel 3  timeout /t 1 >nul & goto :grub2-filemanager
     if errorlevel 2  timeout /t 1 >nul & goto :rEFIndInstaller
     if errorlevel 1  timeout /t 1 >nul & goto :cloverinstaller
-
-:usb.gpt
-choice /c afghilmnpq /cs /n /m "%_lang0020_%"
-    if errorlevel 10 timeout /t 1 >nul & goto :mainMenu
-    if errorlevel 9  timeout /t 1 >nul & goto :sortgrub2menu
-    if errorlevel 8  timeout /t 1 >nul & goto :qemuboottester
-    if errorlevel 7  timeout /t 1 >nul & goto :changelanguage
-    if errorlevel 6  timeout /t 1 >nul & goto :NTFSdriveprotect
-    if errorlevel 5  timeout /t 1 >nul & goto :fixbootloader
-    if errorlevel 4  timeout /t 1 >nul & goto :grub2-filemanager
-    if errorlevel 3  timeout /t 1 >nul & goto :editwinsetupfromUSB
-    if errorlevel 2  timeout /t 1 >nul & goto :editWinPEbootmanager
-    if errorlevel 1  timeout /t 1 >nul & goto :grub2theme
 
 
 
@@ -718,7 +706,7 @@ exit /b 0
     echo.
     echo ^  Multiboot Toolkit is the open-source software. It's released under
     echo ^  General Public Licence ^(GPL^). You can use, modify and redistribute
-    echo ^  if you wish. You can download from my blog niemtin007.blogspot.com
+    echo ^  if you wish.
     echo.
     echo ^  Thanks to:
     echo ^  ------------------------------------------------------------------
@@ -861,6 +849,14 @@ exit /b 0
     for /f "tokens=*" %%i in ('dir /a:d /b "%~1"') do (
         if not exist %~2\%%i md %~2\%%i
         call :copy.hidden %~1\%%i %~2\%%i
+    )
+exit /b 0
+
+
+:delete.hidden
+    del %~1 /s /q /f
+    for /f "tokens=*" %%i in ('dir /a:d /b "%~1"') do (
+        call :delete.hidden %~1\%%i
     )
 exit /b 0
 
@@ -1322,6 +1318,7 @@ exit /b 0
     set "identifier={2247cc17-b047-45e4-b2cd-d4196ff5d2fb}"
     call :bcd.reset
 exit /b 0
+
 :bcd.reset
     bcdedit /store %bcd% /set %identifier% device ramdisk=[%ducky%]%bootfile%,%Object% >nul
     bcdedit /store %bcd% /set %identifier% osdevice ramdisk=[%ducky%]%bootfile%,%Object% >nul
@@ -1336,19 +1333,17 @@ exit /b 0
         echo select disk %disk%
         echo clean
         echo convert gpt
+        echo clean
+        echo convert gpt
         echo create partition primary size=50
-        echo format quick fs=fat label="ESP"
+        echo format quick fs=fat32 label="REFIND"
         echo assign letter=%freedrive%
         echo exit
     ) | diskpart >nul
     :: push files into the ESP partition
     call :pushdata.rEFInd
     :: remove drive letter
-    (
-        echo select volume %freedrive%
-        echo remove letter %freedrive%
-        echo exit
-    ) | diskpart >nul
+    mountvol %freedrive%: /d
     :: create MULTIBOOT partition
     (
         echo select disk %disk%
@@ -1382,8 +1377,8 @@ exit /b 0
         for %%b in (APPS BOOT\grub\themes EFI\BOOT ISO WIM) do mkdir %%b
         >"BOOT\lang"              (echo %lang%)
         >"EFI\BOOT\mark"          (echo niemtin007)
+        >"BOOT\secureboot"        (echo n)
         >"BOOT\grub\themes\theme" (echo %gtheme%)
-        >"EFI\BOOT\usb.gpt"       (echo USB GPT Bootable Disk)
     cd /d "%bindir%"
         xcopy "secureboot" "%ducky%\" /e /g /h /r /y /q >nul
         set "file=Autorun.inf usb.ico B64 XORBOOT grub"
@@ -1421,11 +1416,12 @@ exit /b 0
     (
         echo select disk %disk%
         echo select partition 1
-        echo gpt attributes=0x4000000000000000
+        echo gpt attributes=0x8000000000000000
         echo select partition 3
         echo gpt attributes=0x4000000000000000
         echo exit
     ) | diskpart >nul
+        call :check.letter
         call :clean.bye
 exit /b 0
 
@@ -1834,8 +1830,12 @@ exit /b 0
     :continue.gtheme
     cd /d "%ducky%\BOOT\grub\themes"
         if exist "%curtheme%" rmdir /s /q "%curtheme%" >nul
-        if not exist "%gtheme%" call :install.gtheme
-        >"%ducky%\BOOT\grub\themes\theme" (echo %gtheme%)
+        if not exist "%gtheme%" (
+            echo.
+            echo %_lang0113_% %gtheme%
+            call :install.gtheme
+            >"%ducky%\BOOT\grub\themes\theme" (echo %gtheme%)
+        )
         call :clean.bye
 exit /b 0
 
@@ -1920,16 +1920,18 @@ exit /b 0
     call :extract.rEFInd
     cd /d "%tmp%\rEFInd_themes\%rtheme%\icons"
         >"%ducky%\BOOT\rEFInd" (echo %rtheme%)
-        echo. & echo %_lang0402_%
         if exist "%ducky%\EFI\CLOVER\*.*" (
             xcopy "cloverx64.png" "%ducky%\EFI\CLOVER\" /e /z /r /y /q >nul
         )
         call :rEFInd.icons %ducky%
     :: Install rEFind theme
+    call :get.path rpath REFIND
+    echo.
+    echo ^>^> Cleaning old theme...
+    call :delete.hidden "%rpath%\EFI\BOOT\themes" >nul
     echo.
     echo ^>^> Installing rEFind theme...
     echo.
-    call :get.path rpath REFIND
     cd /d "%tmp%\rEFInd_themes"
         call :copy.hidden "%rtheme%" "%rpath%\EFI\BOOT\themes"
     :: Copy icon to secure boot partition
@@ -2051,12 +2053,14 @@ exit /b 0
     
     :legacy3264bit
     set "source=%ducky%\BOOT\bootmgr\B84"
-    echo.
-    echo ^*               Source^: %source%
-    bootice /edit_bcd /easymode /file=%source%
-    call :colortool
-    call :clean.bye
-    
+    if exist %source% (
+        echo.
+        echo ^*               Source^: %source%
+        bootice /edit_bcd /easymode /file=%source%
+        call :colortool
+        call :clean.bye
+    )
+
     :uefi3264bit
     :: open Configuration BCD file...
     if "%secureboot%"=="n" (
@@ -2153,12 +2157,14 @@ exit /b 0
     del /f /q "%tmp%\winpemenu.txt"
     
     :: Legacy BIOS Mode
-    echo.
-    echo %menutitle%
-    echo.
-    echo %_lang0810_%
     set "source=%ducky%\BOOT\bootmgr\B84"
-    call :create.entry
+    if exist %source% (
+        echo.
+        echo %menutitle%
+        echo.
+        echo %_lang0810_%
+        call :create.entry
+    )
     
     :: UEFI Mode
     echo.
@@ -2354,10 +2360,10 @@ exit /b 0
     cd /d "%bindir%"
         7z x "wget.7z" -o"%tmp%" -aoa -y >nul
     cd /d "%tmp%"
-        set "sourcelink=https://github.com/a1ive/grub2-filemanager/releases"
+        set "sourcelink=https://github.com/a1ive/grub2-filemanager"
         wget.exe -q -O grubfm.log %sourcelink% >nul
-        for /f tokens^=1^,6^ delims^=/^" %%a in (
-            'type grubfm.log ^| findstr /i "releases/tag.*.</a>" ^| find /n /v "" ^| find "[1]"'
+        for /f tokens^=1^,8^ delims^=/^" %%a in (
+            'type grubfm.log ^| findstr /i "releases/tag"'
         ) do set "ver=%%b"
         set "url=https://github.com/a1ive/grub2-filemanager/releases/download/%ver%/grubfm-%langfm%.7z"
         if not "%~1"=="skip" (
