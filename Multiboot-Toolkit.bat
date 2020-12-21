@@ -8,12 +8,10 @@ cd /d "%~dp0"
 set "bindir=%~dp0bin"
 set "rtheme=Glassy"
 set "gtheme=CyberSecurity"
-set "title=License"
 if not exist Modules mkdir Modules
 
 if not exist "bin" (
-    echo. & echo ^>^> Warning: Missing Files
-    timeout /t 15 >nul & exit
+    call :printMissing
 ) else (
     call :permissions
     call :get.freeDrive
@@ -27,13 +25,13 @@ set "title=Menu"
 call :colortool
 
 echo.
-echo =====================================================================
-echo %_lang0017_%
-echo %_lang0018_%
-echo %_lang0019_%
-echo =====================================================================
+call :printc "====================================================================="
+call :printj "[ 1 ]" "%_lang0017_%"
+call :printj "[ 2 ]" "%_lang0018_%"
+call :printj "[ 3 ]" "%_lang0019_%"
+call :printc "====================================================================="
 echo.
-choice /c 1234q /cs /n /m "%_lang0020_%"
+choice /c 1234q /cs /n /m "%_symbol_%%spaces%%_lang0020_%"
     if errorlevel 5 call :license
     if errorlevel 4 timeout /t 1 >nul & goto :qemuboottester
     if errorlevel 3 timeout /t 1 >nul & goto :extraFeatures
@@ -69,7 +67,7 @@ call :checkdisktype
 call :colortool
 :: prepare partitions space for removable Media
 echo.
-echo ^> Cleaning disk...
+echo %_symbol_%%spaces%%_lang0128_%
 call :clean.disk
 call :clean.disk
 call :get.freeDrive
@@ -103,7 +101,7 @@ call :count.partition
     :: set multiboot data partition size
     echo.
     set /a GB=0
-    set /p GB= %_lang0106_%
+    set /p GB= %_symbol_%%spaces%%_lang0106_%
     set /a GB=%GB%+0
     :: check the character of the number
     echo %esp%| findstr /r "^[1-9][0-9]*$">nul
@@ -112,12 +110,12 @@ call :count.partition
     set /a MB=(%GB%*1024+%esp%)
     :: check the installed status and give instruction
     if "%online%"=="true" if "%disk%"=="%diskscan%" (
-        echo. & echo %_lang0107_% & timeout /t 300 >nul
+        echo. & echo ^>%spaces%%_lang0107_% & timeout /t 300 >nul
         goto :delete
     )
     if "%online%"=="false" if "%GB%"=="0" (
         call :colortool
-        echo. & echo %_lang0108_% & timeout /t 15 >nul
+        echo. & echo ^>%spaces%%_lang0108_% & timeout /t 15 >nul
         goto :External
     )
     goto :continue
@@ -212,19 +210,19 @@ cd /d "%bindir%"
     call :colortool
     if "%GPT%"=="true" call :gdisk
     echo.
-    echo %_lang0116_%
+    echo %_symbol_%%spaces%%_lang0116_%
     call :grub2installer MULTIBOOT
     call :install.grubfm
     :: install language
     echo.
-    echo %_lang0112_% %lang%
+    echo %_symbol_%%spaces%%_lang0112_% %lang%
     7z x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
 cd /d "%tmp%\rEfind_themes\%rtheme%\icons"
     echo.
-    echo %_lang0111_% %rtheme%
+    echo %_symbol_%%spaces%%_lang0111_% %rtheme%
     call :rEFInd.icons %ducky%
     echo.
-    echo %_lang0113_% %gtheme%
+    echo %_symbol_%%spaces%%_lang0113_% %gtheme%
     call :install.gtheme
 cd /d "%bindir%\secureboot\EFI\Microsoft\Boot"
     call :bcdautoset bcd
@@ -373,12 +371,13 @@ if %size% LEQ %esp% (
     )
 ) else (
     call :colortool
-    echo. & echo %_lang0205_%
-    echo ----------------------------------------------------------------------
-    echo %_lang0206_%
-    echo %_lang0207_%
-    echo %_lang0208_%
-    echo ----------------------------------------------------------------------
+    echo.
+    call :printc "%_lang0205_%"
+    call :printc "----------------------------------------------------------------------"
+    call :printc "%_lang0206_%"
+    call :printc "%_lang0207_%"
+    call :printc "%_lang0208_%"
+    call :printc "----------------------------------------------------------------------"
     timeout /t 15 >nul
 )
 
@@ -407,7 +406,7 @@ call :colortool
 if exist "%curpath%\krd.iso" (
     if not exist "%ducky%\DATA\krd.iso" (
         echo.
-        echo ^> Kaspersky Rescue Disk 18 %_lang0015_%
+        echo %_symbol_%%spaces%Kaspersky Rescue Disk 18 %_lang0015_%
         robocopy "%curpath%" "%ducky%\DATA" krd.iso /njh /njs /nc /ns
     )
 )
@@ -469,33 +468,6 @@ if not exist "%ducky%\WIM\bootx64.wim" if not exist "%ducky%\WIM\bootx86.wim" (
             if exist bootisowim copy bootisowim "%ducky%\BOOT\bootmgr" /y >nul
     )
 )
-:: Windows install.wim module (wim method)
-call :colortool
-echo.
-echo %_lang0214_%
-echo.
-echo %_lang0215_%
-echo.
-setlocal enabledelayedexpansion
-for %%i in (C D E F G H I J K L M N O P Q R S T U V W X Y Z) do (
-    if exist "%%i:\sources\setup.exe" (
-        if exist "%%i:\sources\install.wim" (
-            for /f "tokens=4 delims= " %%j in ('dism /Get-WimInfo /WimFile:%%i:\sources\install.wim /index:1 ^| Find "Name"') do (
-                echo ^   * Windows %%j ISO found in %%i:\ drive
-                echo %_lang0216_%
-                if not exist "%ducky%\Sources\install%%~nj8664.wim" (
-                    copy "%%i:\sources\install.wim" "%ducky%\Sources\" >nul
-                    cd /d "%ducky%\Sources\"
-                    ren install.wim install%%~nj8664.wim
-                    echo %_lang0217_%
-                ) else (
-                    echo ^     ^>^> Your Windows %%j doesn't need to install again
-                )
-            )
-        )
-    )
-)
-endlocal & cls
 
 :: Windows Install ISO Module (ISO method)
 cd /d "%ducky%\WIM"
@@ -511,7 +483,8 @@ cd /d "%ducky%\WIM"
 call :colortool
     set "list=grubfmia32.efi grubfmx64.efi grubfm.iso"
     if exist "%curpath%\grubfm-*.7z" (
-        cls & echo. & echo %_lang0224_%
+        cls & echo. 
+        echo %_symbol_%%spaces%%_lang0224_%
         7z x "%curpath%\grubfm-*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
     )
 
@@ -560,18 +533,18 @@ call :gather.info
 set "title=Extra Features"
 call :colortool
 echo.
-echo =====================================================================
-echo %_lang0819_%
-echo =====================================================================
-echo  [ a ] = %_lang0821_%   [ i ] = %_lang0829_%
-echo  [ b ] = %_lang0822_%   [ j ] = %_lang0830_%
-echo  [ c ] = %_lang0823_%   [ k ] = %_lang0831_%
-echo  [ d ] = %_lang0824_%   [ l ] = %_lang0832_%
-echo  [ e ] = %_lang0825_%   [ m ] = %_lang0833_%
-echo  [ f ] = %_lang0826_%   [ n ] = %_lang0834_%
-echo  [ g ] = %_lang0827_%   [ o ] = %_lang0835_%
-echo  [ h ] = %_lang0828_%   [ p ] = %_lang0836_%
-echo =====================================================================
+call :printc "====================================================================="
+call :printc "%_lang0819_%"
+call :printc "====================================================================="
+call :printj "[ a ] = %_lang0821_%" "[ i ] = %_lang0829_%"
+call :printj "[ b ] = %_lang0822_%" "[ j ] = %_lang0830_%"
+call :printj "[ c ] = %_lang0823_%" "[ k ] = %_lang0831_%"
+call :printj "[ d ] = %_lang0824_%" "[ l ] = %_lang0832_%"
+call :printj "[ e ] = %_lang0825_%" "[ m ] = %_lang0833_%"
+call :printj "[ f ] = %_lang0826_%" "[ n ] = %_lang0834_%"
+call :printj "[ g ] = %_lang0827_%" "[ o ] = %_lang0835_%"
+call :printj "[ h ] = %_lang0828_%" "[ p ] = %_lang0836_%"
+call :printc "====================================================================="
 echo.
 :: ----------------------------------------------
 :: a b c d e f g h i j  k  l  m  n  o  p  q
@@ -581,7 +554,8 @@ if "%installed%"=="true"  goto :extra.online
 if "%installed%"=="false" goto :extra.offline
 
 :extra.online
-choice /c abcdefghijklmnopq /cs /n /m "%_lang0020_%"
+choice /c abcdefghijklmnopqz /cs /n /m "%_symbol_%%spaces%%_lang0020_%"
+    if errorlevel 18 timeout /t 1 >nul & goto :clean.bye
     if errorlevel 17 timeout /t 1 >nul & goto :mainMenu
     if errorlevel 16 timeout /t 1 >nul & goto :sortgrub2menu
     if errorlevel 15 timeout /t 1 >nul & goto :updatemultiboot
@@ -601,7 +575,8 @@ choice /c abcdefghijklmnopq /cs /n /m "%_lang0020_%"
     if errorlevel 1  timeout /t 1 >nul & goto :grub2theme
 
 :extra.offline
-choice /c cdhknq /cs /n /m "%_lang0020_%"
+choice /c cdhknqz /cs /n /m "%_symbol_%%spaces%%_lang0020_%"
+    if errorlevel 7  timeout /t 1 >nul & goto :clean.bye
     if errorlevel 6  timeout /t 1 >nul & goto :mainMenu
     if errorlevel 5  timeout /t 1 >nul & goto :qemuboottester
     if errorlevel 4  timeout /t 1 >nul & goto :easeconvertdisk
@@ -626,6 +601,30 @@ choice /c cdhknq /cs /n /m "%_lang0020_%"
 :: =========================================
 :: BEGIN FUNCTIONS
 :: =========================================
+
+:set.mode
+    :: set min cols is 102 to fix the partassist's percent process display (old: 18x70)
+    set /a row = 25
+    set /a col = 102
+    mode con lines=%row% cols=%col%
+exit /b 0
+
+
+:printMissing
+    call :set.mode
+    echo. & echo. & echo. & echo. & echo. & echo. & echo.
+    call :printc " ███▄ ▄███▓ ██▓  ██████   ██████  ██▓ ███▄    █   ▄████      █████▒██▓ ██▓    ▓█████   ██████ "
+    call :printc "▓██▒▀█▀ ██▒▓██▒▒██    ▒ ▒██    ▒ ▓██▒ ██ ▀█   █  ██▒ ▀█▒   ▓██   ▒▓██▒▓██▒    ▓█   ▀ ▒██    ▒ "
+    call :printc "▓██    ▓██░▒██▒░ ▓██▄   ░ ▓██▄   ▒██▒▓██  ▀█ ██▒▒██░▄▄▄░   ▒████ ░▒██▒▒██░    ▒███   ░ ▓██▄   "
+    call :printc "▒██    ▒██ ░██░  ▒   ██▒  ▒   ██▒░██░▓██▒  ▐▌██▒░▓█  ██▓   ░▓█▒  ░░██░▒██░    ▒▓█  ▄   ▒   ██▒"
+    call :printc "▒██▒   ░██▒░██░▒██████▒▒▒██████▒▒░██░▒██░   ▓██░░▒▓███▀▒   ░▒█░   ░██░░██████▒░▒████▒▒██████▒▒"
+    call :printc "░ ▒░   ░  ░░▓  ▒ ▒▓▒ ▒ ░▒ ▒▓▒ ▒ ░░▓  ░ ▒░   ▒ ▒  ░▒   ▒     ▒ ░   ░▓  ░ ▒░▓  ░░░ ▒░ ░▒ ▒▓▒ ▒ ░"
+    call :printc "░  ░      ░ ▒ ░░ ░▒  ░ ░░ ░▒  ░ ░ ▒ ░░ ░░   ░ ▒░  ░   ░     ░      ▒ ░░ ░ ▒  ░ ░ ░  ░░ ░▒  ░ ░"
+    call :printc "░      ░    ▒ ░░  ░  ░  ░  ░  ░   ▒ ░   ░   ░ ░ ░ ░   ░     ░ ░    ▒ ░  ░ ░      ░   ░  ░  ░  "
+    call :printc "       ░    ░        ░        ░   ░           ░       ░            ░      ░  ░   ░  ░      ░  "
+    timeout /t 20 >nul & exit
+exit /b 0
+
 
 :colortool
     cls
@@ -657,8 +656,8 @@ choice /c cdhknq /cs /n /m "%_lang0020_%"
     
     :exit.color
     cls
+    call :set.mode
     cd /d "%bindir%"
-    mode con lines=18 cols=70
     title Multiboot Toolkit %cur_a%.%cur_b%.%cur_c% - %title%
 exit /b 0
 
@@ -686,6 +685,7 @@ exit /b 0
 
 
 :license
+    set "title=License"
     call :colortool
     cd /d "%tmp%"
     > welcome.vbs (
@@ -698,25 +698,28 @@ exit /b 0
         echo Speak.Speak "You can use, modify and redistribute if you wish."
         echo Speak.Speak "Choose a default language to continue..."
     )
-    echo ^  __  __      _ _   _ _              _     _____         _ _   _ _   
-    echo ^ ^|  \/  ^|_  _^| ^| ^|_^(_^) ^|__  ___  ___^| ^|_  ^|_   _^|__  ___^| ^| ^|_^(_^) ^|_ 
-    echo ^ ^| ^|\/^| ^| ^|^| ^| ^|  _^| ^| '_ \/ _ \/ _ \  _^|   ^| ^|/ _ \/ _ \ ^| / / ^|  _^|
-    echo ^ ^|_^|  ^|_^|\_,_^|_^|\__^|_^|_.__/\___/\___/\__^|   ^|_^|\___/\___/_^|_\_\_^|\__^|
-    echo ^                                                                %cur_a%.%cur_b%.%cur_c%
+    set "_symbol_=$"
     echo.
-    echo ^  Multiboot Toolkit is the open-source software. It's released under
-    echo ^  General Public Licence ^(GPL^). You can use, modify and redistribute
-    echo ^  if you wish.
+    call :printc " __  __      _ _   _ _              _     _____         _ _   _ _   "
+    call :printc "|  \/  |_  _| | |_(_) |__  ___  ___| |_  |_   _|__  ___| | |_(_) |_ "
+    call :printc "| |\/| | || | |  _| | '_ \/ _ \/ _ \  _|   | |/ _ \/ _ \ | / / |  _|"
+    call :printc "|_|  |_|\_,_|_|\__|_|_.__/\___/\___/\__|   |_|\___/\___/_|_\_\_|\__|"
+    call :printc "                                                              %cur_a%.%cur_b%.%cur_c%"
     echo.
-    echo ^  Thanks to:
-    echo ^  ------------------------------------------------------------------
-    echo ^  Ha Son, Tayfun Akkoyun, anhdv, lethimaivi, A1ive, Hoang Duch2, ...
-    echo ^  ------------------------------------------------------------------
+    call :printc " Multiboot Toolkit is the open-source software. It's released under"
+    call :printc " General Public Licence (GPL). You can use, modify and redistribute"
+    call :printc " if you wish.                                                      "
+    echo.
+    call :printc " Thanks to:                                                        "
+    call :printc " ------------------------------------------------------------------"
+    call :printc " Ha Son, Tayfun Akkoyun, anhdv, lethimaivi, A1ive, Hoang Duch2, ..."
+    call :printc " ------------------------------------------------------------------"
     call :speechOn welcome.vbs
     echo.
-    echo ^  [ 1 ] = English  [ 2 ] = Vietnam  [ 3 ] = Turkish  [ 4 ] = Chinese
+    call :printc "[ 1 ] English   [ 2 ] Vietnamese    [ 3 ] Turkish   [ 4 ] Chinese"
     echo.
-    choice /c 1234a /cs /n /m "> Choose a default language [ ? ] = "
+    echo.
+    choice /c 1234a /cs /n /m "%_symbol_%%spaces%Choose a default language [ ? ] = "
         if errorlevel 1 set "lang=English"
         if errorlevel 2 set "lang=Vietnam"
         if errorlevel 3 set "lang=Turkish"
@@ -735,7 +738,7 @@ exit /b 0
     cls
     echo.
     cd /d "%bindir%"
-        echo ^>^> Loading, Please wait...
+        echo Loading, Please wait...
         7z x "partassist.7z" -o"%tmp%" -aos -y >nul
         path=%path%;%bindir%;%tmp%;%tmp%\partassist
     :: begin preparing file
@@ -802,14 +805,18 @@ exit /b 0
         > thanks.vbs (
             echo Dim Message, Speak
             echo Set Speak=CreateObject^("sapi.spvoice"^)
-            echo Speak.Speak "Successful! Thank you for using Multiboot Toolkit"
+            echo Speak.Speak "Thank you for using Multiboot Toolkit"
         )
         cls
-        echo.
-        echo %_lang0012_%
-        echo %_lang0013_%
+        echo. & echo. & echo. & echo. & echo. & echo. & echo.
+        call :printc
+        call :printc " __   __                 __                           "
+        call :printc "|  |_|  |--.---.-.-----.|  |--.    .--.--.-----.--.--."
+        call :printc "|   _|     |  _  |     ||    <     |  |  |  _  |  |  |"
+        call :printc "|____|__|__|___._|__|__||__|__|    |___  |_____|_____|"
+        call :printc "                                   |_____|            "
         call :speechOn thanks.vbs
-        timeout /t 3 >nul
+        timeout /t 4 >nul
         del /s /q thanks.vbs >nul
         exit
 exit /b 0
@@ -872,7 +879,7 @@ exit /b 0
 
 :check.letter
     echo.
-    echo %_lang0123_%
+    echo %_symbol_%%spaces%%_lang0123_%
     call :get.freeDrive
     :: get volume number instead of specifying a drive letter for missing drive letter case
     for /f "tokens=2" %%b in (
@@ -1049,7 +1056,7 @@ exit /b 0
 
 :create.rpart
     echo.
-    echo ^> Creating rEFInd partition...
+    echo %_symbol_%%spaces%%_lang0129_%
     (
         echo select disk %disk%
         echo create partition primary size=%esp%
@@ -1062,7 +1069,7 @@ exit /b 0
 
 :create.epart
     echo.
-    echo ^> Creating ESP Partition...
+    echo %_symbol_%%spaces%%_lang0130_%
     (
         echo select disk %disk%
         echo create partition primary size=50
@@ -1075,7 +1082,7 @@ exit /b 0
 
 :create.mpart
     echo.
-    echo ^> Creating Multiboot data partition...
+    echo %_symbol_%%spaces%%_lang0131_%
     (
         echo select disk %disk%
         echo create partition primary
@@ -1149,7 +1156,7 @@ exit /b 0
         7z x "grub2.7z" -o"%tmp%" -aos -y >nul
     :: install grub2 for Legacy BIOS mode
     if not "%~2"=="legacydisable" (
-        echo ^   installing for i386-pc platform.
+        echo %spaces%%_lang0132_%
         cd /d "%tmp%\grub2"
             grub-install --target=i386-pc --force --boot-directory=%ducky%\BOOT \\.\physicaldrive%disk% >nul 2>&1
         cd /d "%tmp%\grub2\i386-pc"
@@ -1160,9 +1167,9 @@ exit /b 0
     :: install grub2 for EFI mode
     cd /d "%tmp%\grub2"
         call :get.path rpath REFIND
-        echo ^   installing for i386-efi platform.
+        echo %spaces%%_lang0133_%
         grub-install --target=i386-efi --efi-directory=%rpath% --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=progress --removable >nul 2>&1
-        echo ^   installing for x86_64-efi platform.
+        echo %spaces%%_lang0134_%
         grub-install --target=x86_64-efi --efi-directory=%rpath% --boot-directory=%ducky%\BOOT --bootloader-id=grub --modules=progress --removable >nul 2>&1
         :: copy to multiboot data partition
         copy "%rpath%\EFI\BOOT\BOOTX64.EFI"  "%ducky%\EFI\BOOT\grubx64.efi"  /y >nul
@@ -1229,34 +1236,39 @@ exit /b 0
     :rEFInd.ask
     call :colortool
     echo.
-    echo 	  %_lang0006_%           %_lang0007_% (MB)
-    echo 	==========================         ===============
-    echo 	^* Bitdefender                                  900
-    echo 	^* Fedora                                      1800
-    echo 	^* Network Security Toolkit                    3400
-    echo 	==========================         ===============
-    echo 	^* %_lang0008_%                                 6100
-    echo 	+++++++++++++++++++++++++++++++++++++++++++++++++++
-    echo 	%_lang0009_%=50MB)
     echo.
-    choice /c yn /cs /n /m "%_lang0114_%"
+    echo.
+    call :printc "  %_lang0006_%              %_lang0007_% (MB)"
+    call :printc "==========================         ==============="
+    call :printc "* Bitdefender                                  900"
+    call :printc "* Fedora                                      1800"
+    call :printc "* Network Security Toolkit                    3400"
+    call :printc "==========================         ==============="
+    call :printc "* %_lang0008_%                                 6100"
+    call :printc "++++++++++++++++++++++++++++++++++++++++++++++++++"
+    call :printc "%_lang0009_%=50MB)"
+    echo.
+    echo.
+    call :printc "++++++++++++++++++++++++++++++++++++++++++++++++++"
+    echo.
+    choice /c yn /cs /n /m "%_symbol_%%spaces%%_lang0114_%"
         if errorlevel 1 set "installmodules=y"
         if errorlevel 2 set "installmodules=n"
     echo.
-    choice /c ynq /cs /n /m "%_lang0115_%"
+    choice /c ynq /cs /n /m "%_symbol_%%spaces%%_lang0115_%"
         if errorlevel 1 set "secureboot=y"
         if errorlevel 2 set "secureboot=n"
         if errorlevel 3 goto :rEFInd.ask
     :rEFIndsize
     echo.
     set esp=50
-    set /p esp= %_lang0010_% ^> 
+    set /p esp= %_symbol_%%spaces%%_lang0010_% ^> 
         :: check the character of the number
         echo %esp%| findstr /r "^[1-9][0-9]*$">nul
         if not "%errorlevel%"=="0" goto :rEFIndsize
         :: set the minimum size of the partition
         if %esp% LSS 50 (
-            echo. & echo %_lang0011_% 50MB & timeout /t 15 >nul
+            echo. & echo %_symbol_%%spaces%%_lang0011_% 50MB & timeout /t 15 >nul
             goto :rEFIndsize
         )
 exit /b 0
@@ -1264,7 +1276,7 @@ exit /b 0
 
 :bcdautoset
     echo.
-    echo %_lang0004_%
+    echo %_symbol_%%spaces%%_lang0004_%
     set "bcd=%~1"
     set "Object={7619dcc8-fafe-11d9-b411-000476eba25f}"
     :: edit menu [ 01 ] Win10PE SE                x64 UEFI
@@ -1296,7 +1308,8 @@ exit /b 0
     set "identifier={d314f67b-45b3-4dac-b244-46a733f2583c}"
     call :bcd.reset
     :: --------------------------------------------------------------------------
-    echo.& echo %_lang0005_%
+    echo.
+    echo %_symbol_%%spaces%%_lang0005_%
     :: edit menu [ 01 ] Win10PE SE                x86 UEFI
     set "bootfile=\WIM\w10pe32.wim"
     set "identifier={8b08eb1f-1588-45d5-9327-a8c3c9af04cb}"
@@ -1326,9 +1339,10 @@ exit /b 0
 
 
 :createusb.gpt
+    set "spaces= "
     :: create ESP partition
     echo.
-    echo %_lang0121_%
+    echo %_symbol_%%spaces%%_lang0121_%
     (
         echo select disk %disk%
         echo clean
@@ -1357,10 +1371,10 @@ exit /b 0
     if "%usblegacy%"=="true" (
         call :gdisk
         :: a guide of the disk format waning messenger
-        echo -------------------------------------------------------------------
+        echo.
         echo %_lang0126_%
         echo %_lang0127_%
-        echo -------------------------------------------------------------------
+        echo.
         :: delete drive letter for BIOS Boot Partition
         bootice /device=%disk%:2 /partitions /delete_letter /quiet
     )
@@ -1372,7 +1386,7 @@ exit /b 0
     )
     :: installing data
     echo.
-    echo %_lang0122_%
+    echo %_symbol_%%spaces%%_lang0122_%
     cd /d "%ducky%"
         for %%b in (APPS BOOT\grub\themes EFI\BOOT ISO WIM) do mkdir %%b
         >"BOOT\lang"              (echo %lang%)
@@ -1390,7 +1404,7 @@ exit /b 0
         )
         :: install grub2 bootloader
         echo.
-        echo %_lang0116_%
+        echo %_symbol_%%spaces%%_lang0116_%
         if "%usblegacy%"=="true" (
             call :grub2installer MULTIBOOT
         ) else (
@@ -1400,11 +1414,11 @@ exit /b 0
         call :install.grubfm
         :: install language
         echo.
-        echo %_lang0112_% %lang%
+        echo %_symbol_%%spaces%%_lang0112_% %lang%
         7z x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
         :: install grub2 theme
         echo.
-        echo %_lang0113_% %gtheme%
+        echo %_symbol_%%spaces%%_lang0113_% %gtheme%
         call :install.gtheme
     cd /d "%ducky%\EFI\Microsoft\Boot"
         :: setup WIM path in BCD store for UEFI mode
@@ -1472,7 +1486,7 @@ exit /b 0
         )
         call :speechOn identify.vbs
     call :colortool
-        echo. & echo ^>^> Multiboot Drive Found ^^^^
+        echo. & echo ^> Multiboot Drive Found ^^^^
         timeout /t 1 >nul
         call :speechOff identify.vbs nonstop
         call :check.protected
@@ -1488,7 +1502,7 @@ exit /b 0
             if not exist disk.protect (
                 call :colortool
                 echo.
-                echo ^>^> Please Stop Protection on your device.
+                echo %_symbol_%%spaces%%_lang0135_%
                 call :NTFSdriveprotect loop
             ) else (
                 del /s /q disk.protect >nul
@@ -1542,7 +1556,7 @@ exit /b 0
     wincdemu "%isopath%" %freedrive%: /wait
     cls
     echo.
-    echo ^>^> %modulename% %_lang0015_%
+    echo %_symbol_%%spaces%%modulename% %_lang0015_%
     echo.
     cd /d "%freedrive%:\"
         if "%modulename%"=="AOMEI-Backup" (
@@ -1602,7 +1616,7 @@ exit /b 0
         if errorlevel 2 set "portable=false"
         if errorlevel 3 goto :mainMenu
         if "%portable%"=="true" (
-            choice /c yn /cs /n /m ">> ---> Download the last PortableApps.com Platform? [ y/n ] > "
+            choice /c yn /cs /n /m %_lang0136_%
                 if errorlevel 2 call :PortableAppsExtract
                 if errorlevel 1 call :download.portableapps & call :PortableAppsExtract
                 echo %_lang0012_%
@@ -1638,7 +1652,7 @@ exit /b 0
 
 :PortableAppsExtract
     cd /d "%bindir%"
-        7z x "PortableApps.7z" -o"%ducky%\" -aoa -y >nul
+        7z x "PortableApps.7z" -o"%ducky%\" -aoa -y
 exit /b 0
 
 
@@ -1702,13 +1716,24 @@ exit /b 0
     set "title=%_lang0833_%"
     call :colortool
     echo.
-    echo ^> Current Language is %lang%
-    echo ======================================================================
-    echo        [ 1 ] = English                [ 2 ] = Vietnam                 
-    echo        [ 3 ] = Turkish                [ 4 ] = Simplified Chinese      
-    echo ======================================================================
+    call :printc "            ('-.        .-') _                       ('-.                 ('-.  "
+    call :printc "           ( OO ).-.   ( OO ) )                     ( OO ).-.           _(  OO) "
+    call :printc " ,--.      / . --. ,--./ ,--,' ,----.   ,--. ,--.   / . --. / ,----.   (,------."
+    call :printc " |  |.-')  | \-.  \|   \ |  |\'  .-./-')|  | |  |   | \-.  \ '  .-./-') |  .---'"
+    call :printc " |  | OO .-'-'  |  |    \|  | |  |_( O- |  | | .-'.-'-'  |  ||  |_( O- )|  |    "
+    call :printc " |  |`-' |\| |_.'  |  .     |/|  | .--, |  |_|( OO \| |_.'  ||  | .--, (|  '--. "
+    call :printc "(|  '---.' |  .-.  |  |\    |(|  | '. (_|  | | `-' /|  .-.  (|  | '. (_/|  .--' "
+    call :printc " |      |  |  | |  |  | \   | |  '--'  ('  '-'(_.-' |  | |  ||  '--'  | |  `---."
+    call :printc " `------'  `--' `--`--'  `--'  `------'  `-----'    `--' `--' `------'  `------'"
+    call :printc "%_lang0137_%%lang%"
     echo.
-    choice /c 1234q /cs /n /m "%_lang0016_%"
+    echo.
+    call :printc "======================================================================"
+    call :printc "       [ 1 ] = English                [ 2 ] = Vietnam                 "
+    call :printc "       [ 3 ] = Turkish                [ 4 ] = Simplified Chinese      "
+    call :printc "======================================================================"
+    echo.
+    choice /c 1234q /cs /n /m "%_symbol_%%spaces%%_lang0016_%"
         if errorlevel 5 goto :extra.main
         if errorlevel 4 set "lang=SimplifiedChinese" & goto :continue.lang
         if errorlevel 3 set "lang=Turkish" & goto :continue.lang
@@ -1717,7 +1742,7 @@ exit /b 0
 
     :continue.lang
     echo.
-    echo %_lang0014_%
+    echo %spaces% %_lang0014_%
     cd /d "%bindir%"
         7z.exe x "config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
         >"%ducky%\BOOT\lang" (echo %lang%)
@@ -1726,31 +1751,34 @@ exit /b 0
         call "main.bat"
         :: setting language for grub2 file manager
         >"%ducky%\BOOT\grub\lang.sh" (echo export lang=%langfm%;)
-    call :clean.bye
+    call :colortool
+    goto :extra.main
 exit /b 0
 
 
 :sortgrub2menu
     set "title=%_lang0836_%"
     call :colortool
-    echo                   _    ____  
-    echo   __ _ _ __ _   _^| ^|__^|___ \  a. %_config0115_%
-    echo  / _` ^| '__^| ^| ^| ^| '_ \ __^) ^| b. %_config0109_%
-    echo ^| ^(_^| ^| ^|  ^| ^|_^| ^| ^|_^) / __/  c. %_config0110_%
-    echo  \__, ^|_^|   \__,_^|_.__^|_____^| d. %_config0111_%
-    echo  ^|___/                        e. %_config0100_%
-    echo   _ __ ___   ___ _ __  _   _  f. %_config0101_%
-    echo  ^| '_ ` _ \ / _ ^| '_ \^| ^| ^| ^| g. %_config0102_%
-    echo  ^| ^| ^| ^| ^| ^|  __^| ^| ^| ^| ^|_^| ^| h. %_config0107_%
-    echo  ^|_^| ^|_^| ^|_^|\___^|_^| ^|_^|\__,_^| i. %_config0112_%
-    echo           _ _     _           k. %_config0113_%
-    echo          ^| ^(_^)___^| ^|_         l. %_config0128_%
-    echo          ^| ^| / __^| __^|        m. %_config0116_%
-    echo          ^| ^| \__ ^| ^|_         n. %_config0124_%
-    echo          ^|_^|_^|___/\__^|        o. %_config0125_%
+    echo.
+    echo.
+    call :printj "  __ _ _ __ _   _| |__|___ \ " "a. %_config0115_%"
+    call :printj " / _` | '__| | | | '_ \ __) |" "b. %_config0109_%"
+    call :printj "| (_| | |  | |_| | |_) / __/ " "c. %_config0110_%"
+    call :printj " \__, |_|   \__,_|_.__|_____|" "d. %_config0111_%"
+    call :printj " |___/                       " "e. %_config0100_%"
+    call :printj "  _ __ ___   ___ _ __  _   _ " "f. %_config0101_%"
+    call :printj " | '_ ` _ \ / _ | '_ \| | | |" "g. %_config0102_%"
+    call :printj " | | | | | |  __| | | | |_| |" "h. %_config0107_%"
+    call :printj " |_| |_| |_|\___|_| |_|\__,_|" "i. %_config0112_%"
+    call :printj "          _ _     _          " "k. %_config0113_%"
+    call :printj "         | (_)___| |_        " "l. %_config0128_%"
+    call :printj "         | | / __| __|       " "m. %_config0116_%"
+    call :printj "         | | \__ | |_        " "n. %_config0124_%"
+    call :printj "         |_|_|___/\__|       " "o. %_config0125_%"
+    echo.
     echo.
     set list=a b c d e f g h i k l m n o
-    set /p list= "%_lang0838_%"
+    set /p list= "%_symbol_%%spaces%%_lang0838_%"
         :: check the character of the string
         echo %list%| findstr /r /c:"[a-o]" >nul
         if not "%errorlevel%"=="0" goto :sortgrub2menu
@@ -1760,7 +1788,8 @@ exit /b 0
     
     cd /d "%bindir%\config"
         call "main.bat"
-        call :clean.bye
+        call :colortool
+        goto :extra.main
 exit /b 0
 
 
@@ -1769,21 +1798,21 @@ exit /b 0
     call :colortool
     set "curtheme=%gtheme%"
     echo.
-    echo %_lang0300_% %curtheme%
-    echo =====================================================================
-    echo 01 = Aero      11 = Breeze-1      21 = Gentoo      31 = Raindrops    
-    echo 02 = AirVision 12 = blur-grub2    22 = Grau        32 = SAO          
-    echo 03 = Alienware 13 = Breeze_dark   23 = Huayralimbo 33 = SolarizedDark
-    echo 04 = Anonymous 14 = Breeze-5      24 = Journey     34 = Solstice     
-    echo 05 = Archlinux 15 = CyberSecurity 25 = Monochrome  35 = Standby      
-    echo 06 = Ask-larry 16 = Dark_Colors   26 = Oxygen      36 = Steam        
-    echo 07 = Atomic    17 = Dark_squares  27 = Plasma-dark 37 = StylishDark  
-    echo 08 = Aurora    18 = Devuan        28 = poly-dark   38 = Tela         
-    echo 09 = Axiom     19 = Eternity      29 = Powerman    39 = Ubuntu-lucid 
-    echo 10 = Bluec4d   20 = FagiadaBue    30 = RainbowDash 40 = Vimix        
-    echo =====================================================================
+    call :printc "%_lang0300_% %curtheme%"
+    call :printc "====================================================================="
+    call :printc "01 = Aero      11 = Breeze-1      21 = Gentoo      31 = Raindrops    "
+    call :printc "02 = AirVision 12 = blur-grub2    22 = Grau        32 = SAO          "
+    call :printc "03 = Alienware 13 = Breeze_dark   23 = Huayralimbo 33 = SolarizedDark"
+    call :printc "04 = Anonymous 14 = Breeze-5      24 = Journey     34 = Solstice     "
+    call :printc "05 = Archlinux 15 = CyberSecurity 25 = Monochrome  35 = Standby      "
+    call :printc "06 = Ask-larry 16 = Dark_Colors   26 = Oxygen      36 = Steam        "
+    call :printc "07 = Atomic    17 = Dark_squares  27 = Plasma-dark 37 = StylishDark  "
+    call :printc "08 = Aurora    18 = Devuan        28 = poly-dark   38 = Tela         "
+    call :printc "09 = Axiom     19 = Eternity      29 = Powerman    39 = Ubuntu-lucid "
+    call :printc "10 = Bluec4d   20 = FagiadaBue    30 = RainbowDash 40 = Vimix        "
+    call :printc "====================================================================="
     echo.
-    set /P ask= %_lang0301_%
+    set /P ask= %_symbol_%%spaces%%_lang0301_%
     if "%ask%"=="1"  (set "gtheme=Aero"            & goto :continue.gtheme)
     if "%ask%"=="2"  (set "gtheme=Air_Vision"      & goto :continue.gtheme)
     if "%ask%"=="3"  (set "gtheme=Alienware"       & goto :continue.gtheme)
@@ -1832,11 +1861,12 @@ exit /b 0
         if exist "%curtheme%" rmdir /s /q "%curtheme%" >nul
         if not exist "%gtheme%" (
             echo.
-            echo %_lang0113_% %gtheme%
+            echo %_symbol_%%spaces%%_lang0113_% %gtheme%
             call :install.gtheme
             >"%ducky%\BOOT\grub\themes\theme" (echo %gtheme%)
         )
-        call :clean.bye
+        call :colortool
+        goto :extra.main
 exit /b 0
 
 
@@ -1844,22 +1874,22 @@ exit /b 0
     set "title=%_lang0822_%"
     call :colortool
     echo.
-    echo %_lang0400_% %rtheme%
-    echo =====================================================================
-    echo 01 = Apocalypse   12 = CloverBootcam 23 = Glassy     34 = Oceanix    
-    echo 02 = BGM          13 = Clovernity    24 = GoldClover 35 = Pandora    
-    echo 03 = BGM256       14 = Clover-X      25 = Gothic     36 = Red        
-    echo 04 = black        15 = CrispyOSX     26 = HighSierra 37 = Shield     
-    echo 05 = Bluemac      16 = Crystal       27 = HMF        38 = SimpleGrey 
-    echo 06 = Buttons      17 = Dark          28 = iclover    39 = Simplicity 
-    echo 07 = Carbon       18 = DarkBoot      29 = Leather    40 = Smooth     
-    echo 08 = Catalina     19 = DarkBootX     30 = MacOSX     41 = Sphere     
-    echo 09 = Chrome       20 = ElCapitan     31 = MavsStyle  42 = Underground
-    echo 10 = Circla       21 = Emerald       32 = Mojave     43 = Universe   
-    echo 11 = ClassicMacOS 22 = GameOfThrones 33 = Neon       44 = Woody      
-    echo =====================================================================
+    call :printc "%_lang0400_% %rtheme%"
+    call :printc "====================================================================="
+    call :printc "01 = Apocalypse   12 = CloverBootcam 23 = Glassy     34 = Oceanix    "
+    call :printc "02 = BGM          13 = Clovernity    24 = GoldClover 35 = Pandora    "
+    call :printc "03 = BGM256       14 = Clover-X      25 = Gothic     36 = Red        "
+    call :printc "04 = black        15 = CrispyOSX     26 = HighSierra 37 = Shield     "
+    call :printc "05 = Bluemac      16 = Crystal       27 = HMF        38 = SimpleGrey "
+    call :printc "06 = Buttons      17 = Dark          28 = iclover    39 = Simplicity "
+    call :printc "07 = Carbon       18 = DarkBoot      29 = Leather    40 = Smooth     "
+    call :printc "08 = Catalina     19 = DarkBootX     30 = MacOSX     41 = Sphere     "
+    call :printc "09 = Chrome       20 = ElCapitan     31 = MavsStyle  42 = Underground"
+    call :printc "10 = Circla       21 = Emerald       32 = Mojave     43 = Universe   "
+    call :printc "11 = ClassicMacOS 22 = GameOfThrones 33 = Neon       44 = Woody      "
+    call :printc "====================================================================="
     echo.
-    set /p ask= %_lang0401_%
+    set /p ask= %_symbol_%%spaces%%_lang0401_%
     if "%ask%"=="1"  set "rtheme=Apocalypse"     & goto :continue.rtheme
     if "%ask%"=="2"  set "rtheme=BGM"            & goto :continue.rtheme
     if "%ask%"=="3"  set "rtheme=BGM256"         & goto :continue.rtheme
@@ -1911,7 +1941,7 @@ exit /b 0
     call :checkdisktype
         if "%harddisk%"=="true" (
             echo.
-            echo ^>^> Hard Disk detected, auto quit...
+            echo %_symbol_%%spaces% Hard Disk detected, auto quit...
             timeout /t 3 >nul & exit
         )
         call :set.partnum install.rtheme install.rtheme
@@ -1927,10 +1957,10 @@ exit /b 0
     :: Install rEFind theme
     call :get.path rpath REFIND
     echo.
-    echo ^>^> Cleaning old theme...
+    echo %_symbol_%%spaces%%_lang0138_%
     call :delete.hidden "%rpath%\EFI\BOOT\themes" >nul
     echo.
-    echo ^>^> Installing rEFind theme...
+    echo %_symbol_%%spaces%%_lang0139_%
     echo.
     cd /d "%tmp%\rEFInd_themes"
         call :copy.hidden "%rtheme%" "%rpath%\EFI\BOOT\themes"
@@ -1940,7 +1970,8 @@ exit /b 0
         cd /d "%tmp%\rEFInd_themes\%rtheme%\icons"
             call :copy.hidden "others" "%spath%\EFI\BOOT"
     )
-    call :clean.bye
+    call :colortool
+    goto :extra.main
 exit /b 0
 
 
@@ -1990,25 +2021,25 @@ exit /b 0
         call :speechOn warning.vbs
     
     echo.
-    echo %_lang0813_%
-    echo ---------------------------------------------------------------------
-    echo %_lang0814_%
-    echo %_lang0815_%
+    call :printc "%_lang0813_%"
+    call :printc "--------------------------------------------------------------------"
+    call :printc "%_lang0814_%"
+    call :printc "%_lang0815_%"
     echo.
-    echo %_lang0816_%
-    echo %_lang0817_%
-    echo ---------------------------------------------------------------------
+    call :printj "[ 1 ]" "%_lang0816_%"
+    call :printj "[ 2 ]" "%_lang0817_%"
+    call :printc "--------------------------------------------------------------------"
     echo.
-    echo ^>  Disk %disk% was selected.
+    echo %_symbol_%%spaces%  Disk %disk% was selected.
     echo.
-    choice /c 12 /cs /n /m "*  %_lang0905_% [ ? ] = "
+    choice /c 12 /cs /n /m "%_symbol_%%spaces%  %_lang0905_% [ ? ] = "
         if errorlevel 1 set "option=1"
         if errorlevel 2 set "option=2"
         :: do not change the errorlevel order in the two lines above
         call :speechOff warning.vbs
     
     echo.
-    choice /c yn /cs /n /m "%_lang0818_%"
+    choice /c yn /cs /n /m "%_symbol_%%spaces%%_lang0818_%"
         if errorlevel 2 call :colortool & goto :option.convert
         if errorlevel 1 goto :continue.convert
     
@@ -2032,22 +2063,29 @@ exit /b 0
 exit /b 0
 
 
+:WinPEInterface
+    echo. & echo.
+    call :printc " _ _ _ _     _____ _____                               _ _ _           "
+    call :printc "| | | |_|___|  _  |   __|   _____ ___ ___ _ _    ___ _| |_| |_ ___ ___ "
+    call :printc "| | | | |   |   __|   __|  |     | -_|   | | |  | -_| . | |  _| . |  _|"
+    call :printc "|_____|_|_|_|__|  |_____|  |_|_|_|___|_|_|___|  |___|___|_|_| |___|_|  "
+    echo. & echo.
+exit /b 0
+
 :editWinPEbootmanager
     set "title=%_lang0826_%"
     call :colortool
-    echo.
-    echo            ^	^>^> MINI WINDOWS BOOT MANAGER EDITOR ^<^<
-    echo                 --------------------------------------
-    echo.
+    call :WinPEInterface
     cd /d "%bindir%"
-    choice /c ynq /cs /n /m "%_lang0800_%"
+    choice /c ynq /cs /n /m "%_symbol_%%spaces%%_lang0800_%"
         if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :option.pe
         if errorlevel 1 call :bcdautomenu
     
     :option.pe
     echo.
-    choice /c 12 /cs /n /m "*               [ 1 ] Legacy mode  [ 2 ] UEFI mode > "
+    choice /c 12q /cs /n /m "%_symbol_%%spaces%[ 1 ] Legacy mode  [ 2 ] UEFI mode > "
+        if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :uefi3264bit
         if errorlevel 1 goto :legacy3264bit
     
@@ -2055,10 +2093,9 @@ exit /b 0
     set "source=%ducky%\BOOT\bootmgr\B84"
     if exist %source% (
         echo.
-        echo ^*               Source^: %source%
+        echo %_symbol_%%spaces%%_lang0140_%%source%
         bootice /edit_bcd /easymode /file=%source%
-        call :colortool
-        call :clean.bye
+        goto :option.pe
     )
 
     :uefi3264bit
@@ -2069,7 +2106,7 @@ exit /b 0
         set "source=%bindir%\secureboot\EFI\Microsoft\Boot\bcd"
     )
     echo.
-    echo ^*               Source^: %source%
+    echo %_symbol_%%spaces%%_lang0140_%%source%
     "%bindir%\bootice.exe" /edit_bcd /easymode /file="%source%"
     :: copy Configuration BCD file to the destination...
     if "%secureboot%"=="y" call :bcdautoset bcd
@@ -2077,13 +2114,12 @@ exit /b 0
     if "%secureboot%"=="y" (
         call :copy.hidden "%source%" "%epath%\EFI\Microsoft\Boot" >nul 2>&1
     )
-    call :colortool
-    goto :extra.main
+    goto :option.pe
 exit /b 0
 
 
 :bcdautomenu
-    mode con lines=100 cols=70
+    mode con lines=100 cols=102
     > "%tmp%\winpemenu.txt" (
         echo.
         echo %_lang0801_%
@@ -2123,16 +2159,14 @@ exit /b 0
         echo.
     )
     
-    echo.
-    echo            ^	^>^> MINI WINDOWS BOOT MANAGER EDITOR ^<^<
-    echo                 --------------------------------------
-    echo.
-    echo %_lang0805_%
+    call :WinPEInterface
+    call :printc "%_lang0805_%"
+    call :printc "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     "%tmp%\winpemenu.txt"
     
     cd /d "%ducky%\WIM"
         echo.
-        echo %_lang0806_%
+        echo %_symbol_%%spaces%%_lang0806_%
         for /f "tokens=*" %%i in ('dir /a:-d /b 2^>nul') do (
             if exist %%~ni.wim (
                 echo.
@@ -2142,15 +2176,15 @@ exit /b 0
         )
         if not "%wim%"=="true" (
             echo.
-            echo. %_lang0807_%
+            echo %_symbol_%%spaces%%_lang0807_%
         )
     
     echo.
-    echo.  ------------------------------------------------------------------
-    echo. %_lang0808_%
-    echo.  ------------------------------------------------------------------
+    call :printc "------------------------------------------------------------------"
+    call :printc "%_lang0808_%"
+    call :printc "------------------------------------------------------------------"
     echo.
-    set /p bootfilename= %_lang0809_%
+    set /p bootfilename= %_symbol_%%spaces%%_lang0809_%
     set "bootfile=\WIM\%bootfilename%"
     
     for /f "delims=" %%b in (%tmp%\winpemenu.txt) do set menutitle=%%b
@@ -2160,15 +2194,15 @@ exit /b 0
     set "source=%ducky%\BOOT\bootmgr\B84"
     if exist %source% (
         echo.
-        echo %menutitle%
+        echo %_symbol_%%spaces%%menutitle%
         echo.
-        echo %_lang0810_%
+        echo %_symbol_%%spaces%%_lang0810_%
         call :create.entry
     )
     
     :: UEFI Mode
     echo.
-    echo %_lang0811_%
+    echo %_symbol_%%spaces%%_lang0811_%
     if "%secureboot%"=="n" (
         set "source=%ducky%\EFI\Microsoft\Boot\bcd"
     ) else (
@@ -2177,9 +2211,9 @@ exit /b 0
     call :create.entry
     
     echo.
-    echo.  ------------------------------------------------------------------
-    echo.  %_lang0812_%
-    echo.  ------------------------------------------------------------------
+    call :printc "------------------------------------------------------------------"
+    call :printc "%_lang0812_%"
+    call :printc "------------------------------------------------------------------"
     echo.
 exit /b 0
 
@@ -2189,7 +2223,7 @@ exit /b 0
     bcdedit /store %source% /copy {default} /d "%menutitle%" > %tmp%\tmpuuid.txt
     for /f "tokens=7 delims=. " %%b in (%tmp%\tmpuuid.txt) do set identifier=%%b
     del /f /q "%tmp%\tmpuuid.txt"
-    bcdedit /store %source% /set %identifier% device ramdisk=[%ducky%]%bootfile%,%Object%
+    bcdedit /store %source% /set %identifier% device ramdisk=[%ducky%]%bootfile%,%Object% >nul
     bcdedit /store %source% /set %identifier% osdevice ramdisk=[%ducky%]%bootfile%,%Object% >nul
     timeout /t 1 >nul
 exit /b 0
@@ -2200,28 +2234,35 @@ exit /b 0
     call :colortool
     if not exist "%ducky%\WINSETUP\" (
         color 0e & echo.
-        echo ^>^> Please install winsetup module before running me
+        echo %_symbol_%%spaces%%_lang0141_%
         timeout /t 15 >nul & goto :extra.main
     )
     
     :option.winsetup
-    echo                ^	^>^> WINSETUP BOOT MANAGER EDITOR  ^<^<
-    echo                -------------------------------------
+    echo.
+    call :printc " _ _ _ _     _____     _                                         _ _ _           "
+    call :printc "| | | |_|___|   __|___| |_ _ _ ___    _____ ___ ___ _ _    ___ _| |_| |_ ___ ___ "
+    call :printc "| | | | |   |__   | -_|  _| | | . |  |     | -_|   | | |  | -_| . | |  _| . |  _|"
+    call :printc "|_____|_|_|_|_____|___|_| |___|  _|  |_|_|_|___|_|_|___|  |___|___|_|_| |___|_|  "
+    call :printc "                              |_|                                                "
+    echo.
     echo.
     set mode=
-    set /P mode= "^*              [ 1 ] Legacy mode - [ 2 ] UEFI mode ^> "
+    set /P mode= "%_symbol_%%spaces%[ 1 ] Legacy mode - [ 2 ] UEFI mode ^> "
     if "%mode%"=="1" goto :legacy.winsetup
     if "%mode%"=="2" goto :uefi.winsetup
     if "%mode%"=="q" goto :extra.main
-    color 0e & echo. & echo ^>^>  Invalid Input. & timeout /t 15 >nul & goto :option.winsetup
+    color 0e & echo. & echo %_symbol_%%spaces% Invalid Input. & timeout /t 15 >nul & goto :option.winsetup
     
     :legacy.winsetup
     bootice /edit_bcd /easymode /file=%ducky%\BOOT\bcd
-    call :clean.bye
+    call :colortool
+    goto :extra.main
     
     :uefi.winsetup
     bootice /edit_bcd /easymode /file=%ducky%\EFI\MICROSOFT\Boot\bcd
-    call :clean.bye
+    call :colortool
+    goto :extra.main
 exit /b 0
 
 
@@ -2229,14 +2270,14 @@ exit /b 0
     set "title=%_lang0829_%"
     call :colortool
     call :check.diskInfo
-    echo                  ------------------------------------
-    echo                    __ _        _                 _   
-    echo                   / _^(___  __ ^| ^|__   ___   ___ ^| ^|_ 
-    echo                  ^| ^|_^| \ \/ / ^| '_ \ / _ \ / _ \^| __^|
-    echo                  ^|  _^| ^|^>  ^<  ^| ^|_^) ^| ^(_^) ^| ^(_^) ^| ^|_ 
-    echo                  ^|_^| ^|_/_/\_\ ^|_.__/ \___/ \___/ \__^|
+    call :printc "------------------------------------"
+    call :printc "  __ _        _                 _   "
+    call :printc " / _(___  __ | |__   ___   ___ | |_ "
+    call :printc "| |_| \ \/ / | '_ \ / _ \ / _ \| __|"
+    call :printc "|  _| |>  <  | |_) | (_) | (_) | |_ "
+    call :printc "|_| |_/_/\_\ |_.__/ \___/ \___/ \__|"
     echo.
-    echo                  ------------------------------------
+    call :printc "++++++++++++++++++++++++++++++++++++++++++++++++++++"
     echo.
     cd /d "%bindir%"
         7z x "wget.7z" -o"%tmp%" -aoa -y >nul
@@ -2251,7 +2292,7 @@ exit /b 0
     if exist "%ducky%\WINSETUP" (
         goto :winsetup.fix
     ) else (
-        goto :grub.fix
+        goto :grub2.fix
     )
     
     :winsetup.fix
@@ -2262,28 +2303,28 @@ exit /b 0
         if exist %ducky%\winsetup.lst (del /s /q /f %ducky%\winsetup.lst >nul)
     
     :grub.fix
-    if "%GPT%"=="true" goto :grub2.fix
-    echo.
-    choice /c ynq /cs /n /m "%_lang0837_%"
-        if errorlevel 3 goto :extra.main
-        if errorlevel 2 goto :grub2.fix
-        if errorlevel 1 call :download.grub4dos
+    ::if "%GPT%"=="true" goto :grub2.fix
+    ::echo.
+    ::choice /c ynq /cs /n /m "%_symbol_%%spaces%%_lang0837_%"
+    ::    if errorlevel 3 goto :extra.main
+    ::    if errorlevel 2 goto :grub2.fix
+    ::    if errorlevel 1 call :download.grub4dos
     
     :grub2.fix
     echo.
-    choice /c ynq /cs /n /m "%_lang0503_%"
+    choice /c ynq /cs /n /m "%_symbol_%%spaces%%_lang0503_%"
         if errorlevel 3 goto :fixbootloader
         if errorlevel 2 goto :config.fix
         if errorlevel 1 set "installgrub2=true"
 
         if "%installgrub2%"=="true" (
-            choice /c ynq /cs /n /m "> Download the last build from A1ive?        [ y/n ] > "
+            choice /c ynq /cs /n /m "%_symbol_%%spaces%Download the last build from A1ive?        [ y/n ] > "
                 if errorlevel 1 set "downloadgrub2=true"
                 if errorlevel 2 set "downloadgrub2=false"
                 if errorlevel 3 goto :fixbootloader
         )
         if "%downloadgrub2%"=="true" call :download.grub2
-        echo %_lang0504_%
+        echo %_symbol_%%spaces%%_lang0504_%
         call :grub2installer MULTIBOOT
 
     :config.fix
@@ -2308,13 +2349,14 @@ exit /b 0
     if "%installgrub2%"=="true" if exist "%ducky%\EFI\BOOT\WindowsGrub2" (
         goto :install.defaultboot
     )
-    call :clean.bye
+    call :colortool
+    goto :extra.main
 exit /b 0
 
 
 :download.grub4dos
     cd /d "%tmp%"
-        wget -q -O g4dtemp.log  http://grub4dos.chenall.net >nul
+        wget -q -O g4dtemp.log http://grub4dos.chenall.net >nul
         for /f "tokens=2,3 delims=/" %%a in (
             'type "g4dtemp.log" ^| findstr /i "<h1.*.7z" ^| find /n /v "" ^| find "[1]"'
             ) do (
@@ -2322,12 +2364,12 @@ exit /b 0
                 set "sourcelink=http://dl.grub4dos.chenall.net/%%b.7z"
             )
         if "%~1"=="skip" (
-            echo Updating %ver%...
+            echo %spaces%Updating %ver%...
         ) else (
-            echo ^  Updating %ver%...
+            echo %spaces% Updating %ver%...
         )
         wget -q -O grub4dos.7z %sourcelink% >nul
-        del g4dtemp.log
+        REM del g4dtemp.log
     cd /d "%bindir%\extra-modules"
         set "file=grub4dos-0.4.6a/grldr grub4dos-0.4.6a/grub.exe grub4dos0.4.6a/grldr_cd.bin"
         7z e -ogrub4dos -aoa "%tmp%\grub4dos.7z" %file% >nul
@@ -2340,10 +2382,8 @@ exit /b 0
         if exist "grub" rd /s /q "grub" >nul
         if exist "grub2" rd /s /q "grub2" >nul
         :: download last release
-        if not "%~1"=="skip" echo ^  Downloading Grub2 from A1ive...
         set "sourcelink=https://github.com/a1ive/grub/releases/download/latest/grub2-latest.tar.gz"
         wget -q --show-progress -O grub2-latest.tar.gz %sourcelink%
-        if not "%~1"=="skip" echo ^  Repacking Grub2...
         set "list=i386-efi i386-pc locale x86_64-efi grub-install.exe"
         7z x grub2-latest.tar.gz >nul
         7z x grub2-latest.tar %list% -r -y >nul
@@ -2368,7 +2408,7 @@ exit /b 0
         set "url=https://github.com/a1ive/grub2-filemanager/releases/download/%ver%/grubfm-%langfm%.7z"
         if not "%~1"=="skip" (
             echo.
-            echo ^> Downloading grub2-filemanager %ver%...
+            echo %_symbol_%%spaces%%_lang0142_%%ver%...
         )
         wget.exe -q --show-progress -O grubfm-%ver%.7z %url%
 exit /b 0
@@ -2381,17 +2421,17 @@ exit /b 0
 :grub2-filemanager
     set "title=%_lang0828_%"
     call :colortool
-    echo                     ___            _      __
-    echo                   / _ \_ __ _   _^| ^|__  / _^|_ __ ___
-    echo                  / /_\/ '__^| ^| ^| ^| '_ \^| ^|_^| '_ ` _ \
-    echo                 / /_\\^| ^|  ^| ^|_^| ^| ^|_) ^|  _^| ^| ^| ^| ^| ^|
-    echo                 \____/^|_^|   \__,_^|_.__/^|_^| ^|_^| ^|_^| ^|_^|
-    echo                                                  A1ive
+    call :printc "   ___            _      __           " 
+    call :printc "  / _ \_ __ _   _| |__  / _|_ __ ___  " 
+    call :printc " / /_\/ '__| | | | '_ \| |_| '_ ` _ \ " 
+    call :printc "/ /_\\| |  | |_| | |_) |  _| | | | | |" 
+    call :printc "\____/|_|   \__,_|_.__/|_| |_| |_| |_|" 
+    call :printc "                                 A1ive" 
     echo.
-    echo ^                      [ 1 ] Origin build ^(full^)
-    echo ^                      [ 2 ] Source Script ^(lite^)
+    call :printc "            [ 1 ] Origin build  (full)"
+    call :printc "            [ 2 ] Source Script (lite)"
     echo.
-    choice /c 12q /cs /n /m "%_lang0020_%"
+    choice /c 12q /cs /n /m "%_symbol_%%spaces% %_lang0020_%"
         if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :grubfm-script
         if errorlevel 1 goto :grubfm-build
@@ -2399,13 +2439,15 @@ exit /b 0
     :grubfm-build
         call :download.grubfm
         set "list=grubfmia32.efi grubfmx64.efi grubfm.iso"
-        cls & echo. & echo %_lang0224_%
+        echo.
+        echo %_symbol_%%spaces% %_lang0224_%
         7z x "%tmp%\grubfm*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
-        call :clean.bye
+        call :colortool
+        goto :extra.main
     
     :grubfm-script
         echo.
-        echo ^> Downloading grub2-filemanager...
+        echo %_symbol_%%spaces%%_lang0142_%
         cd /d "%bindir%\extra-modules"
             7z x "%bindir%\curl.7z" -o"%tmp%" -aos -y >nul
             set "link=https://github.com/a1ive/grub2-filemanager/archive/lua.zip"
@@ -2418,7 +2460,7 @@ exit /b 0
             rmdir "grub2-filemanager-lua" /s /q >nul
 
         echo.
-        echo ^> Setting grub2-filemanager config...
+        echo %_symbol_%%spaces%%_lang0143_%
         :: insert backdoor
         cd /d "%bindir%\extra-modules\grub2-filemanager"
         
@@ -2438,10 +2480,10 @@ exit /b 0
             if exist "grub2-filemanager" rd /s /q "grub2-filemanager" >nul
             if "%installed%"=="false" call :clean.bye
             echo.
-            echo ^> Updating grub2-filemanager to MultibootUSB...
+            echo %_symbol_%%spaces%%_lang0144_%
             7z x "grub2-filemanager.7z" -o"%ducky%\BOOT\grub\" -aoa -y >nul
-            timeout /t 3 >nul
-            call :clean.bye
+            call :colortool
+            goto :extra.main
 exit /b 0
 
 
@@ -2449,15 +2491,20 @@ exit /b 0
     set "title=%_lang0825_%"
     call :colortool
     echo.
-    echo      %_lang0900_%
-    echo ---------------------------------------------------------------------
-    echo  %_lang0901_%
-    echo  %_lang0902_%
-    echo  %_lang0903_%
-    echo  %_lang0904_%
-    echo ---------------------------------------------------------------------
+    call :printc "   _     ___         _ _      _           _   _           _         "
+    call :printc " _| |___|  _|___ _ _| | |_   | |_ ___ ___| |_| |___ ___ _| |___ ___ "
+    call :printc "| . | -_|  _| .'| | | |  _|  | . | . | . |  _| | . | .'| . | -_|  _|"
+    call :printc "|___|___|_| |__,|___|_|_|    |___|___|___|_| |_|___|__,|___|___|_|  "
     echo.
-    choice /c 1234q /cs /n /m "%_lang0905_% > "
+    call :printc "%_lang0900_%"
+    call :printc "---------------------------------------------------------------------"
+    call :printj  "[ 1 ]" "%_lang0901_%"
+    call :printj  "[ 2 ]" "%_lang0902_%"
+    call :printj  "[ 3 ]" "%_lang0903_%"
+    call :printj  "[ 4 ]" "%_lang0904_%"
+    call :printc "---------------------------------------------------------------------"
+    echo.
+    choice /c 1234q /cs /n /m "%_symbol_%%spaces%%_lang0905_% > "
         if errorlevel 5 timeout /t 1 >nul & goto :extra.main
         if errorlevel 4 timeout /t 1 >nul & set "option=Grub2"
         if errorlevel 3 timeout /t 1 >nul & set "option=rEFInd"
@@ -2493,7 +2540,8 @@ exit /b 0
         >"%ducky%\EFI\BOOT\WindowsGrub2" (echo true)
     )
     timeout /t 1 >nul
-    call :clean.bye
+    call :colortool
+    goto :extra.main
     
     :secure.default
     call :get.path rpath REFIND
@@ -2522,8 +2570,8 @@ exit /b 0
             xcopy "secureboot" "%ducky%\" /e /g /h /r /y
             >"%ducky%\EFI\BOOT\WindowsGrub2" (echo true)
     )
-    timeout /t 1 >nul
-    call :clean.bye
+    call :colortool
+    goto :extra.main
 exit /b 0
 
 
@@ -2537,12 +2585,13 @@ exit /b 0
         7z x "refind.7z" -o"%tmp%" -aoa -y >nul
     
     echo.
-    echo ---------------------------------------------------------------------
-    echo.          [ 1 ] Update config only   [ 2 ] Update full data
-    echo.          [ 3 ] Download and Update all bootloader and data
-    echo ---------------------------------------------------------------------
+    call :printc "---------------------------------------------------------------------"
+    call :printj "[ 1 ]" "%_lang0145_%"
+    call :printj "[ 2 ]" "%_lang0146_%"
+    call :printj "[ 3 ]" "%_lang0147_%"
+    call :printc "---------------------------------------------------------------------"
     echo.
-    choice /c 123q /cs /n /m "#   Choose your option [ ? ] > "
+    choice /c 123q /cs /n /m "%_symbol_%%spaces%Choose your option [ ? ] > "
         if errorlevel 4 goto :extra.main
         if errorlevel 3 goto :updateOnline
         if errorlevel 2 goto :updateOffline
@@ -2552,16 +2601,16 @@ exit /b 0
     echo.
     call :download.clover skip
     call :download.rEFInd
-    call :download.grub2 skip
+    call :download.grub2
     call :download.grubfm skip
     call :download.portableapps
-    call :download.grub4dos skip
+    ::call :download.grub4dos skip
 
     :updateOffline
     cd /d "%bindir%"
-        echo. & echo ^>^> Updating data...
+        echo. & echo %_symbol_%%spaces%%_lang0148_%
         call :PortableAppsExtract
-        7z x "data.7z" -o"%ducky%\" -aoa -y >nul
+        7z x "data.7z" -o"%ducky%\" -aoa -y
         xcopy /y "version" "%ducky%\EFI\BOOT\" >nul
     cd /d "%bindir%"
         7z x "wincdemu.7z" -o"%ducky%\ISO\" -aoa -y >nul
@@ -2571,7 +2620,8 @@ exit /b 0
     cd /d "%tmp%"
         set "list=grubfmia32.efi grubfmx64.efi grubfm.iso"
         if exist "grubfm*.*" (
-            echo. & echo %_lang0224_%
+            echo.
+            echo %_symbol_%%spaces%%_lang0224_%
             7z x "%tmp%\grubfm*.7z" -o"%ducky%\EFI\Boot\" %list% -r -y >nul
             del "grubfm*.*" /s /q /f >nul
         )
@@ -2584,7 +2634,7 @@ exit /b 0
     :: install grub2 Bootloader
     cd /d "%bindir%"
         echo.
-        echo %_lang0116_%
+        echo %_symbol_%%spaces%%_lang0116_%
         call :grub2installer MULTIBOOT
     cd /d "%bindir%"
         7z x "%bindir%\config\%lang%.7z" -o"%ducky%\" -aoa -y >nul
@@ -2599,20 +2649,33 @@ exit /b 0
     :updateconfig
     cd /d "%bindir%\config"
         call "main.bat"
-        timeout /t 2 >nul
-        call :clean.bye
+        call :colortool
+        goto :extra.main
 exit /b 0
 
+:OFLInterface
+echo.
+call :printc "    )                 (                   (                           "
+call :printc " ( /(                 )\ )      (         )\ )                        "
+call :printc " )\())           (   (()/(  (   )\   (   (()/( (            (      )  "
+call :printc "((_)\    (      ))\   /(_)) )\ ((_) ))\   /(_)))\   (      ))\  ( /(  "
+call :printc "  ((_)   )\ )  /((_) (_))_|((_) _  /((_) (_)) ((_)  )\ )  /((_) )\()) "
+call :printc " / _ \  _(_/( (_))   | |_   (_)| |(_))   | |   (_) _(_/( (_))( ((_)\  "
+call :printc "| (_) || ' \))/ -_)  | __|  | || |/ -_)  | |__ | || ' \))| || |\ \ /  "
+call :printc " \___/ |_||_| \___|  |_|    |_||_|\___|  |____||_||_||_|  \_,_|/_\_\  "
+echo.
+echo.
+exit /b 0
 
 :OneFileLinux
     set "title=%_lang0830_%"
     call :colortool
-    echo.
+    call :OFLInterface
     cd /d "%bindir%"
         7z x "wget.7z" -o"%tmp%" -aoa -y >nul
     cd /d "%tmp%"
         echo.
-        echo ^> Get last version...
+        echo %_symbol_%%spaces% Get last version...
         set "sourcelink=https://github.com/zhovner/OneFileLinux/releases"
         wget.exe -q -O OneFileLinux.log %sourcelink% >nul
         for /f "tokens=1,6 delims=/" %%a in (
@@ -2621,14 +2684,17 @@ exit /b 0
         set "ver=%ver:~0,6%"
         set "url=https://github.com/zhovner/OneFileLinux/releases/download/%ver%/OneFileLinux.efi"
         cls
+        call :OFLInterface
         echo.
-        echo ^> Downloading OneFileLinux.efi %ver%...
+        echo %_symbol_%%spaces%%_lang0149_% OneFileLinux.efi %ver%...
         wget.exe -q --show-progress -O OneFileLinux.efi %url%
         cls
+        call :OFLInterface
         echo.
-        echo ^> Integrate to multiboot device...
+        echo %_symbol_%%spaces%%_lang0150_%
         copy OneFileLinux.efi "%ducky%\EFI\Boot\" /y >nul
-        call :clean.bye
+        call :colortool
+        goto :extra.main
 exit /b 0
 
 
@@ -2643,14 +2709,15 @@ exit /b 0
     cd /d "%tmp%\driveprotect"
         start /i /wait %DriveProtect%
         if "%~1"=="loop" goto :multibootscan
-        exit
+        call :colortool
+        goto :extra.main
 exit /b 0
 
 
 :qemuboottester
     call :colortool
     echo.
-    echo ^>^> Cleaning up trash, wait a minute...
+    echo %_symbol_%%spaces%%_lang0151_%
     echo.
     cd /d "%tmp%"
         del "%tmp%\*.*" /s /q /f >nul
@@ -2666,11 +2733,10 @@ exit /b 0
 
 :cloverinterface
     echo.
-    echo        _                       _           _        _ _           
-    echo    ___^| ^| _____   _____ _ __  ^(_^)_ __  ___^| ^|_ __ _^| ^| ^| ___ _ __ 
-    echo   / __^| ^|/ _ \ \ / / _ \ '__^| ^| ^| '_ \/ __^| __/ _` ^| ^| ^|/ _ \ '__^|
-    echo  ^| ^(__^| ^| ^(_^) \ V /  __/ ^|    ^| ^| ^| ^| \__ \ ^|^| ^(_^| ^| ^| ^|  __/ ^|   
-    echo   \___^|_^|\___/ \_/ \___^|_^|    ^|_^|_^| ^|_^|___/\__\__,_^|_^|_^|\___^|_^|   
+    call :printc "     _                    _         _       _ _         "
+    call :printc " ___| |___ _ _ ___ ___   |_|___ ___| |_ ___| | |___ ___ "
+    call :printc "|  _| | . | | | -_|  _|  | |   |_ -|  _| .'| | | -_|  _|"
+    call :printc "|___|_|___|\_/|___|_|    |_|_|_|___|_| |__,|_|_|___|_|  "
     echo. 
     echo.
 exit /b 0
@@ -2696,7 +2762,7 @@ exit /b 0
         :: download clover
         if not "%~1"=="skip" (
             echo.
-            echo ^> Downloading Clover Boot Manager v%ver%...
+            echo %_symbol_%%spaces%%_lang0152_%v%ver%...
         )
         set "url=%sourcelink%/download/%ver%/Clover-%ver%-X64.iso.7z"
         wget -q --show-progress -O Clover-%ver%-X64.iso.7z %url%
@@ -2739,7 +2805,7 @@ exit /b 0
 
 :install.clover
     echo.
-    echo %_lang0712_%
+    echo %_symbol_%%spaces%%_lang0712_%
     cd /d "%tmp%"
         if not exist rEFInd_themes (mkdir rEFInd_themes)
     cd /d "%bindir%"
@@ -2748,7 +2814,7 @@ exit /b 0
         7z x "clover.7z" -o"%ducky%\EFI\CLOVER\" -aoa -y >nul
     cd /d "%tmp%\rEFInd_themes\%rtheme%\icons"
         xcopy "cloverx64.png" "%ducky%\EFI\CLOVER\" /s /z /y /q >nul
-    if "%~1" neq "skip" echo %_lang0715_%
+    if "%~1" neq "skip" echo %spaces%%_lang0715_%
     timeout /t 2 >nul
 exit /b 0
 
@@ -2760,7 +2826,7 @@ exit /b 0
     :clover
     cls 
     call :cloverinterface
-    choice /c ynq /cs /n /m "%_lang0700_% > "
+    choice /c ynq /cs /n /m "%_symbol_%%spaces% %_lang0700_% > "
         if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :cloverconfig
         if errorlevel 1 call :download.clover
@@ -2768,7 +2834,7 @@ exit /b 0
     :cloverconfig
     if "%structure%"=="MBR" goto :option.clover
     echo.
-    choice /c yn /cs /n /m "%_lang0702_% > "
+    choice /c yn /cs /n /m "%_symbol_%%spaces% %_lang0702_% > "
         if errorlevel 2 goto :option.clover
         if errorlevel 1 goto :gdisk.clover
     
@@ -2781,43 +2847,43 @@ exit /b 0
         set gdisk=gdisk64.exe
     )
     start http://cloudclovereditor.altervista.org/cce/index.php
-    mode con lines=100 cols=81
+    mode con lines=1000 cols=%col%
     echo.
-    echo %_lang0703_%
-    echo -------------------------------------------------------------------------------
-    echo %_lang0704_% %harddisk% %_lang0705_%
-    echo %_lang0706_%
-    echo %_lang0707_%
-    echo -------------------------------------------------------------------------------
+    call :printc "%_lang0703_%"
+    call :printc "-------------------------------------------------------------------------------"
+    call :printc "%_lang0704_% %harddisk% %_lang0705_%"
+    call :printc "%_lang0706_%"
+    call :printc "%_lang0707_%"
+    call :printc "-------------------------------------------------------------------------------"
     echo.
     cd /d "%tmp%\gdisk"
         %gdisk% \\.\physicaldrive%harddisk%
     
     :option.clover
     call :colortool
+    call :cloverinterface
+    call :printc "----------------------------------------------------------------------"
+    call :printj "[ 1 ]" "%_lang0708_%"
+    call :printj "[ 2 ]" "%_lang0709_%"
+    call :printc "----------------------------------------------------------------------"
     echo.
-    echo ----------------------------------------------------------------------
-    echo %_lang0708_%
-    echo %_lang0709_%
-    echo ----------------------------------------------------------------------
-    echo.
-    choice /c 12 /cs /n /m "%_lang0605_% [ ? ] > "
+    choice /c 12 /cs /n /m "%_symbol_%%spaces%%_lang0605_% [ ? ] > "
         if errorlevel 2 goto :MultibootOS.clover
         if errorlevel 1 goto :MultibootUSB.clover
     
     :MultibootUSB.clover
     if "%installed%"=="false" goto :option.clover
-    call :colortool
     call :install.clover
-    call :clean.bye
+    call :colortool
+    goto :extra.main
     
     :MultibootOS.clover
     if "%structure%"=="MBR" (
         call :colortool
-        echo. & echo %_lang0713_% & timeout /t 15 >nul & goto :option.clover
+        echo. & echo %_symbol_%%spaces%%_lang0713_% & timeout /t 15 >nul & goto :option.clover
     )
     echo.
-    choice /c yn /cs /n /m "%_lang0714_%"
+    choice /c yn /cs /n /m "%_symbol_%%spaces%%_lang0714_%"
         if errorlevel 2 goto :option.clover
         if errorlevel 1 echo.
     :: installing Clover to ESP
@@ -2833,18 +2899,18 @@ exit /b 0
     mountvol S: /d
     :: Add Cloverx64.efi to the UEFI NVRAM entries
     call :add.entry "Clover Boot Manager" "\EFI\CLOVER\cloverx64.efi"
-    call :clean.bye
+    call :colortool
+    goto :extra.main
 exit /b 0
 
 
 :rEFIndinterface
     call :colortool
     echo.
-    echo             __ _           _    _           _        _ _           
-    echo   _ __ ___ / _^(_^)_ __   __^| ^|  ^(_^)_ __  ___^| ^|_ __ _^| ^| ^| ___ _ __ 
-    echo  ^| '__/ _ \ ^|_^| ^| '_ \ / _` ^|  ^| ^| '_ \/ __^| __/ _` ^| ^| ^|/ _ \ '__^|
-    echo  ^| ^| ^|  __/  _^| ^| ^| ^| ^| ^(_^| ^|  ^| ^| ^| ^| \__ \ ^|^| ^(_^| ^| ^| ^|  __/ ^|   
-    echo  ^|_^|  \___^|_^| ^|_^|_^| ^|_^|\__,_^|  ^|_^|_^| ^|_^|___/\__\__,_^|_^|_^|\___^|_^|   
+    call :printc "     _____ _____ _____       _    _         _       _ _         "
+    call :printc " ___|   __|   __|     |___ _| |  |_|___ ___| |_ ___| | |___ ___ "
+    call :printc "|  _|   __|   __|-   -|   | . |  | |   |_ -|  _| .'| | | -_|  _|"
+    call :printc "|_| |_____|__|  |_____|_|_|___|  |_|_|_|___|_| |__,|_|_|___|_|  "
     echo.
     echo.
 exit /b 0
@@ -2913,7 +2979,7 @@ exit /b 0
     
     :refind
     call :rEFIndinterface
-    choice /c ynq /cs /n /m "%_lang0600_% > "
+    choice /c ynq /cs /n /m "%_symbol_%%spaces% %_lang0600_% > "
         if errorlevel 3 goto :extra.main
         if errorlevel 2 goto :option.rEFInd
         if errorlevel 1 call :download.rEFInd
@@ -2923,28 +2989,31 @@ exit /b 0
     call :extract.rEFInd
     :: make option
     call :colortool
+    call :rEFIndinterface
+    call :printc "----------------------------------------------------------------------"
+    call :printj "[ 1 ]" "%_lang0603_%"
+    call :printj "[ 2 ]" "%_lang0604_%"
+    call :printc "----------------------------------------------------------------------"
     echo.
-    echo ----------------------------------------------------------------------
-    echo %_lang0603_%
-    echo %_lang0604_%
-    echo ----------------------------------------------------------------------
-    echo.
-    choice /c 12 /cs /n /m "%_lang0605_% [ ? ] > "
+    choice /c 12 /cs /n /m "%_symbol_%%spaces% %_lang0605_% [ ? ] > "
         if errorlevel 2 goto :MultibootOS.rEFInd
         if errorlevel 1 goto :MultibootUSB.rEFInd
     
     :MultibootUSB.rEFInd
     if "%installed%"=="false" goto :option.rEFInd
+    echo.
+    echo %_symbol_%%spaces% %_lang0014_%
     call :install.rEFInd
-    call :clean.bye
+    call :colortool
+    goto :extra.main
 
     :MultibootOS.rEFInd
     if "%structure%"=="MBR" (
         call :colortool
-        echo. & echo %_lang0608_% & timeout /t 15 >nul & goto :option.rEFInd
+        echo. & echo %_symbol_%%spaces%%_lang0608_% & timeout /t 15 >nul & goto :option.rEFInd
     )
     echo.
-    choice /c yn /cs /n /m "%_lang0609_%"
+    choice /c yn /cs /n /m "%_symbol_%%spaces% %_lang0609_%"
         if errorlevel 2 goto :option.rEFInd
         if errorlevel 1 echo.
     mountvol S: /d >nul
@@ -2956,17 +3025,18 @@ exit /b 0
     mountvol S: /d
     :: Add rEFIndx64.efi to the UEFI NVRAM entries
     call :add.entry "rEFInd Boot Manager" "\EFI\rEFInd\bootx64.efi"
-    call :clean.bye
+    call :colortool
+    goto :extra.main
 exit /b 0
 
 
 :add.entry
-    echo ^>  Creating %~1 entry to the UEFI NVRAM...
+    echo %_symbol_%%spaces%%_lang0153_% %~1 %_lang0154_%
     bcdedit /set "{bootmgr}" path %~2 >nul
     bcdedit /set "{bootmgr}" description %~1 >nul
     echo.
-    echo ^>  Use bootice to view/edit the boot entries management
-    echo ^>  Choose "UEFI" ^>^> "Edit boot entries"
+    echo %_symbol_%%spaces%%_lang0155_%
+    echo %_symbol_%%spaces%%_lang0156_% "UEFI" ^>^> "Edit boot entries"
     cd /d "%bindir%" & bootice
 exit /b 0
 
@@ -2984,3 +3054,58 @@ exit /b 0
             timeout /t 15 >nul
         )
 exit /b 0
+
+
+:strlen
+    setlocal EnableDelayedExpansion
+    :: https://ss64.com/nt/syntax-strlen.html
+    :: strLen String [RtnVar]
+    ::             -- String  The string to be measured, surround in quotes if it contains spaces.
+    ::             -- RtnVar  An optional variable to be used to return the string length.
+    set "s=#%~1"
+    set "len=0"
+    for %%N in (4096 2048 1024 512 256 128 64 32 16 8 4 2 1) do (
+        if "!s:~%%N,1!" neq "" (
+            set /a "len+=%%N"
+            set "s=!s:~%%N!"
+        )
+    )
+    endlocal & if "%~2" neq "" (set %~2=%len%) else echo %len%
+exit /b 0
+
+:printc
+    call :strlen "%~1" strLength
+    set /a numLeft = (%col% - %strLength%) / 2
+    set "spaces="
+    for /l %%i in (1,1,%numLeft%) do call :addSpace
+    set "flag=false"
+    set "printstr=%~1"
+    setlocal EnableDelayedExpansion
+    echo %spaces% !printstr!
+    endlocal
+exit /b 0
+
+:printj
+    call :strlen "%~1" str1Length
+    call :strlen "%~2" str2Length
+    set /a between = 1
+    set /a marginx = (%col% - %str1Length% - %str2Length% - %between% - 2) / 2
+    set "spaces="
+    for /l %%i in (1,1,%between%) do call :addSpace
+    set "between=%spaces%"
+    set "spaces="
+    for /l %%i in (1,1,%marginx%) do call :addSpace
+    set "printstr1=%~1"
+    set "printstr2=%~2"
+    set "flag=false"
+    setlocal EnableDelayedExpansion
+    echo %spaces% !printstr1! %between% !printstr2!
+    endlocal
+exit /b 0
+
+:addSpace
+    set "space= "
+    set "spaces=%spaces%%space%"
+exit /b 0
+
+
