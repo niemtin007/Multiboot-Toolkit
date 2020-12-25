@@ -20,9 +20,7 @@ if not exist "bin" (
 
 :mainMenu
 
-set "title=Menu"
-
-call :colortool
+call :colortool "Menu"
 
 echo.
 call :printc "====================================================================="
@@ -48,9 +46,7 @@ choice /c 1234q /cs /n /m "%_symbol_%%spaces%%_lang0020_%"
 
 :bootableCreator
 
-set "title=Bootable Creator"
-
-call :colortool
+call :colortool "Bootable Creator"
 call :list.disk
 
 echo.
@@ -101,7 +97,7 @@ call :count.partition
     :: set multiboot data partition size
     echo.
     set /a GB=0
-    set /p GB= %_symbol_%%spaces%%_lang0106_%
+    set /p GB=%_symbol_%%spaces%%_lang0106_%
     set /a GB=%GB%+0
     :: check the character of the number
     echo %esp%| findstr /r "^[1-9][0-9]*$">nul
@@ -252,10 +248,9 @@ call :clean.bye
 
 :moduleInstaller
 
-set "title=Module Installer"
 set "curpath=%~dp0Modules"
 
-call :colortool
+call :colortool "Module Installer"
 call :multibootscan
 call :gather.info
 
@@ -530,8 +525,7 @@ call :gather.info
 
 
 :extra.main
-set "title=Extra Features"
-call :colortool
+call :colortool "Extra Features"
 echo.
 call :printc "====================================================================="
 call :printc "%_lang0819_%"
@@ -658,6 +652,7 @@ exit /b 0
     cls
     call :set.mode
     cd /d "%bindir%"
+    if not "%~1" == "" set "title=%~1"
     title Multiboot Toolkit %cur_a%.%cur_b%.%cur_c% - %title%
 exit /b 0
 
@@ -685,8 +680,7 @@ exit /b 0
 
 
 :license
-    set "title=License"
-    call :colortool
+    call :colortool "License"
     cd /d "%tmp%"
     > welcome.vbs (
         echo Dim Message, Speak
@@ -698,7 +692,6 @@ exit /b 0
         echo Speak.Speak "You can use, modify and redistribute if you wish."
         echo Speak.Speak "Choose a default language to continue..."
     )
-    set "_symbol_=$"
     echo.
     call :printc " __  __      _ _   _ _              _     _____         _ _   _ _   "
     call :printc "|  \/  |_  _| | |_(_) |__  ___  ___| |_  |_   _|__  ___| | |_(_) |_ "
@@ -719,7 +712,7 @@ exit /b 0
     call :printc "[ 1 ] English   [ 2 ] Vietnamese    [ 3 ] Turkish   [ 4 ] Chinese"
     echo.
     echo.
-    choice /c 1234a /cs /n /m "%_symbol_%%spaces%Choose a default language [ ? ] = "
+    choice /c 1234a /cs /n /m "$%spaces%Choose a default language [ ? ] = "
         if errorlevel 1 set "lang=English"
         if errorlevel 2 set "lang=Vietnam"
         if errorlevel 3 set "lang=Turkish"
@@ -809,7 +802,6 @@ exit /b 0
         )
         cls
         echo. & echo. & echo. & echo. & echo. & echo. & echo.
-        call :printc
         call :printc " __   __                 __                           "
         call :printc "|  |_|  |--.---.-.-----.|  |--.    .--.--.-----.--.--."
         call :printc "|   _|     |  _  |     ||    <     |  |  |  _  |  |  |"
@@ -1556,7 +1548,7 @@ exit /b 0
     wincdemu "%isopath%" %freedrive%: /wait
     cls
     echo.
-    echo %_symbol_%%spaces%%modulename% %_lang0015_%
+    echo %_symbol_%%spaces%%modulename%%_lang0015_%
     echo.
     cd /d "%freedrive%:\"
         if "%modulename%"=="AOMEI-Backup" (
@@ -1616,10 +1608,9 @@ exit /b 0
         if errorlevel 2 set "portable=false"
         if errorlevel 3 goto :mainMenu
         if "%portable%"=="true" (
-            choice /c yn /cs /n /m %_lang0136_%
+            choice /c yn /cs /n /m "%_lang0136_%"
                 if errorlevel 2 call :PortableAppsExtract
                 if errorlevel 1 call :download.portableapps & call :PortableAppsExtract
-                echo %_lang0012_%
                 timeout /t 2 >nul
         )
 exit /b 0
@@ -1713,8 +1704,7 @@ exit /b 0
 
 
 :changelanguage
-    set "title=%_lang0833_%"
-    call :colortool
+    call :colortool "%_lang0833_%"
     echo.
     call :printc "            ('-.        .-') _                       ('-.                 ('-.  "
     call :printc "           ( OO ).-.   ( OO ) )                     ( OO ).-.           _(  OO) "
@@ -1757,8 +1747,7 @@ exit /b 0
 
 
 :sortgrub2menu
-    set "title=%_lang0836_%"
-    call :colortool
+    call :colortool "%_lang0836_%"
     echo.
     echo.
     call :printj "  __ _ _ __ _   _| |__|___ \ " "a. %_config0115_%"
@@ -1794,8 +1783,7 @@ exit /b 0
 
 
 :grub2theme
-    set "title=%_lang0821_%"
-    call :colortool
+    call :colortool "%_lang0821_%"
     set "curtheme=%gtheme%"
     echo.
     call :printc "%_lang0300_% %curtheme%"
@@ -1871,8 +1859,7 @@ exit /b 0
 
 
 :rEFIndtheme
-    set "title=%_lang0822_%"
-    call :colortool
+    call :colortool "%_lang0822_%"
     echo.
     call :printc "%_lang0400_% %rtheme%"
     call :printc "====================================================================="
@@ -1984,8 +1971,7 @@ exit /b 0
 
 
 :easeconvertdisk
-    set "title=%_lang0831_%"
-    call :colortool
+    call :colortool "%_lang0831_%"
     call :list.disk
     echo.
     set /p disk= %_lang0101_%
@@ -2073,8 +2059,7 @@ exit /b 0
 exit /b 0
 
 :editWinPEbootmanager
-    set "title=%_lang0826_%"
-    call :colortool
+    call :colortool "%_lang0826_%"
     call :WinPEInterface
     cd /d "%bindir%"
     choice /c ynq /cs /n /m "%_symbol_%%spaces%%_lang0800_%"
@@ -2230,8 +2215,7 @@ exit /b 0
 
 
 :editwinsetupfromUSB
-    set "title=%_lang0827_%"
-    call :colortool
+    call :colortool "%_lang0827_%"
     if not exist "%ducky%\WINSETUP\" (
         color 0e & echo.
         echo %_symbol_%%spaces%%_lang0141_%
@@ -2267,8 +2251,7 @@ exit /b 0
 
 
 :fixbootloader
-    set "title=%_lang0829_%"
-    call :colortool
+    call :colortool "%_lang0829_%"
     call :check.diskInfo
     call :printc "------------------------------------"
     call :printc "  __ _        _                 _   "
@@ -2419,8 +2402,7 @@ exit /b 0
 exit /b 0
 
 :grub2-filemanager
-    set "title=%_lang0828_%"
-    call :colortool
+    call :colortool "%_lang0828_%"
     call :printc "   ___            _      __           " 
     call :printc "  / _ \_ __ _   _| |__  / _|_ __ ___  " 
     call :printc " / /_\/ '__| | | | '_ \| |_| '_ ` _ \ " 
@@ -2488,8 +2470,7 @@ exit /b 0
 
 
 :setdefaultboot
-    set "title=%_lang0825_%"
-    call :colortool
+    call :colortool "%_lang0825_%"
     echo.
     call :printc "   _     ___         _ _      _           _   _           _         "
     call :printc " _| |___|  _|___ _ _| | |_   | |_ ___ ___| |_| |___ ___ _| |___ ___ "
@@ -2576,8 +2557,7 @@ exit /b 0
 
 
 :updatemultiboot
-    set "title=%_lang0835_%"
-    call :colortool
+    call :colortool "%_lang0835_%"
     echo.
     cd /d "%bindir%"
         7z x "grub2.7z" -o"%tmp%" -aos -y >nul
@@ -2668,8 +2648,7 @@ echo.
 exit /b 0
 
 :OneFileLinux
-    set "title=%_lang0830_%"
-    call :colortool
+    call :colortool "%_lang0830_%"
     call :OFLInterface
     cd /d "%bindir%"
         7z x "wget.7z" -o"%tmp%" -aoa -y >nul
@@ -2819,8 +2798,7 @@ exit /b 0
 exit /b 0
 
 :cloverinstaller
-    set "title=%_lang0823_%"
-    call :colortool
+    call :colortool "%_lang0823_%"
     call :check.systemInfo
     
     :clover
@@ -2973,8 +2951,7 @@ exit /b 0
 exit /b 0
 
 :rEFIndinstaller
-    set "title=%_lang0824_%"
-    call :colortool
+    call :colortool "%_lang0824_%"
     call :check.systemInfo
     
     :refind
