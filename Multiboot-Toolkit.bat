@@ -1168,6 +1168,8 @@ exit /b 0
         copy "%rpath%\EFI\BOOT\BOOTIA32.EFI" "%ducky%\EFI\BOOT\grubia32.efi" /y >nul
         copy "%rpath%\EFI\BOOT\grub.efi"     "%ducky%\EFI\BOOT\grub.efi"     /y >nul
     :: make backup
+    cd /d "%bindir%\secureboot\EFI\Boot\backup"
+        if not exist Grub2 mkdir Grub2
     cd /d "%ducky%\EFI\BOOT"
         copy "grubx64.efi"  "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootx64.efi"  /y >nul
         copy "grubia32.efi" "%bindir%\secureboot\EFI\Boot\backup\Grub2\bootia32.efi" /y >nul
