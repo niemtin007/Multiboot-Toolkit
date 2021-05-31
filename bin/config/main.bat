@@ -1,4 +1,10 @@
 @echo off
+set "ESP1=%~1"
+set "ESP2=%~2"
+set "DATA=%~3"
+if "%~1"=="" set "ESP1=REFIND"
+if "%~2"=="" set "ESP2=M-ESP"
+if "%~3"=="" set "DATA=MULTIBOOT"
 
 cd /d "%bindir%\config"
     xcopy /s /y "grubcfg" "%ducky%\BOOT\grub\" >nul
@@ -47,9 +53,9 @@ cd /d "%ducky%\BOOT\grub"
         echo set isopath="/ISO"
         echo export locale_dir drive_label binpath isopath
         echo.
-        echo search.fs_label M-ESP edir
-        echo search.fs_label REFIND rdir
-        echo search.fs_label MULTIBOOT mdir
+        echo search.fs_label %ESP1% rdir
+        echo search.fs_label %ESP2% edir
+        echo search.fs_label %DATA% mdir
         echo export edir rdir mdir
         echo.
         echo probe -u $mdir --set=dev_uuid

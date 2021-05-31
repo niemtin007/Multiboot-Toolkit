@@ -22,7 +22,8 @@
 * Supported script to update grub2 and grubfm automatic (thanks to By_FaRuK)
 * Supported to boot Linux Distro live ISO via partnew - Easy2Boot method
   (thanks to Steve6375 & A1ive)
-* Add rEFInd/Clover boot menu entry automatic for multi-OS
+* Added rEFInd/Clover boot menu entry automatic for multi-OS
+* Added Configuration File (thanks to rojo)
   ------------------------------------------------------------------------------
 
 
